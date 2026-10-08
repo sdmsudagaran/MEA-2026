@@ -32,8 +32,6 @@
         .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; transform: translateX(120%); transition: transform 0.3s; display: flex; align-items: center; gap: 12px; }
         .toast.show { transform: translateX(0); }
-        
-        /* Spinner */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #005B9F; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -57,7 +55,7 @@
     <!-- GLOBAL LOADER -->
     <div id="global-loader" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[999] flex flex-col items-center justify-center transition-opacity duration-300">
         <div class="loader mb-4"></div>
-        <p class="text-sm font-bold text-muh-blue animate-pulse">Memuat Data...</p>
+        <p class="text-sm font-bold text-muh-blue animate-pulse">Sinkronisasi Database...</p>
     </div>
 
     <!-- NAVBAR -->
@@ -104,7 +102,7 @@
                 <button onclick="app.navigate('kategori'); app.toggleMobileMenu()" class="bg-muh-blue text-white font-bold py-4 rounded-2xl w-full">Daftar Sekarang</button>
             </div>
             <div id="mobile-user-menu" class="hidden flex-col gap-3 pt-4">
-                 <button id="mob-dash-btn" onclick="app.navigate('dashboard'); app.toggleMobileMenu()" class="bg-muh-light text-muh-blue font-bold py-4 rounded-2xl w-full">Dashboard Saya</button>
+                 <button id="mob-dash-btn" onclick="app.navigate('dashboard'); app.toggleMobileMenu()" class="bg-muh-light text-muh-blue font-bold py-4 rounded-2xl w-full">Dasbor Saya</button>
                  <button onclick="app.logout(); app.toggleMobileMenu()" class="text-red-500 font-bold py-4 rounded-2xl w-full border border-red-100">Keluar</button>
             </div>
         </div>
@@ -179,11 +177,11 @@
                 <form id="registration-form" onsubmit="app.submitForm(event)" class="bg-white rounded-3xl p-6 md:p-10 shadow-soft border">
                     <h3 class="text-lg font-bold border-b pb-3 mb-6">Data Umum</h3>
                     <div class="grid md:grid-cols-2 gap-6 mb-8">
-                        <div><label class="block text-sm font-bold mb-2">Nama Lengkap</label><input type="text" name="nama" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
-                        <div><label class="block text-sm font-bold mb-2">NISN/NBM/NIP</label><input type="text" name="nomor_induk" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
-                        <div class="md:col-span-2"><label class="block text-sm font-bold mb-2">Asal Instansi</label><input type="text" name="instansi" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
-                        <div><label class="block text-sm font-bold mb-2">Nomor WA</label><input type="tel" name="wa" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
-                        <div><label class="block text-sm font-bold mb-2">Email</label><input type="email" name="email" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
+                        <div><label class="block text-sm font-bold mb-2">Nama Lengkap</label><input type="text" name="nama" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
+                        <div><label class="block text-sm font-bold mb-2">NISN/NBM/NIP</label><input type="text" name="nomor_induk" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-bold mb-2">Asal Instansi</label><input type="text" name="instansi" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
+                        <div><label class="block text-sm font-bold mb-2">Nomor WA</label><input type="tel" name="wa" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
+                        <div><label class="block text-sm font-bold mb-2">Email</label><input type="email" name="email" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
                     </div>
                     <h3 class="text-lg font-bold border-b pb-3 mb-6">Data Khusus Kategori</h3>
                     <div id="dynamic-fields" class="space-y-6 mb-10"></div>
@@ -226,7 +224,7 @@
                     </div>
                     <div class="flex flex-col gap-3 no-print">
                         <button onclick="window.print()" class="w-full py-3 border border-muh-blue text-muh-blue font-bold rounded-xl">Cetak Bukti</button>
-                        <button onclick="app.loginAsPeserta()" class="w-full py-3 bg-muh-blue text-white font-bold rounded-xl">Masuk Dashboard</button>
+                        <button onclick="app.loginAsPeserta()" class="w-full py-3 bg-muh-blue text-white font-bold rounded-xl">Masuk Dasbor</button>
                     </div>
                 </div>
             </div>
@@ -236,7 +234,7 @@
         <section id="view-dashboard" class="view-section py-12 bg-slate-50">
             <div class="max-w-5xl mx-auto px-4">
                 <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-2xl font-bold">Dashboard <span id="dash-nama" class="text-muh-blue"></span></h2>
+                    <h2 class="text-2xl font-bold">Dasbor <span id="dash-nama" class="text-muh-blue"></span></h2>
                 </div>
                 
                 <div class="bg-white rounded-3xl p-6 md:p-8 shadow-soft border">
@@ -245,31 +243,19 @@
                         <span id="dash-status" class="bg-yellow-100 text-yellow-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">Menunggu</span>
                     </div>
                     <div class="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <p class="text-sm text-slate-500 mb-1">Nomor Registrasi</p>
-                            <p id="dash-reg" class="text-lg font-mono font-bold text-slate-800"></p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-slate-500 mb-1">Kategori Lomba</p>
-                            <p id="dash-kat" class="text-lg font-bold text-slate-800"></p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <p class="text-sm text-slate-500 mb-1">Asal Instansi</p>
-                            <p id="dash-instansi" class="text-lg font-bold text-slate-800"></p>
-                        </div>
+                        <div><p class="text-sm text-slate-500 mb-1">Nomor Registrasi</p><p id="dash-reg" class="text-lg font-mono font-bold text-slate-800"></p></div>
+                        <div><p class="text-sm text-slate-500 mb-1">Kategori Lomba</p><p id="dash-kat" class="text-lg font-bold text-slate-800"></p></div>
+                        <div class="md:col-span-2"><p class="text-sm text-slate-500 mb-1">Asal Instansi</p><p id="dash-instansi" class="text-lg font-bold text-slate-800"></p></div>
                     </div>
-                    
                     <div class="mt-8 pt-6 border-t">
                         <h4 class="font-bold mb-4">Berkas & Data Tambahan</h4>
-                        <div id="dash-tambahan" class="text-sm text-slate-600 space-y-3">
-                            <!-- Injected by JS -->
-                        </div>
+                        <div id="dash-tambahan" class="text-sm text-slate-600 space-y-3"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- PENGUMUMAN -->
+        <!-- PENGUMUMAN PUBLIK -->
         <section id="view-pengumuman" class="view-section py-12">
             <div class="print-only">
                 <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" alt="Logo">
@@ -290,113 +276,127 @@
             </div>
         </section>
 
-        <!-- ADMIN PANEL -->
+        <!-- ADMIN PANEL UTAMA -->
         <section id="view-admin" class="view-section bg-slate-100 min-h-screen">
             <div class="flex h-[calc(100vh-80px)] overflow-hidden">
                 <!-- Admin Sidebar -->
                 <div class="admin-sidebar w-64 bg-muh-dark text-white hidden md:flex flex-col shadow-2xl relative z-10">
                     <div class="p-6 border-b border-blue-900/50"><h2 class="text-xl font-bold">Panel Admin</h2></div>
                     <div class="p-4 space-y-2">
-                        <button onclick="app.switchAdminTab('dashboard')" id="btn-tab-dashboard" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Dashboard</button>
-                        <button onclick="app.switchAdminTab('peserta')" id="btn-tab-peserta" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Data Peserta</button>
+                        <button onclick="app.switchAdminTab('dashboard')" id="btn-tab-dashboard" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Dasbor Utama</button>
+                        <button onclick="app.switchAdminTab('rekap')" id="btn-tab-rekap" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Rekap Peserta</button>
+                        <button onclick="app.switchAdminTab('konten')" id="btn-tab-konten" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Konten (CMS)</button>
                         <button onclick="app.switchAdminTab('akses')" id="btn-tab-akses" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Akses</button>
-                        <button onclick="app.switchAdminTab('konten')" id="btn-tab-konten" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Konten / Beranda</button>
                     </div>
                 </div>
                 
-                <!-- Admin Content -->
+                <!-- Admin Content Body -->
                 <div class="flex-1 overflow-y-auto p-4 md:p-8">
                     
-                    <!-- ADMIN: DASHBOARD -->
+                    <!-- 1. ADMIN DASHBOARD -->
                     <div id="admin-sec-dashboard" class="admin-section active">
                         <div class="flex justify-between mb-8">
-                            <h2 class="text-2xl font-bold">Statistik Real-time</h2>
+                            <h2 class="text-2xl font-bold">Dasbor Cepat</h2>
                             <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border">
                                 <span class="text-sm font-bold">Pendaftaran Terbuka:</span>
                                 <input type="checkbox" id="toggle-form" onchange="app.toggleFormStatus(this)" class="w-5 h-5 cursor-pointer">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-l-muh-blue"><p class="text-sm">Total Peserta</p><h3 id="stat-total" class="text-3xl font-bold">0</h3></div>
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-l-muh-blue"><p class="text-sm">Total Peserta Masuk</p><h3 id="stat-total" class="text-3xl font-bold">0</h3></div>
                             <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-l-green-500"><p class="text-sm">Sekolah Terlibat</p><h3 id="stat-sekolah" class="text-3xl font-bold">0</h3></div>
                         </div>
                     </div>
 
-                    <!-- ADMIN: PESERTA -->
-                    <div id="admin-sec-peserta" class="admin-section hidden">
-                        <div class="print-only"><h1 style="font-size: 24px; font-weight: bold;">Rekap Data Peserta MEA 2026</h1></div>
+                    <!-- 2. ADMIN REKAP PESERTA -->
+                    <div id="admin-sec-rekap" class="admin-section hidden">
+                        <div class="print-only"><h1 style="font-size: 24px; font-weight: bold;">Dasbor Rekap Peserta MEA 2026</h1></div>
                         <div class="flex justify-between items-center mb-6 no-print">
-                            <h2 class="text-2xl font-bold">Data Pendaftar</h2>
+                            <div><h2 class="text-2xl font-bold">Dasbor Rekap Peserta</h2><p class="text-sm text-slate-500">Tabel manajemen dan verifikasi seluruh peserta.</p></div>
                             <div class="flex gap-3">
-                                <select id="admin-filter-kategori" onchange="app.renderAdminPeserta()" class="px-4 py-2 rounded-xl border bg-white"><option value="all">Semua Kategori</option></select>
+                                <select id="admin-filter-kategori" onchange="app.renderAdminRekap()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue"><option value="all">Semua Kategori Lomba</option></select>
                                 <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
                             </div>
                         </div>
+                        
+                        <!-- Tabel Rekap -->
                         <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                             <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID / Waktu</th><th class="p-4">Nama Peserta</th><th class="p-4">Asal Sekolah</th><th class="p-4">Status / Aksi</th></tr></thead>
+                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID / Waktu</th><th class="p-4">Nama Peserta</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori Lomba</th><th class="p-4 no-print">Status & Aksi</th></tr></thead>
                                 <tbody id="admin-table-body" class="divide-y"></tbody>
                             </table>
                         </div>
                     </div>
 
-                    <!-- ADMIN: AKSES -->
-                    <div id="admin-sec-akses" class="admin-section hidden no-print">
-                        <h2 class="text-2xl font-bold mb-6">Kelola Akses Login</h2>
-                        <form onsubmit="app.addAdminUser(event)" class="bg-white p-6 rounded-2xl shadow-sm border mb-8 flex gap-4 items-end">
-                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Username</label><input type="text" name="username" required class="w-full p-2 border rounded outline-none"></div>
-                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Password</label><input type="password" name="password" required class="w-full p-2 border rounded outline-none"></div>
-                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Role</label><select name="role" class="w-full p-2 border rounded outline-none"><option value="admin">Admin</option><option value="operator">Operator</option></select></div>
-                            <button type="submit" class="bg-muh-blue text-white font-bold p-2.5 rounded">Tambah Akun</button>
-                        </form>
-                        <table class="w-full text-left bg-white rounded-2xl shadow-sm overflow-hidden text-sm"><thead class="bg-slate-50 border-b"><tr><th class="p-4">Username</th><th class="p-4">Role Akses</th></tr></thead><tbody id="admin-users-body" class="divide-y"></tbody></table>
-                    </div>
-
-                    <!-- ADMIN: KONTEN (CMS UTAMA) -->
+                    <!-- 3. ADMIN KONTEN (CMS: Beranda, Kategori, Pengumuman) -->
                     <div id="admin-sec-konten" class="admin-section hidden no-print">
                         <h2 class="text-2xl font-bold mb-6">Manajemen Konten (CMS)</h2>
                         
-                        <!-- Form Edit Beranda -->
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border mb-6">
-                            <h3 class="font-bold mb-4 border-b pb-2">Ubah Teks & Jadwal Beranda</h3>
-                            <form onsubmit="app.updateBeranda(event)" class="space-y-4">
-                                <div><label class="text-sm font-bold text-slate-600 block mb-2">Teks Paragraf Utama Beranda</label>
-                                <textarea name="teks_beranda" id="edit-teks-beranda" rows="3" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none"></textarea></div>
-                                <div><label class="text-sm font-bold text-slate-600 block mb-2">Teks Jadwal Pelaksanaan</label>
-                                <input type="text" name="tanggal_pelaksanaan" id="edit-teks-jadwal" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none"></div>
-                                <button type="submit" class="w-full bg-muh-blue text-white font-bold py-3 rounded-lg hover:bg-muh-dark">Update Beranda ke Database</button>
-                            </form>
-                        </div>
-
-                        <!-- Form Edit Kategori -->
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border mb-6">
-                            <h3 class="font-bold mb-4 border-b pb-2">Ubah Detail Kategori Lomba</h3>
-                            <div class="mb-4">
-                                <label class="text-sm font-bold block mb-2">Pilih Kategori yang mau diubah:</label>
-                                <select id="edit-kat-select" onchange="app.loadEditKategori(this.value)" class="w-full p-3 border rounded-xl bg-slate-50 outline-none"></select>
-                            </div>
-                            <form onsubmit="app.updateKategori(event)" id="form-edit-kategori" class="space-y-4 hidden">
-                                <input type="hidden" name="id" id="edit-kat-id">
-                                <div><label class="text-sm font-bold text-slate-600 block mb-1">Judul Kategori</label><input type="text" name="judul" id="edit-kat-judul" required class="w-full p-2 border rounded bg-slate-50"></div>
-                                <div><label class="text-sm font-bold text-slate-600 block mb-1">Deskripsi Singkat</label><textarea name="deskripsi" id="edit-kat-desc" rows="2" required class="w-full p-2 border rounded bg-slate-50"></textarea></div>
-                                <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Simpan Perubahan Kategori</button>
-                            </form>
-                        </div>
-
-                        <!-- Form Pengumuman -->
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                            <h3 class="font-bold mb-4 border-b pb-2">Terbitkan Pengumuman Juara</h3>
-                            <form onsubmit="app.addPengumuman(event)" class="space-y-4">
-                                <div><label class="text-xs font-bold text-slate-600">Nama Pemenang</label><input type="text" name="nama_pemenang" required class="w-full p-2 border rounded bg-slate-50 outline-none"></div>
-                                <div><label class="text-xs font-bold text-slate-600">Asal Instansi</label><input type="text" name="asal_instansi" required class="w-full p-2 border rounded bg-slate-50 outline-none"></div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div><label class="text-xs font-bold text-slate-600">Kategori Lomba</label><select id="admin-select-kat" name="kategori_id" required class="w-full p-2 border rounded bg-slate-50 outline-none"></select></div>
-                                    <div><label class="text-xs font-bold text-slate-600">Peringkat (1, 2, atau 3)</label><input type="number" name="peringkat" min="1" max="3" required class="w-full p-2 border rounded bg-slate-50 outline-none"></div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="space-y-6">
+                                <!-- Edit Beranda -->
+                                <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                                    <h3 class="font-bold mb-4 border-b pb-2">1. Ubah Teks Beranda & Jadwal</h3>
+                                    <form onsubmit="app.updateBeranda(event)" class="space-y-4">
+                                        <div><label class="text-sm font-bold text-slate-600 block mb-1">Paragraf Utama Beranda</label>
+                                        <textarea name="teks_beranda" id="edit-teks-beranda" rows="3" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></textarea></div>
+                                        <div><label class="text-sm font-bold text-slate-600 block mb-1">Jadwal Pelaksanaan</label>
+                                        <input type="text" name="tanggal_pelaksanaan" id="edit-teks-jadwal" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></div>
+                                        <button type="submit" class="w-full bg-muh-blue text-white font-bold py-2 rounded hover:bg-muh-dark">Simpan Beranda</button>
+                                    </form>
                                 </div>
-                                <div><label class="text-xs font-bold text-slate-600">Skor Akhir</label><input type="number" step="0.01" name="skor" required class="w-full p-2 border rounded bg-slate-50 outline-none"></div>
-                                <button type="submit" class="w-full bg-muh-blue text-white font-bold py-3 rounded-lg hover:bg-muh-dark">Simpan Pengumuman ke Database</button>
-                            </form>
+
+                                <!-- Edit Kategori -->
+                                <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                                    <h3 class="font-bold mb-4 border-b pb-2">2. Ubah Detail Kategori Lomba</h3>
+                                    <div class="mb-4">
+                                        <label class="text-sm font-bold block mb-1">Pilih Kategori:</label>
+                                        <select id="edit-kat-select" onchange="app.loadEditKategori(this.value)" class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></select>
+                                    </div>
+                                    <form onsubmit="app.updateKategori(event)" id="form-edit-kategori" class="space-y-4 hidden">
+                                        <input type="hidden" name="id" id="edit-kat-id">
+                                        <div><label class="text-sm font-bold text-slate-600 block mb-1">Judul Kategori</label><input type="text" name="judul" id="edit-kat-judul" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></div>
+                                        <div><label class="text-sm font-bold text-slate-600 block mb-1">Deskripsi Singkat</label><textarea name="deskripsi" id="edit-kat-desc" rows="2" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></textarea></div>
+                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">Simpan Perubahan Kategori</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <!-- Manajemen Pengumuman -->
+                                <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                                    <h3 class="font-bold mb-4 border-b pb-2">3. Terbitkan Pengumuman Juara</h3>
+                                    <form onsubmit="app.addPengumuman(event)" class="space-y-4 mb-6">
+                                        <div><label class="text-xs font-bold text-slate-600">Nama Pemenang</label><input type="text" name="nama_pemenang" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></div>
+                                        <div><label class="text-xs font-bold text-slate-600">Asal Instansi</label><input type="text" name="asal_instansi" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div><label class="text-xs font-bold text-slate-600">Kategori Lomba</label><select id="admin-select-kat" name="kategori_id" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></select></div>
+                                            <div><label class="text-xs font-bold text-slate-600">Peringkat (1/2/3)</label><input type="number" name="peringkat" min="1" max="3" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></div>
+                                        </div>
+                                        <div><label class="text-xs font-bold text-slate-600">Skor Akhir</label><input type="number" step="0.01" name="skor" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></div>
+                                        <button type="submit" class="w-full bg-muh-blue text-white font-bold py-2 rounded hover:bg-muh-dark">Simpan Pengumuman</button>
+                                    </form>
+
+                                    <!-- Tabel Daftar Pengumuman -->
+                                    <h4 class="font-bold text-sm mb-2">Daftar Pengumuman Aktif</h4>
+                                    <div class="border rounded overflow-hidden max-h-48 overflow-y-auto">
+                                        <table class="w-full text-left text-xs"><tbody id="admin-list-pengumuman" class="divide-y bg-slate-50"></tbody></table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- 4. ADMIN AKSES -->
+                    <div id="admin-sec-akses" class="admin-section hidden no-print">
+                        <h2 class="text-2xl font-bold mb-6">Kelola Akses Login</h2>
+                        <form onsubmit="app.addAdminUser(event)" class="bg-white p-6 rounded-2xl shadow-sm border mb-8 flex gap-4 items-end">
+                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Username</label><input type="text" name="username" required class="w-full p-2 border rounded outline-none focus:border-muh-blue"></div>
+                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Password</label><input type="text" name="password" required class="w-full p-2 border rounded outline-none focus:border-muh-blue"></div>
+                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Role</label><select name="role" class="w-full p-2 border rounded outline-none focus:border-muh-blue"><option value="admin">Admin</option><option value="operator">Operator</option></select></div>
+                            <button type="submit" class="bg-muh-blue text-white font-bold p-2.5 rounded">Tambah Akun</button>
+                        </form>
+                        <table class="w-full text-left bg-white rounded-2xl shadow-sm overflow-hidden text-sm"><thead class="bg-slate-50 border-b"><tr><th class="p-4">Username</th><th class="p-4">Role Akses</th></tr></thead><tbody id="admin-users-body" class="divide-y"></tbody></table>
                     </div>
 
                 </div>
@@ -446,10 +446,13 @@
                 if (!res.ok) throw new Error(`Gagal insert ${table}`); return res.json();
             },
             patch: async (table, query, data) => {
-                // Gunakan text() karena PATCH kadang mengembalikan 204 No Content
                 const res = await fetch(`${SUPABASE_URL}/${table}${query}`, { method: 'PATCH', headers: DB_HEADERS, body: JSON.stringify(data) });
                 if (!res.ok) throw new Error(`Gagal update ${table}`);
                 const text = await res.text(); return text ? JSON.parse(text) : {};
+            },
+            delete: async (table, query) => {
+                const res = await fetch(`${SUPABASE_URL}/${table}${query}`, { method: 'DELETE', headers: DB_HEADERS });
+                if (!res.ok) throw new Error(`Gagal delete ${table}`); return true;
             }
         };
 
@@ -467,7 +470,7 @@
                     document.getElementById('teks-jadwal').textContent = this.state.settings.tanggal_pelaksanaan;
                     
                     this.initCountdown(); this.navigate('home');
-                } catch (err) { this.showToast('Gagal terhubung ke Database Supabase.', 'error'); console.error(err); } finally { this.hideLoader(); }
+                } catch (err) { this.showToast('Gagal terhubung ke Database Supabase. Cek RLS SQL Anda.', 'error'); console.error(err); } finally { this.hideLoader(); }
             },
             showLoader: () => document.getElementById('global-loader').classList.remove('hidden'),
             hideLoader: () => document.getElementById('global-loader').classList.add('hidden'),
@@ -549,7 +552,7 @@
                     this.state.user = { role: 'peserta', name: payload.nama_lengkap, data: payload };
                     this.state.formDraft = null;
                     this.updateNavState(); this.navigate('bukti'); this.showToast('Pendaftaran Berhasil!', 'success');
-                } catch(e) { this.showToast('Gagal submit pendaftaran. Cek koneksi.', 'error'); } finally { this.hideLoader(); }
+                } catch(e) { this.showToast('Gagal submit pendaftaran. Cek izin SQL.', 'error'); } finally { this.hideLoader(); }
             },
 
             // DASHBOARD PESERTA
@@ -566,11 +569,10 @@
                 document.getElementById('dash-tambahan').innerHTML = addHtml || 'Tidak ada data tambahan.';
             },
             
-            // PENGUMUMAN
+            // PENGUMUMAN PUBLIK
             renderPengumumanView: async function() {
                 const sel = document.getElementById('filter-pengumuman');
                 if(sel && sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
-                
                 this.showLoader();
                 try {
                     this.state.pengumuman = await db.get('pengumuman', '?select=*,kategori_lomba(judul)&order=peringkat.asc');
@@ -582,7 +584,6 @@
                 const tbody = document.getElementById('table-pengumuman');
                 let data = this.state.pengumuman;
                 if(fVal !== 'all') data = data.filter(p => p.kategori_id === fVal);
-                
                 if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada pengumuman untuk kategori ini.</td></tr>`;
                 tbody.innerHTML = data.map(p => `<tr><td class="p-4 font-bold text-muh-blue">Juara ${p.peringkat}</td><td class="p-4 font-bold">${p.nama_pemenang}</td><td class="p-4">${p.asal_instansi}</td><td class="p-4 text-xs font-bold bg-slate-50">${p.kategori_lomba?.judul||'-'}</td><td class="p-4 font-bold">${p.skor}</td></tr>`).join('');
             },
@@ -598,10 +599,10 @@
                 this.showLoader();
                 try {
                     if(tab === 'dashboard') await this.renderAdminDashboard();
-                    if(tab === 'peserta') await this.renderAdminPeserta();
+                    if(tab === 'rekap') await this.renderAdminRekap();
                     if(tab === 'akses') await this.renderAdminAkses();
-                    if(tab === 'konten') this.renderAdminKonten();
-                } catch(e) { this.showToast('Gagal memuat data admin', 'error'); } finally { this.hideLoader(); }
+                    if(tab === 'konten') await this.renderAdminKonten();
+                } catch(e) { this.showToast('Gagal memuat data admin. Cek RLS SQL', 'error'); } finally { this.hideLoader(); }
             },
             renderAdminDashboard: async function() {
                 const data = await db.get('pendaftaran', '?select=kategori_id,asal_instansi');
@@ -614,9 +615,11 @@
                     await db.patch('pengaturan_web', '?id=eq.1', { pendaftaran_buka: el.checked });
                     this.state.settings.pendaftaran_buka = el.checked;
                     this.showToast(el.checked ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup', 'success');
-                } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
+                } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status. Izin RLS SQL belum dieksekusi.', 'error'); }
             },
-            renderAdminPeserta: async function() {
+            
+            // ADMIN REKAP PESERTA
+            renderAdminRekap: async function() {
                 const sel = document.getElementById('admin-filter-kategori');
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
                 
@@ -625,14 +628,15 @@
                 
                 const data = await db.get('pendaftaran', query);
                 const tbody = document.getElementById('admin-table-body');
-                if(!data.length) return tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Data Kosong</td></tr>`;
+                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Data Kosong</td></tr>`;
                 
                 tbody.innerHTML = data.map(p => `
                     <tr>
                         <td class="p-4 font-mono text-xs">${p.reg_id}<br><span class="text-slate-400">${new Date(p.waktu_daftar).toLocaleDateString('id-ID')}</span></td>
-                        <td class="p-4 font-bold text-slate-800">${p.nama_lengkap}<br><span class="font-normal text-xs text-slate-500">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</span></td>
+                        <td class="p-4 font-bold text-slate-800">${p.nama_lengkap}</td>
                         <td class="p-4">${p.asal_instansi}</td>
-                        <td class="p-4">
+                        <td class="p-4 font-bold text-xs">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</td>
+                        <td class="p-4 no-print">
                             <select onchange="app.updateStatusPeserta('${p.reg_id}', this.value)" class="p-1 text-xs border rounded ${p.status_verifikasi === 'Terverifikasi' ? 'bg-green-100 text-green-700' : p.status_verifikasi === 'Ditolak' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'} outline-none cursor-pointer">
                                 <option value="Menunggu" ${p.status_verifikasi === 'Menunggu' ? 'selected' : ''}>Menunggu</option>
                                 <option value="Terverifikasi" ${p.status_verifikasi === 'Terverifikasi' ? 'selected' : ''}>Verifikasi</option>
@@ -647,45 +651,37 @@
                 try {
                     await db.patch('pendaftaran', `?reg_id=eq.${regId}`, { status_verifikasi: status });
                     this.showToast(`Status ${regId} diperbarui`, 'success');
-                    this.renderAdminPeserta(); // refresh color
+                    this.renderAdminRekap(); 
                 } catch(e) { this.showToast('Gagal merubah status', 'error'); } finally { this.hideLoader(); }
-            },
-            renderAdminAkses: async function() {
-                const data = await db.get('akun_pengguna', '?select=username,role');
-                document.getElementById('admin-users-body').innerHTML = data.map(u => `<tr><td class="p-4 font-bold">${u.username}</td><td class="p-4 uppercase text-xs">${u.role}</td></tr>`).join('');
-            },
-            addAdminUser: async function(e) {
-                e.preventDefault(); const data = Object.fromEntries(new FormData(e.target).entries());
-                this.showLoader();
-                try {
-                    await db.post('akun_pengguna', data);
-                    e.target.reset(); await this.renderAdminAkses(); this.showToast('Akun ditambah', 'success');
-                } catch(err) { this.showToast('Gagal / Username sudah ada', 'error'); } finally { this.hideLoader(); }
             },
             
             // FUNGSI CMS (MANAJEMEN KONTEN)
-            renderAdminKonten: function() {
-                // Populate Beranda forms with current state
+            renderAdminKonten: async function() {
+                // Beranda Update
                 document.getElementById('edit-teks-beranda').value = this.state.settings.teks_beranda;
                 document.getElementById('edit-teks-jadwal').value = this.state.settings.tanggal_pelaksanaan;
 
-                // Populate Kategori dropdowns
+                // Kategori Dropdowns
                 const selKatEdit = document.getElementById('edit-kat-select');
-                const selKatPengumuman = document.getElementById('admin-select-kat');
+                const selKatPeng = document.getElementById('admin-select-kat');
                 const options = `<option value="">Pilih Kategori...</option>` + this.state.categories.map(c => `<option value="${c.id}">${c.judul}</option>`).join('');
-                
                 if (selKatEdit.options.length === 0) selKatEdit.innerHTML = options;
-                if (selKatPengumuman.options.length === 0) selKatPengumuman.innerHTML = options;
+                if (selKatPeng.options.length === 0) selKatPeng.innerHTML = options;
+
+                // Load Pengumuman Table
+                const pData = await db.get('pengumuman', '?select=*,kategori_lomba(judul)&order=created_at.desc');
+                const tb = document.getElementById('admin-list-pengumuman');
+                if(!pData.length) { tb.innerHTML = `<tr><td class="p-2 text-center text-slate-500">Belum ada pengumuman</td></tr>`; }
+                else {
+                    tb.innerHTML = pData.map(p => `<tr><td class="p-2"><span class="font-bold">${p.nama_pemenang}</span> (Juara ${p.peringkat})<br><span class="text-[10px] text-slate-400">${p.kategori_lomba?.judul||''}</span></td><td class="p-2 text-right"><button onclick="app.hapusPengumuman('${p.id}')" class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded hover:bg-red-100">Hapus</button></td></tr>`).join('');
+                }
             },
             updateBeranda: async function(e) {
-                e.preventDefault();
-                const data = Object.fromEntries(new FormData(e.target).entries());
+                e.preventDefault(); const data = Object.fromEntries(new FormData(e.target).entries());
                 this.showLoader();
                 try {
                     await db.patch('pengaturan_web', '?id=eq.1', data);
-                    // Update state & UI immediately
-                    this.state.settings.teks_beranda = data.teks_beranda;
-                    this.state.settings.tanggal_pelaksanaan = data.tanggal_pelaksanaan;
+                    this.state.settings.teks_beranda = data.teks_beranda; this.state.settings.tanggal_pelaksanaan = data.tanggal_pelaksanaan;
                     document.getElementById('teks-beranda').textContent = data.teks_beranda;
                     document.getElementById('teks-jadwal').textContent = `Pelaksanaan: ${data.tanggal_pelaksanaan}`;
                     this.showToast('Beranda berhasil diperbarui!', 'success');
@@ -695,23 +691,16 @@
                 const form = document.getElementById('form-edit-kategori');
                 if(!katId) { form.classList.add('hidden'); return; }
                 const cat = this.state.categories.find(c => c.id === katId);
-                document.getElementById('edit-kat-id').value = cat.id;
-                document.getElementById('edit-kat-judul').value = cat.judul;
-                document.getElementById('edit-kat-desc').value = cat.deskripsi;
+                document.getElementById('edit-kat-id').value = cat.id; document.getElementById('edit-kat-judul').value = cat.judul; document.getElementById('edit-kat-desc').value = cat.deskripsi;
                 form.classList.remove('hidden');
             },
             updateKategori: async function(e) {
-                e.preventDefault();
-                const data = Object.fromEntries(new FormData(e.target).entries());
+                e.preventDefault(); const data = Object.fromEntries(new FormData(e.target).entries());
                 this.showLoader();
                 try {
                     await db.patch('kategori_lomba', `?id=eq.${data.id}`, { judul: data.judul, deskripsi: data.deskripsi });
-                    // Update lokal state
                     const idx = this.state.categories.findIndex(c => c.id === data.id);
-                    if(idx > -1) {
-                        this.state.categories[idx].judul = data.judul;
-                        this.state.categories[idx].deskripsi = data.deskripsi;
-                    }
+                    if(idx > -1) { this.state.categories[idx].judul = data.judul; this.state.categories[idx].deskripsi = data.deskripsi; }
                     this.showToast('Kategori berhasil diupdate!', 'success');
                 } catch(err) { this.showToast('Gagal mengupdate kategori', 'error'); } finally { this.hideLoader(); }
             },
@@ -721,7 +710,30 @@
                 try {
                     await db.post('pengumuman', { kategori_id: d.kategori_id, peringkat: parseInt(d.peringkat), nama_pemenang: d.nama_pemenang, asal_instansi: d.asal_instansi, skor: parseFloat(d.skor) });
                     e.target.reset(); this.showToast('Pengumuman juara diterbitkan!', 'success');
+                    this.renderAdminKonten();
                 } catch(err) { this.showToast('Gagal menerbitkan pengumuman', 'error'); } finally { this.hideLoader(); }
+            },
+            hapusPengumuman: async function(id) {
+                if(!confirm('Hapus pengumuman ini?')) return;
+                this.showLoader();
+                try {
+                    await db.delete('pengumuman', `?id=eq.${id}`);
+                    this.showToast('Pengumuman dihapus', 'success');
+                    this.renderAdminKonten();
+                } catch(err) { this.showToast('Gagal menghapus', 'error'); } finally { this.hideLoader(); }
+            },
+
+            // ADMIN AKSES LOGIC
+            renderAdminAkses: async function() {
+                const data = await db.get('akun_pengguna', '?select=username,role');
+                document.getElementById('admin-users-body').innerHTML = data.map(u => `<tr><td class="p-4 font-bold">${u.username}</td><td class="p-4 uppercase text-xs">${u.role}</td></tr>`).join('');
+            },
+            addAdminUser: async function(e) {
+                e.preventDefault(); const data = Object.fromEntries(new FormData(e.target).entries());
+                this.showLoader();
+                try {
+                    await db.post('akun_pengguna', data); e.target.reset(); await this.renderAdminAkses(); this.showToast('Akun ditambah', 'success');
+                } catch(err) { this.showToast('Gagal / Username sudah ada', 'error'); } finally { this.hideLoader(); }
             },
 
             // LOGIN SYSTEM
