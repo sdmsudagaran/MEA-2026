@@ -32,12 +32,14 @@
         .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; transform: translateX(120%); transition: transform 0.3s; display: flex; align-items: center; gap: 12px; }
         .toast.show { transform: translateX(0); }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #005B9F; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .print-only { display: none; }
         @media print {
             @page { size: 215mm 330mm; margin: 20mm; }
             body { background-color: white; color: black; }
-            nav, #mobile-menu, button, .no-print, .toast-container, .admin-sidebar, #global-loader { display: none !important; }
+            nav, #mobile-menu, button, .no-print, .toast-container, .admin-sidebar, #global-loader, #admin-home-edit-btn { display: none !important; }
             .print-only { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px; }
             .print-only img { height: 70px; margin: 0 auto 10px auto; }
             .view-section { display: none !important; } .view-section.active { display: block !important; padding: 0 !important; margin: 0 !important; }
@@ -49,6 +51,12 @@
     </style>
 </head>
 <body class="text-slate-800 antialiased selection:bg-muh-blue selection:text-white">
+
+    <!-- GLOBAL LOADER -->
+    <div id="global-loader" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[999] flex flex-col items-center justify-center transition-opacity duration-300">
+        <div class="loader mb-4"></div>
+        <p class="text-sm font-bold text-muh-blue animate-pulse">Menyiapkan Sistem...</p>
+    </div>
 
     <!-- NAVBAR -->
     <nav id="main-nav" class="fixed top-0 w-full z-50 glass-nav transition-all duration-300 no-print">
@@ -94,7 +102,7 @@
                 <button onclick="app.navigate('kategori'); app.toggleMobileMenu()" class="bg-muh-blue text-white font-bold py-4 rounded-2xl w-full">Daftar Sekarang</button>
             </div>
             <div id="mobile-user-menu" class="hidden flex-col gap-3 pt-4">
-                 <button id="mob-dash-btn" onclick="app.navigate('dashboard'); app.toggleMobileMenu()" class="bg-muh-light text-muh-blue font-bold py-4 rounded-2xl w-full">Dasbor Saya</button>
+                 <button id="mob-dash-btn" onclick="app.navigate('dashboard'); app.toggleMobileMenu()" class="bg-muh-light text-muh-blue font-bold py-4 rounded-2xl w-full">Dashboard Saya</button>
                  <button onclick="app.logout(); app.toggleMobileMenu()" class="text-red-500 font-bold py-4 rounded-2xl w-full border border-red-100">Keluar</button>
             </div>
         </div>
@@ -102,8 +110,16 @@
 
     <!-- MAIN CONTENT -->
     <main class="pt-20">
-        <!-- BERANDA -->
+        
+        <!-- =================== VIEW: BERANDA =================== -->
         <section id="view-home" class="view-section active">
+            <!-- Tombol Edit Cepat Khusus Admin -->
+            <div id="admin-home-edit-btn" class="hidden absolute top-24 right-8 z-20">
+                <button onclick="app.editBerandaInline()" class="bg-yellow-400 text-yellow-900 font-bold px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 border border-yellow-500 hover:bg-yellow-500 transition-colors">
+                    <i class="ph-bold ph-pencil-simple"></i> Edit Beranda
+                </button>
+            </div>
+
             <div class="relative bg-gradient-to-br from-muh-dark via-muh-blue to-blue-600 text-white overflow-hidden rounded-b-[3rem] shadow-2xl">
                 <div class="absolute inset-0 pattern-islami opacity-20"></div>
                 <div class="absolute top-0 right-0 w-96 h-96 bg-muh-gold rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
@@ -132,7 +148,7 @@
             </div>
         </section>
 
-        <!-- KATEGORI -->
+        <!-- =================== VIEW: KATEGORI =================== -->
         <section id="view-kategori" class="view-section bg-slate-50 py-12">
             <div class="max-w-7xl mx-auto px-4">
                 <div class="mb-10"><h2 class="text-3xl font-bold mb-2">Pilih Kategori Penghargaan</h2><p class="text-slate-500">Pilih kategori yang sesuai untuk mendaftar.</p></div>
@@ -140,7 +156,7 @@
             </div>
         </section>
 
-        <!-- DETAIL KATEGORI -->
+        <!-- =================== VIEW: DETAIL KATEGORI =================== -->
         <section id="view-detail" class="view-section py-12">
             <div class="max-w-4xl mx-auto px-4">
                 <button onclick="app.navigate('kategori')" class="flex items-center gap-2 text-slate-500 font-semibold mb-8"><i class="ph-bold ph-arrow-left"></i> Kembali</button>
@@ -162,7 +178,7 @@
             </div>
         </section>
 
-        <!-- FORM PENDAFTARAN -->
+        <!-- =================== VIEW: FORM PENDAFTARAN =================== -->
         <section id="view-form" class="view-section py-12 bg-slate-50">
             <div class="max-w-3xl mx-auto px-4">
                 <h2 class="text-2xl font-bold mb-1">Formulir Pendaftaran</h2><p class="text-slate-500 mb-8" id="form-category-subtitle"></p>
@@ -185,7 +201,7 @@
             </div>
         </section>
 
-        <!-- REVIEW -->
+        <!-- =================== VIEW: REVIEW =================== -->
         <section id="view-review" class="view-section py-12 bg-slate-50">
             <div class="max-w-2xl mx-auto px-4 text-center">
                 <h2 class="text-2xl font-bold mb-8">Review Data Pendaftaran</h2>
@@ -203,8 +219,8 @@
             </div>
         </section>
 
-        <!-- BUKTI DAFTAR -->
-        <section id="view-bukti" class="view-section py-12 flex items-center">
+        <!-- =================== VIEW: BUKTI DAFTAR =================== -->
+        <section id="view-bukti" class="view-section py-12 flex items-center justify-center">
             <div class="max-w-md mx-auto px-4 w-full text-center">
                 <div class="bg-white rounded-3xl p-8 shadow-floating border-t-8 border-green-500">
                     <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph-bold ph-check text-3xl"></i></div>
@@ -215,14 +231,14 @@
                         <p id="bukti-reg" class="text-3xl font-mono font-bold text-muh-blue mb-4"></p>
                     </div>
                     <div class="flex flex-col gap-3 no-print">
-                        <button onclick="window.print()" class="w-full py-3 border border-muh-blue text-muh-blue font-bold rounded-xl">Cetak Bukti (PDF)</button>
-                        <button onclick="app.loginAsPeserta()" class="w-full py-3 bg-muh-blue text-white font-bold rounded-xl">Masuk Dasbor Peserta</button>
+                        <button onclick="window.print()" class="w-full py-3 border border-muh-blue text-muh-blue font-bold rounded-xl hover:bg-blue-50">Cetak Bukti (PDF)</button>
+                        <button onclick="app.loginAsPeserta()" class="w-full py-3 bg-muh-blue text-white font-bold rounded-xl hover:bg-muh-dark">Masuk Dasbor Peserta</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- DASHBOARD PESERTA -->
+        <!-- =================== VIEW: DASHBOARD PESERTA =================== -->
         <section id="view-dashboard" class="view-section py-12 bg-slate-50">
             <div class="max-w-5xl mx-auto px-4">
                 <div class="flex justify-between items-center mb-8">
@@ -247,7 +263,7 @@
             </div>
         </section>
 
-        <!-- PENGUMUMAN PUBLIK -->
+        <!-- =================== VIEW: PENGUMUMAN PUBLIK =================== -->
         <section id="view-pengumuman" class="view-section py-12">
             <div class="print-only">
                 <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" alt="Logo">
@@ -268,7 +284,7 @@
             </div>
         </section>
 
-        <!-- ADMIN PANEL UTAMA -->
+        <!-- =================== VIEW: ADMIN PANEL UTAMA =================== -->
         <section id="view-admin" class="view-section bg-slate-100 min-h-screen">
             <div class="flex h-[calc(100vh-80px)] overflow-hidden">
                 <!-- Admin Sidebar -->
@@ -304,7 +320,7 @@
                     <div id="admin-sec-rekap" class="admin-section hidden">
                         <div class="print-only"><h1 style="font-size: 24px; font-weight: bold;">Dasbor Rekap Peserta MEA 2026</h1></div>
                         <div class="flex justify-between items-center mb-6 no-print">
-                            <div><h2 class="text-2xl font-bold">Dasbor Rekap Peserta</h2><p class="text-sm text-slate-500">Tabel manajemen dan verifikasi seluruh peserta.</p></div>
+                            <div><h2 class="text-2xl font-bold">Dasbor Rekap Peserta</h2><p class="text-sm text-slate-500">Manajemen dan verifikasi seluruh peserta.</p></div>
                             <div class="flex gap-3">
                                 <select id="admin-filter-kategori" onchange="app.renderAdminRekap()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue"><option value="all">Semua Kategori Lomba</option></select>
                                 <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
@@ -320,7 +336,7 @@
                         </div>
                     </div>
 
-                    <!-- 3. ADMIN KONTEN (CMS: Beranda, Kategori, Pengumuman) -->
+                    <!-- 3. ADMIN KONTEN (CMS) -->
                     <div id="admin-sec-konten" class="admin-section hidden no-print">
                         <h2 class="text-2xl font-bold mb-6">Manajemen Konten (CMS)</h2>
                         
@@ -328,28 +344,28 @@
                             <div class="space-y-6">
                                 <!-- Edit Beranda -->
                                 <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                                    <h3 class="font-bold mb-4 border-b pb-2 text-muh-blue">1. Ubah Teks Beranda & Jadwal</h3>
+                                    <h3 class="font-bold mb-4 border-b pb-2 text-muh-blue">1. Ubah Konten Beranda</h3>
                                     <form onsubmit="app.updateBeranda(event)" class="space-y-4">
                                         <div><label class="text-sm font-bold text-slate-600 block mb-1">Paragraf Utama Beranda</label>
-                                        <textarea name="teks_beranda" id="edit-teks-beranda" rows="3" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></textarea></div>
+                                        <textarea name="teks_beranda" id="edit-teks-beranda" rows="3" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"></textarea></div>
                                         <div><label class="text-sm font-bold text-slate-600 block mb-1">Jadwal Pelaksanaan</label>
-                                        <input type="text" name="tanggal_pelaksanaan" id="edit-teks-jadwal" required class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></div>
-                                        <button type="submit" class="w-full bg-muh-blue text-white font-bold py-2 rounded hover:bg-muh-dark">Simpan Perubahan Beranda</button>
+                                        <input type="text" name="tanggal_pelaksanaan" id="edit-teks-jadwal" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"></div>
+                                        <button type="submit" class="w-full bg-muh-blue text-white font-bold py-3 rounded-lg hover:bg-muh-dark">Simpan Perubahan Beranda</button>
                                     </form>
                                 </div>
 
                                 <!-- Edit Kategori -->
-                                <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                                    <h3 class="font-bold mb-4 border-b pb-2 text-muh-blue">2. Ubah Detail Kategori Lomba</h3>
+                                <div class="bg-white p-6 rounded-2xl shadow-sm border" id="form-edit-kategori-section">
+                                    <h3 class="font-bold mb-4 border-b pb-2 text-muh-blue">2. Ubah Kategori Lomba</h3>
                                     <div class="mb-4">
                                         <label class="text-sm font-bold block mb-1">Pilih Kategori:</label>
-                                        <select id="edit-kat-select" onchange="app.loadEditKategori(this.value)" class="w-full p-2 border rounded bg-slate-50 outline-none focus:border-muh-blue"></select>
+                                        <select id="edit-kat-select" onchange="app.loadEditKategori(this.value)" class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"></select>
                                     </div>
                                     <form onsubmit="app.updateKategori(event)" id="form-edit-kategori" class="space-y-4 hidden">
                                         <input type="hidden" name="id" id="edit-kat-id">
                                         <div><label class="text-sm font-bold text-slate-600 block mb-1">Ubah Judul Kategori</label><input type="text" name="judul" id="edit-kat-judul" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"></div>
                                         <div><label class="text-sm font-bold text-slate-600 block mb-1">Ubah Deskripsi Singkat</label><textarea name="deskripsi" id="edit-kat-desc" rows="3" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"></textarea></div>
-                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Simpan Perubahan Kategori</button>
+                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Update Kategori</button>
                                     </form>
                                 </div>
                             </div>
@@ -369,7 +385,6 @@
                                         <button type="submit" class="w-full bg-muh-blue text-white font-bold py-3 rounded-lg hover:bg-muh-dark">Simpan Pengumuman</button>
                                     </form>
 
-                                    <!-- Tabel Daftar Pengumuman -->
                                     <h4 class="font-bold text-sm mb-2">Daftar Pengumuman Aktif</h4>
                                     <div class="border rounded-xl overflow-hidden max-h-48 overflow-y-auto">
                                         <table class="w-full text-left text-xs"><tbody id="admin-list-pengumuman" class="divide-y bg-slate-50"></tbody></table>
@@ -396,7 +411,7 @@
         </section>
     </main>
 
-    <!-- MODAL LOGIN (DIJAMIN 1 KOLOM USERNAME, 1 KOLOM PASSWORD) -->
+    <!-- MODAL LOGIN (1 USERNAME, 1 PASSWORD, BISA ENTER) -->
     <div id="login-modal" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center px-4 opacity-0 transition-opacity duration-300 no-print">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300" id="login-modal-content">
             <div class="flex justify-between items-center mb-6">
@@ -406,12 +421,14 @@
             <div class="space-y-4 mb-6">
                 <div>
                     <label class="block text-sm font-semibold mb-1">ID Reg / Username</label>
-                    <input type="text" id="login-id" class="w-full px-4 py-3 rounded-xl border outline-none focus:border-muh-blue bg-slate-50" placeholder="ID Reg atau Username">
+                    <input type="text" id="login-id" onkeydown="if(event.key === 'Enter') app.processLogin()" class="w-full px-4 py-3 rounded-xl border outline-none focus:border-muh-blue bg-slate-50" placeholder="ID Reg atau Username">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold mb-1">Password</label>
                     <div class="relative">
-                        <input type="password" id="login-password" class="w-full px-4 py-3 rounded-xl border outline-none focus:border-muh-blue bg-slate-50 pr-12" placeholder="Kosongkan jika peserta">
+                        <!-- Fitur Enter pada input password -->
+                        <input type="password" id="login-password" onkeydown="if(event.key === 'Enter') app.processLogin()" class="w-full px-4 py-3 rounded-xl border outline-none focus:border-muh-blue bg-slate-50 pr-12" placeholder="Kosongkan jika peserta">
+                        <!-- Fitur Lihat Password -->
                         <button type="button" onclick="app.togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-slate-600"><i id="login-pwd-icon" class="ph-bold ph-eye text-xl"></i></button>
                     </div>
                 </div>
@@ -420,9 +437,9 @@
         </div>
     </div>
 
-    <!-- APP LOGIC & LOCAL DATABASE (LENGKAP SEMUA KATEGORI & CMS) -->
+    <!-- APP LOGIC & LOCAL DATABASE -->
     <script>
-        const DB_KEY = 'MEA_2026_DATABASE_V2';
+        const DB_KEY = 'MEA_2026_DATABASE_V3';
         const defaultData = {
             pengaturan: { pendaftaran_buka: true, teks_beranda: 'Membangun Generasi Emas Berkemajuan. Ajang kompetisi dan penghargaan bergengsi untuk siswa, guru, karyawan, dan sekolah se-Kabupaten Wonosobo.', tanggal_pelaksanaan: '7-8 November 2026' },
             kategori: [
@@ -449,10 +466,12 @@
             state: { view: 'home', category: null, formDraft: null, user: null },
 
             init: function() {
-                document.getElementById('teks-beranda').textContent = db.data.pengaturan.teks_beranda;
-                document.getElementById('teks-jadwal').textContent = db.data.pengaturan.tanggal_pelaksanaan;
-                document.getElementById('global-loader').classList.add('hidden');
-                this.initCountdown(); this.navigate('home');
+                setTimeout(() => {
+                    document.getElementById('teks-beranda').textContent = db.data.pengaturan.teks_beranda;
+                    document.getElementById('teks-jadwal').textContent = db.data.pengaturan.tanggal_pelaksanaan;
+                    document.getElementById('global-loader').classList.add('hidden');
+                    this.initCountdown(); this.navigate('home');
+                }, 400);
             },
             showToast: function(msg, type='info') {
                 const c = document.getElementById('toast-container'), t = document.createElement('div');
@@ -469,6 +488,7 @@
                 this.runViewLogic(viewId);
             },
             runViewLogic: function(v) {
+                this.updateNavState(); // Sync edit buttons
                 if(v === 'kategori') this.renderCategories(); else if(v === 'detail') this.renderDetail(); else if(v === 'form') this.renderForm();
                 else if(v === 'review') this.renderReview(); else if(v === 'dashboard') this.renderDashboard();
                 else if(v === 'pengumuman') this.renderPengumumanView(); else if(v === 'admin') this.switchAdminTab('dashboard');
@@ -476,8 +496,10 @@
 
             // PUBLIK UI
             renderCategories: function() {
+                const isAdmin = this.state.user && this.state.user.role === 'admin';
                 document.getElementById('kategori-grid').innerHTML = db.data.kategori.map(c => `
-                    <div onclick="app.navigate('detail', '${c.id}')" class="bg-white rounded-3xl p-6 shadow-soft border cursor-pointer hover:-translate-y-1 transition-all">
+                    <div onclick="app.navigate('detail', '${c.id}')" class="bg-white rounded-3xl p-6 shadow-soft border cursor-pointer hover:-translate-y-1 transition-all relative">
+                        ${isAdmin ? `<button onclick="app.editKategoriInline(event, '${c.id}')" class="absolute top-4 right-4 text-xs bg-yellow-400 text-yellow-900 px-3 py-1 rounded-lg font-bold shadow hover:bg-yellow-500">Edit Kategori</button>` : ''}
                         <div class="w-12 h-12 bg-blue-50 text-muh-blue rounded-xl flex items-center justify-center text-2xl mb-4"><i class="${c.ikon}"></i></div>
                         <h3 class="font-bold text-lg mb-2">${c.judul}</h3><p class="text-sm text-slate-500 line-clamp-2">${c.deskripsi}</p>
                     </div>`).join('');
@@ -556,7 +578,18 @@
                 tbody.innerHTML = data.map(p => `<tr><td class="p-4 pl-6 font-bold text-muh-blue">Juara ${p.peringkat}</td><td class="p-4 font-bold">${p.nama_pemenang}</td><td class="p-4">${p.asal_instansi}</td><td class="p-4 text-xs font-bold bg-slate-50">${db.data.kategori.find(k=>k.id===p.kategori_id)?.judul||'-'}</td><td class="p-4 pr-6 font-bold">${p.skor}</td></tr>`).join('');
             },
 
-            // ADMIN LOGIC
+            // ADMIN LOGIC (SMART INLINE EDITING)
+            editBerandaInline: function() {
+                this.navigate('admin'); this.switchAdminTab('konten');
+                setTimeout(() => document.getElementById('edit-teks-beranda').focus(), 300);
+            },
+            editKategoriInline: function(e, id) {
+                e.stopPropagation(); // Mencegah klik menembus ke view detail
+                this.navigate('admin'); this.switchAdminTab('konten');
+                document.getElementById('edit-kat-select').value = id;
+                this.loadEditKategori(id);
+                setTimeout(() => document.getElementById('edit-kat-judul').focus(), 300);
+            },
             switchAdminTab: function(tab) {
                 if(!this.state.user || !['admin','operator'].includes(this.state.user.role)) return this.navigate('home');
                 document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
@@ -632,7 +665,7 @@
                 db.data.pengaturan.tanggal_pelaksanaan = d.tanggal_pelaksanaan; 
                 db.save();
                 
-                // Langsung ubah di UI
+                // Langsung ubah di UI public
                 document.getElementById('teks-beranda').textContent = d.teks_beranda; 
                 document.getElementById('teks-jadwal').textContent = `Pelaksanaan: ${d.tanggal_pelaksanaan}`;
                 this.showToast('Beranda berhasil diperbarui!', 'success');
@@ -656,7 +689,6 @@
                     db.save(); 
                     
                     this.showToast('Kategori berhasil diperbarui!', 'success');
-                    this.renderCategories(); // Otomatis perbarui UI grid kategori
                     e.target.reset();
                     document.getElementById('form-edit-kategori').classList.add('hidden');
                     document.getElementById('edit-kat-select').value = '';
@@ -683,7 +715,7 @@
             },
 
             // LOGIN
-            showLoginModal: function() { const m = document.getElementById('login-modal'); m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10); },
+            showLoginModal: function() { const m = document.getElementById('login-modal'); m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10); document.getElementById('login-id').focus(); },
             hideLoginModal: function() { const m = document.getElementById('login-modal'); m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300); },
             togglePassword: function() { const inp = document.getElementById('login-password'); const ico = document.getElementById('login-pwd-icon'); if(inp.type === 'password') { inp.type = 'text'; ico.className = 'ph-bold ph-eye-slash text-xl'; } else { inp.type = 'password'; ico.className = 'ph-bold ph-eye text-xl'; } },
             processLogin: function() {
@@ -703,12 +735,27 @@
             logout: function() { this.state.user = null; this.updateNavState(); this.navigate('home'); this.showToast('Berhasil keluar.', 'success'); },
             updateNavState: function() {
                 const authBtns = document.getElementById('auth-buttons'), userMenu = document.getElementById('user-menu'), mobAuthBtns = document.getElementById('mobile-auth-buttons'), mobUserMenu = document.getElementById('mobile-user-menu'), navDashBtn = document.getElementById('nav-dash-btn'), mobDashBtn = document.getElementById('mob-dash-btn'), navUserIcon = document.getElementById('nav-user-icon');
+                
+                // Toggle Admin UI (Tombol Edit Beranda)
+                const homeEditBtn = document.getElementById('admin-home-edit-btn');
+                
                 if(this.state.user) {
                     authBtns.classList.add('hidden'); userMenu.classList.remove('hidden'); userMenu.classList.add('flex');
                     mobAuthBtns.classList.add('hidden'); mobUserMenu.classList.remove('hidden'); mobUserMenu.classList.add('flex');
-                    if (['admin', 'operator'].includes(this.state.user.role)) { navDashBtn.setAttribute('onclick', "app.navigate('admin')"); document.getElementById('nav-username').textContent = 'Panel Admin'; navUserIcon.className = 'ph-fill ph-shield-check text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('admin'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Panel Admin'; } 
-                    else { navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dashboard Saya'; }
-                } else { authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); userMenu.classList.remove('flex'); mobAuthBtns.classList.remove('hidden'); mobUserMenu.classList.add('hidden'); mobUserMenu.classList.remove('flex'); }
+                    if (['admin', 'operator'].includes(this.state.user.role)) { 
+                        navDashBtn.setAttribute('onclick', "app.navigate('admin')"); document.getElementById('nav-username').textContent = 'Panel Admin'; navUserIcon.className = 'ph-fill ph-shield-check text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('admin'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Panel Admin'; 
+                        if(homeEditBtn) homeEditBtn.classList.remove('hidden');
+                    } else { 
+                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dashboard Saya'; 
+                        if(homeEditBtn) homeEditBtn.classList.add('hidden');
+                    }
+                } else { 
+                    authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); userMenu.classList.remove('flex'); mobAuthBtns.classList.remove('hidden'); mobUserMenu.classList.add('hidden'); mobUserMenu.classList.remove('flex'); 
+                    if(homeEditBtn) homeEditBtn.classList.add('hidden');
+                }
+                
+                // Refresh views immediately if they are active to show/hide admin buttons
+                if(this.state.view === 'kategori') this.renderCategories();
             },
             toggleMobileMenu: function() { const menu = document.getElementById('mobile-menu'); if(menu.classList.contains('hidden')) { menu.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } else { menu.classList.add('hidden'); document.body.style.overflow = ''; } },
             initCountdown: function() {
