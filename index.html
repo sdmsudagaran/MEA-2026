@@ -287,6 +287,7 @@
                         <button onclick="app.switchAdminTab('dashboard')" id="btn-tab-dashboard" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Dashboard</button>
                         <button onclick="app.switchAdminTab('peserta')" id="btn-tab-peserta" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Data Peserta</button>
                         <button onclick="app.switchAdminTab('akses')" id="btn-tab-akses" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Akses</button>
+                        <button id="btn-tab-konten" onclick="app.switchAdminTab('konten')" class="admin-tab-btn w-full flex items-center gap-3 text-blue-200 hover:bg-blue-900/50 hover:text-white px-4 py-3 rounded-xl font-medium transition-colors"><i class="ph-fill ph-browser text-xl"></i> Kelola Konten</button>
                     </div>
                 </div>
                 <div class="flex-1 overflow-y-auto p-4 md:p-8">
@@ -334,11 +335,48 @@
                             <div class="flex-1"><label class="block text-sm font-bold mb-2">Password</label><input type="text" name="password" required class="w-full p-2 border rounded"></div>
                             <div class="flex-1"><label class="block text-sm font-bold mb-2">Role</label><select name="role" class="w-full p-2 border rounded"><option value="admin">Admin</option><option value="operator">Operator</option></select></div>
                             <button type="submit" class="bg-muh-blue text-white font-bold p-2.5 rounded">Tambah</button>
+                            <button id="btn-tab-konten" onclick="app.switchAdminTab('konten')" class="admin-tab-btn w-full flex items-center gap-3 text-blue-200 hover:bg-blue-900/50 hover:text-white px-4 py-3 rounded-xl font-medium transition-colors"><i class="ph-fill ph-browser text-xl"></i> Kelola Konten</button>
                         </form>
                         <table class="w-full text-left bg-white rounded-2xl shadow-sm overflow-hidden text-sm"><thead class="bg-slate-50 border-b"><tr><th class="p-4">Username</th><th class="p-4">Role</th></tr></thead><tbody id="admin-users-body" class="divide-y"></tbody></table>
                     </div>
                 </div>
             </div>
+            <!-- TAB KELOLA KONTEN -->
+<div id="admin-sec-konten" class="admin-section hidden no-print">
+    <h2 class="text-2xl font-bold mb-6">Manajemen Konten Aplikasi</h2>
+    
+    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6">
+        <p class="text-sm text-yellow-800 font-bold"><i class="ph-bold ph-warning"></i> Mode Prototype</p>
+        <p class="text-xs text-yellow-700">Perubahan konten saat ini bersifat sementara di memori browser. Jika di-refresh akan hilang. Segera integrasikan Supabase untuk data permanen.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <!-- Kelola Pengumuman -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border">
+            <h3 class="font-bold mb-4 border-b pb-2">Tambah Pengumuman Pemenang</h3>
+            <form onsubmit="app.addPengumuman(event)" class="space-y-4">
+                <div><label class="text-xs font-bold">Nama Peserta</label><input type="text" name="nama" required class="w-full p-2 border rounded bg-slate-50"></div>
+                <div><label class="text-xs font-bold">Asal Instansi</label><input type="text" name="instansi" required class="w-full p-2 border rounded bg-slate-50"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-xs font-bold">Kategori Lomba</label>
+                        <select id="admin-select-kat" name="katId" required class="w-full p-2 border rounded bg-slate-50"></select>
+                    </div>
+                    <div><label class="text-xs font-bold">Peringkat (1/2/3)</label><input type="number" name="rank" min="1" max="3" required class="w-full p-2 border rounded bg-slate-50"></div>
+                </div>
+                <div><label class="text-xs font-bold">Skor Akhir</label><input type="number" step="0.1" name="skor" required class="w-full p-2 border rounded bg-slate-50"></div>
+                <button type="submit" class="w-full bg-muh-blue text-white font-bold py-2 rounded">Terbitkan Pengumuman</button>
+            </form>
+        </div>
+
+        <!-- Kelola Kategori (Status Singkat) -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border flex flex-col">
+            <h3 class="font-bold mb-4 border-b pb-2">Daftar Kategori Aktif</h3>
+            <div id="admin-list-kategori" class="flex-1 overflow-y-auto space-y-2 max-h-64"></div>
+            <button onclick="app.showToast('Fitur edit kategori dinamis wajib menggunakan Supabase Database', 'error')" class="mt-4 w-full border border-muh-blue text-muh-blue font-bold py-2 rounded hover:bg-blue-50">Edit Detail Kategori (Terkunci)</button>
+        </div>
+    </div>
+</div>
         </section>
     </main>
 
@@ -487,6 +525,7 @@
             },
 
             // --- ADMIN LOGIC ---
+            // 1. TIMPA FUNGSI INI
             switchAdminTab: function(tab) {
                 document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
                 document.getElementById(`admin-sec-${tab}`).classList.remove('hidden');
@@ -495,30 +534,44 @@
                 if(tab === 'dashboard') this.renderAdminDashboard();
                 if(tab === 'peserta') { this.populateFilter('admin-filter-kategori'); this.renderAdminPeserta(); }
                 if(tab === 'akses') this.renderAdminAkses();
+                if(tab === 'konten') this.renderAdminKonten();
             },
-            renderAdminDashboard: function() {
-                document.getElementById('stat-total').textContent = MOCK_DATA.db.peserta.length;
-                document.getElementById('stat-sekolah').textContent = new Set(MOCK_DATA.db.peserta.map(p => p.instansi)).size;
-                let html = ''; MOCK_DATA.categories.forEach(c => {
-                    let count = MOCK_DATA.db.peserta.filter(p => p.kategoriId === c.id).length;
-                    html += `<div class="p-3 bg-slate-50 border rounded-xl flex justify-between"><span class="text-sm font-bold">${c.title}</span><span class="font-bold text-muh-blue">${count}</span></div>`;
-                }); document.getElementById('stat-per-cabang').innerHTML = html;
+
+            renderAdminKonten: function() {
+                const selKat = document.getElementById('admin-select-kat');
+                if (selKat && selKat.options.length === 0) {
+                    selKat.innerHTML = `<option value="">Pilih Kategori...</option>` + 
+                        MOCK_DATA.categories.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+                }
+                const listKat = document.getElementById('admin-list-kategori');
+                if(listKat) {
+                    listKat.innerHTML = MOCK_DATA.categories.map(c => `
+                        <div class="flex justify-between items-center p-2 bg-slate-50 border rounded text-sm">
+                            <span class="font-bold text-slate-700"><i class="${c.icon} text-muh-blue mr-2"></i>${c.title}</span>
+                            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Aktif</span>
+                        </div>
+                    `).join('');
+                }
             },
-            toggleFormStatus: function(el) { this.state.isFormOpen = el.checked; this.showToast(el.checked ? 'Form Dibuka' : 'Form Ditutup', 'info'); },
-            renderAdminPeserta: function() {
-                const sel = document.getElementById('admin-filter-kategori').value;
-                const data = sel === 'all' ? MOCK_DATA.db.peserta : MOCK_DATA.db.peserta.filter(x => x.kategoriId === sel);
-                const tbody = document.getElementById('admin-table-body');
-                if(!data.length) return tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Data Kosong</td></tr>`;
-                tbody.innerHTML = data.map(p => `<tr><td class="p-4 font-mono">${p.id}</td><td class="p-4 font-bold">${p.nama}</td><td class="p-4">${MOCK_DATA.categories.find(c=>c.id===p.kategoriId).title}</td><td class="p-4">${p.instansi}</td></tr>`).join('');
-            },
-            renderAdminAkses: function() {
-                document.getElementById('admin-users-body').innerHTML = MOCK_DATA.db.users.map(u => `<tr><td class="p-4 font-bold">${u.username}</td><td class="p-4 font-bold uppercase text-xs">${u.role}</td></tr>`).join('');
-            },
-            addAdminUser: function(e) {
-                e.preventDefault(); const data = Object.fromEntries(new FormData(e.target).entries());
-                if(MOCK_DATA.db.users.find(u => u.username === data.username)) return this.showToast('Username terpakai', 'error');
-                MOCK_DATA.db.users.push(data); e.target.reset(); this.renderAdminAkses(); this.showToast('Akun ditambah', 'success');
+
+            addPengumuman: function(e) {
+                e.preventDefault();
+                const data = Object.fromEntries(new FormData(e.target).entries());
+                const kategoriInfo = MOCK_DATA.categories.find(c => c.id === data.katId);
+                
+                MOCK_DATA.pengumuman.push({
+                    rank: parseInt(data.rank),
+                    nama: data.nama,
+                    instansi: data.instansi,
+                    katId: data.katId,
+                    kat: kategoriInfo ? kategoriInfo.title : 'Kategori',
+                    skor: parseFloat(data.skor)
+                });
+                
+                MOCK_DATA.pengumuman.sort((a, b) => a.katId.localeCompare(b.katId) || a.rank - b.rank);
+                e.target.reset();
+                this.showToast('Pengumuman ditambahkan!', 'success');
+                this.renderPengumuman(); 
             },
 
             // --- AUTH ---
