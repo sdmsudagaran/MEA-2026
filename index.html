@@ -220,19 +220,21 @@
         </section>
 
         <!-- =================== VIEW: BUKTI DAFTAR =================== -->
-        <section id="view-bukti" class="view-section py-12 flex items-center justify-center">
-            <div class="max-w-md mx-auto px-4 w-full text-center">
-                <div class="bg-white rounded-3xl p-8 shadow-floating border-t-8 border-green-500">
-                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph-bold ph-check text-3xl"></i></div>
-                    <h2 class="text-2xl font-bold mb-2">Pendaftaran Berhasil!</h2>
-                    <p class="text-sm text-slate-500 mb-6">Data tersimpan di sistem.</p>
-                    <div class="bg-slate-50 p-4 rounded-2xl border mb-6">
-                        <p class="text-xs text-slate-500 uppercase mb-1">Nomor Registrasi Anda</p>
-                        <p id="bukti-reg" class="text-3xl font-mono font-bold text-muh-blue mb-4"></p>
-                    </div>
-                    <div class="flex flex-col gap-3 no-print">
-                        <button onclick="window.print()" class="w-full py-3 border border-muh-blue text-muh-blue font-bold rounded-xl hover:bg-blue-50">Cetak Bukti (PDF)</button>
-                        <button onclick="app.loginAsPeserta()" class="w-full py-3 bg-muh-blue text-white font-bold rounded-xl hover:bg-muh-dark">Masuk Dasbor Peserta</button>
+        <section id="view-bukti" class="view-section py-12">
+            <div class="flex items-center justify-center min-h-[60vh]">
+                <div class="max-w-md mx-auto px-4 w-full text-center">
+                    <div class="bg-white rounded-3xl p-8 shadow-floating border-t-8 border-green-500">
+                        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph-bold ph-check text-3xl"></i></div>
+                        <h2 class="text-2xl font-bold mb-2">Pendaftaran Berhasil!</h2>
+                        <p class="text-sm text-slate-500 mb-6">Data tersimpan di sistem.</p>
+                        <div class="bg-slate-50 p-4 rounded-2xl border mb-6">
+                            <p class="text-xs text-slate-500 uppercase mb-1">Nomor Registrasi Anda</p>
+                            <p id="bukti-reg" class="text-3xl font-mono font-bold text-muh-blue mb-4"></p>
+                        </div>
+                        <div class="flex flex-col gap-3 no-print">
+                            <button onclick="window.print()" class="w-full py-3 border border-muh-blue text-muh-blue font-bold rounded-xl hover:bg-blue-50">Cetak Bukti (PDF)</button>
+                            <button onclick="app.loginAsPeserta()" class="w-full py-3 bg-muh-blue text-white font-bold rounded-xl hover:bg-muh-dark">Masuk Dasbor Peserta</button>
+                        </div>
                     </div>
                 </div>
             </div>
