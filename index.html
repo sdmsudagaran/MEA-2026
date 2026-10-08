@@ -15,20 +15,9 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                    },
-                    colors: {
-                        muh: { blue: '#005B9F', dark: '#003B6F', gold: '#D4AF37', light: '#F0F7FA', accent: '#F59E0B' }
-                    },
-                    boxShadow: {
-                        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
-                        'floating': '0 20px 40px -10px rgba(0,91,159,0.15)',
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out forwards',
-                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                    }
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: { muh: { blue: '#005B9F', dark: '#003B6F', gold: '#D4AF37', light: '#F0F7FA', accent: '#F59E0B' } },
+                    boxShadow: { 'soft': '0 10px 40px -10px rgba(0,0,0,0.08)', 'floating': '0 20px 40px -10px rgba(0,91,159,0.15)' }
                 }
             }
         }
@@ -37,78 +26,74 @@
     <style>
         body { background-color: #F8FAFC; -webkit-tap-highlight-color: transparent; }
         .pattern-islami { background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #f1f1f1; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .glass-nav { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.3); }
-        .view-section { display: none; min-height: calc(100vh - 80px); }
-        .view-section.active { display: block; }
-        
+        .view-section { display: none; min-height: calc(100vh - 80px); } .view-section.active { display: block; }
         .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; transform: translateX(120%); transition: transform 0.3s; display: flex; align-items: center; gap: 12px; }
         .toast.show { transform: translateX(0); }
+        
+        /* Spinner */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #005B9F; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .print-only { display: none; }
         @media print {
             @page { size: 215mm 330mm; margin: 20mm; }
             body { background-color: white; color: black; }
-            nav, #mobile-menu, button, .no-print, .toast-container, .admin-sidebar { display: none !important; }
+            nav, #mobile-menu, button, .no-print, .toast-container, .admin-sidebar, #global-loader { display: none !important; }
             .print-only { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px; }
             .print-only img { height: 70px; margin: 0 auto 10px auto; }
-            .view-section { display: none !important; }
-            .view-section.active { display: block !important; padding: 0 !important; margin: 0 !important; }
+            .view-section { display: none !important; } .view-section.active { display: block !important; padding: 0 !important; margin: 0 !important; }
             .shadow-soft, .shadow-floating, .shadow-sm { box-shadow: none !important; border: 1px solid #e2e8f0; }
-            main { padding-top: 0 !important; }
-            table { border-collapse: collapse; width: 100%; }
-            th, td { border: 1px solid #cbd5e1 !important; padding: 8px !important; }
+            main { padding-top: 0 !important; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #cbd5e1 !important; padding: 8px !important; }
             .bg-slate-50, .bg-slate-100 { background-color: transparent !important; }
-            #view-admin .flex.h-\\[calc\\(100vh-80px\\)\\] { display: block; height: auto; }
-            #view-admin .flex-1 { overflow: visible; padding: 0 !important; }
+            #view-admin .flex.h-\\[calc\\(100vh-80px\\)\\] { display: block; height: auto; } #view-admin .flex-1 { overflow: visible; padding: 0 !important; }
         }
     </style>
 </head>
 <body class="text-slate-800 antialiased selection:bg-muh-blue selection:text-white">
 
+    <!-- GLOBAL LOADER -->
+    <div id="global-loader" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[999] flex flex-col items-center justify-center transition-opacity duration-300">
+        <div class="loader mb-4"></div>
+        <p class="text-sm font-bold text-muh-blue animate-pulse">Menghubungkan ke Database...</p>
+    </div>
+
+    <!-- NAVBAR -->
     <nav id="main-nav" class="fixed top-0 w-full z-50 glass-nav transition-all duration-300 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <div class="flex items-center gap-3 cursor-pointer" onclick="app.navigate('home')">
                     <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" alt="MEA Logo" class="h-10 object-contain drop-shadow-sm">
                     <div class="hidden sm:block">
-                        <div class="font-bold text-lg leading-tight text-muh-dark tracking-tight">MEA 2026</div>
-                        <div class="text-[10px] font-semibold text-slate-500 tracking-wider uppercase">Kab. Wonosobo</div>
+                        <div class="font-bold text-lg leading-tight text-muh-dark">MEA 2026</div>
+                        <div class="text-[10px] font-semibold text-slate-500 uppercase">Kab. Wonosobo</div>
                     </div>
                 </div>
 
                 <div class="hidden md:flex items-center space-x-8">
-                    <button onclick="app.navigate('home')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm transition-colors nav-link" data-target="home">Beranda</button>
-                    <button onclick="app.navigate('kategori')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm transition-colors nav-link" data-target="kategori">Kategori</button>
-                    <button onclick="app.navigate('pengumuman')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm transition-colors nav-link" data-target="pengumuman">Pengumuman</button>
-                    
+                    <button onclick="app.navigate('home')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="home">Beranda</button>
+                    <button onclick="app.navigate('kategori')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="kategori">Kategori</button>
+                    <button onclick="app.navigate('pengumuman')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="pengumuman">Pengumuman</button>
                     <div class="h-6 w-px bg-slate-300"></div>
-                    
                     <div id="auth-buttons" class="flex gap-3">
-                        <button onclick="app.showLoginModal()" class="text-muh-blue font-bold text-sm px-4 py-2 rounded-xl hover:bg-blue-50 transition-colors">Masuk</button>
-                        <button onclick="app.navigate('kategori')" class="bg-muh-blue text-white font-bold text-sm px-6 py-2.5 rounded-xl shadow-lg hover:bg-muh-dark transition-all">Daftar Sekarang</button>
+                        <button onclick="app.showLoginModal()" class="text-muh-blue font-bold text-sm px-4 py-2 rounded-xl hover:bg-blue-50">Masuk</button>
+                        <button onclick="app.navigate('kategori')" class="bg-muh-blue text-white font-bold text-sm px-6 py-2.5 rounded-xl shadow-lg hover:bg-muh-dark">Daftar Sekarang</button>
                     </div>
-                    
                     <div id="user-menu" class="hidden items-center gap-3">
-                        <button id="nav-dash-btn" onclick="app.navigate('dashboard')" class="flex items-center gap-2 bg-muh-light text-muh-blue px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-100 transition-colors">
+                        <button id="nav-dash-btn" onclick="app.navigate('dashboard')" class="flex items-center gap-2 bg-muh-light text-muh-blue px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-100">
                             <i id="nav-user-icon" class="ph-fill ph-user-circle text-xl"></i> <span id="nav-username">Peserta</span>
                         </button>
-                        <button onclick="app.logout()" class="text-red-500 p-2 rounded-xl hover:bg-red-50 transition-colors" title="Keluar"><i class="ph ph-sign-out text-xl"></i></button>
+                        <button onclick="app.logout()" class="text-red-500 p-2 rounded-xl hover:bg-red-50"><i class="ph ph-sign-out text-xl"></i></button>
                     </div>
                 </div>
-
-                <div class="md:hidden flex items-center">
-                    <button onclick="app.toggleMobileMenu()" class="text-slate-600 p-2"><i class="ph ph-list text-2xl"></i></button>
-                </div>
+                <div class="md:hidden flex items-center"><button onclick="app.toggleMobileMenu()" class="text-slate-600 p-2"><i class="ph ph-list text-2xl"></i></button></div>
             </div>
         </div>
     </nav>
 
+    <!-- MOBILE MENU -->
     <div id="mobile-menu" class="fixed inset-0 bg-white z-40 hidden pt-24 px-6 no-print">
         <div class="flex flex-col space-y-6">
             <button onclick="app.navigate('home'); app.toggleMobileMenu()" class="text-left text-xl font-bold border-b pb-4">Beranda</button>
@@ -125,66 +110,59 @@
         </div>
     </div>
 
+    <!-- MAIN CONTENT -->
     <main class="pt-20">
-        <!-- VIEW: BERANDA -->
+        <!-- BERANDA -->
         <section id="view-home" class="view-section active">
             <div class="relative bg-gradient-to-br from-muh-dark via-muh-blue to-blue-600 text-white overflow-hidden rounded-b-[3rem] shadow-2xl">
                 <div class="absolute inset-0 pattern-islami opacity-20"></div>
+                <div class="absolute top-0 right-0 w-96 h-96 bg-muh-gold rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
                 <div class="relative max-w-7xl mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center">
                     <div class="flex items-center gap-4 md:gap-8 mb-10 bg-white/10 p-4 rounded-3xl backdrop-blur-sm border border-white/20">
-                        <img src="https://i.ibb.co.com/nN1sdbjK/LOGO-dikdasemen-Muhammadiyah-1-removebg-preview.png" alt="Dikdasmen" class="h-12 md:h-16 object-contain">
+                        <img src="https://i.ibb.co.com/nN1sdbjK/LOGO-dikdasemen-Muhammadiyah-1-removebg-preview.png" class="h-12 md:h-16 object-contain">
                         <div class="w-px h-10 bg-white/30"></div>
-                        <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" alt="MEA" class="h-16 md:h-24 scale-110 object-contain">
+                        <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" class="h-16 md:h-24 scale-110 object-contain">
                         <div class="w-px h-10 bg-white/30"></div>
-                        <img src="https://i.ibb.co.com/s929z6nm/FGM.png" alt="FGM" class="h-12 md:h-16 object-contain">
+                        <img src="https://i.ibb.co.com/s929z6nm/FGM.png" class="h-12 md:h-16 object-contain">
                     </div>
-                    
-                    <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6">
-                        Muhammadiyah <br/>
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-muh-gold to-yellow-200">Education Award</span> 2026
-                    </h1>
-                    <p class="text-lg md:text-xl text-blue-100 max-w-3xl mb-12 font-medium">Membangun Generasi Emas Berkemajuan. Ajang kompetisi dan penghargaan bergengsi untuk siswa, guru, karyawan, dan sekolah se-Kabupaten Wonosobo.</p>
-
+                    <h1 class="text-4xl md:text-6xl font-extrabold mb-6">Muhammadiyah <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-muh-gold to-yellow-200">Education Award</span> 2026</h1>
+                    <p id="teks-beranda" class="text-lg md:text-xl text-blue-100 max-w-3xl mb-12 font-medium">Memuat informasi...</p>
                     <button onclick="app.navigate('kategori')" class="bg-white text-muh-dark font-extrabold text-lg px-8 py-4 rounded-2xl hover:scale-105 transition-all flex items-center gap-2">
                         Mulai Pendaftaran <i class="ph-bold ph-arrow-right"></i>
                     </button>
                 </div>
             </div>
-
             <div class="max-w-7xl mx-auto px-4 py-20">
-                <div class="text-center mb-16">
-                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Informasi Kegiatan</h2>
-                    <div class="w-24 h-1.5 bg-muh-gold mx-auto rounded-full"></div>
-                </div>
+                <div class="text-center mb-16"><h2 class="text-3xl font-bold mb-4">Informasi Kegiatan</h2><div class="w-24 h-1.5 bg-muh-gold mx-auto rounded-full"></div></div>
                 <div class="grid md:grid-cols-3 gap-8">
-                    <div class="bg-white rounded-3xl p-8 shadow-soft border border-slate-100"><h3 class="text-xl font-bold mb-3">Tujuan Utama</h3><p class="text-slate-600">Meningkatkan mutu pendidikan, menjaring potensi, dan memberikan apresiasi.</p></div>
-                    <div class="bg-white rounded-3xl p-8 shadow-soft border border-slate-100"><h3 class="text-xl font-bold mb-3">Jadwal</h3><p class="text-slate-600">Pendaftaran: 5-24 Okt 2026<br>Pelaksanaan: 7-8 Nov 2026</p></div>
-                    <div class="bg-white rounded-3xl p-8 shadow-soft border border-slate-100"><h3 class="text-xl font-bold mb-3">Penghargaan</h3><p class="text-slate-600">Piala, sertifikat penghargaan, dan uang pembinaan.</p></div>
+                    <div class="bg-white rounded-3xl p-8 shadow-soft border"><h3 class="text-xl font-bold mb-3">Tujuan Utama</h3><p class="text-slate-600">Meningkatkan mutu pendidikan, menjaring potensi, dan memberikan apresiasi.</p></div>
+                    <div class="bg-white rounded-3xl p-8 shadow-soft border"><h3 class="text-xl font-bold mb-3">Jadwal</h3><p id="teks-jadwal" class="text-slate-600">Memuat...</p></div>
+                    <div class="bg-white rounded-3xl p-8 shadow-soft border"><h3 class="text-xl font-bold mb-3">Penghargaan</h3><p class="text-slate-600">Piala, sertifikat penghargaan, dan uang pembinaan.</p></div>
                 </div>
             </div>
         </section>
 
-        <!-- VIEW: KATEGORI -->
+        <!-- KATEGORI -->
         <section id="view-kategori" class="view-section bg-slate-50 py-12">
             <div class="max-w-7xl mx-auto px-4">
-                <div class="mb-10"><h2 class="text-3xl font-bold text-slate-800 mb-2">Pilih Kategori Penghargaan</h2></div>
+                <div class="mb-10"><h2 class="text-3xl font-bold mb-2">Pilih Kategori Penghargaan</h2><p class="text-slate-500">Pilih kategori yang sesuai untuk mendaftar.</p></div>
                 <div id="kategori-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </section>
 
-        <!-- VIEW: DETAIL -->
+        <!-- DETAIL KATEGORI -->
         <section id="view-detail" class="view-section py-12">
             <div class="max-w-4xl mx-auto px-4">
                 <button onclick="app.navigate('kategori')" class="flex items-center gap-2 text-slate-500 font-semibold mb-8"><i class="ph-bold ph-arrow-left"></i> Kembali</button>
-                <div class="bg-white rounded-3xl p-6 md:p-10 shadow-floating border border-slate-100 relative overflow-hidden">
+                <div class="bg-white rounded-3xl p-6 md:p-10 shadow-floating border relative overflow-hidden">
                     <div class="flex items-start gap-4 mb-6">
                         <div id="detail-icon" class="w-16 h-16 bg-muh-light text-muh-blue rounded-2xl flex items-center justify-center text-3xl"></div>
-                        <div><span id="detail-group" class="text-xs font-bold uppercase text-muh-accent block"></span><h1 id="detail-title" class="text-3xl md:text-4xl font-bold"></h1></div>
+                        <div><span id="detail-group" class="text-xs font-bold uppercase text-muh-accent block"></span><h1 id="detail-title" class="text-3xl font-bold"></h1></div>
                     </div>
                     <p id="detail-desc" class="text-lg text-slate-600 mb-8 pb-8 border-b"></p>
                     <div class="grid md:grid-cols-2 gap-8 mb-10">
-                        <div><h3 class="font-bold mb-4"><i class="ph-fill ph-file-text text-muh-blue"></i> Persyaratan</h3><ul id="detail-reqs" class="space-y-3"></ul></div>
-                        <div><h3 class="font-bold mb-4"><i class="ph-fill ph-info text-muh-blue"></i> Ketentuan</h3><ul id="detail-rules" class="space-y-3"></ul></div>
+                        <div><h3 class="font-bold mb-4"><i class="ph-fill ph-file-text text-muh-blue"></i> Persyaratan</h3><ul id="detail-reqs" class="space-y-3 text-slate-600"></ul></div>
+                        <div><h3 class="font-bold mb-4"><i class="ph-fill ph-info text-muh-blue"></i> Ketentuan</h3><ul id="detail-rules" class="space-y-3 text-slate-600"></ul></div>
                     </div>
                     <div class="bg-blue-50 p-6 rounded-2xl flex justify-between items-center">
                         <p class="font-bold text-muh-dark">Siap berpartisipasi?</p>
@@ -194,29 +172,30 @@
             </div>
         </section>
 
-        <!-- VIEW: FORM -->
+        <!-- FORM PENDAFTARAN -->
         <section id="view-form" class="view-section py-12 bg-slate-50">
             <div class="max-w-3xl mx-auto px-4">
-                <h2 class="text-2xl font-bold mb-1">Formulir Pendaftaran</h2>
-                <p class="text-slate-500 mb-8" id="form-category-subtitle"></p>
+                <h2 class="text-2xl font-bold mb-1">Formulir Pendaftaran</h2><p class="text-slate-500 mb-8" id="form-category-subtitle"></p>
                 <form id="registration-form" onsubmit="app.submitForm(event)" class="bg-white rounded-3xl p-6 md:p-10 shadow-soft border">
                     <h3 class="text-lg font-bold border-b pb-3 mb-6">Data Umum</h3>
                     <div class="grid md:grid-cols-2 gap-6 mb-8">
-                        <div><label class="block text-sm font-semibold mb-2">Nama Lengkap</label><input type="text" name="nama" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
-                        <div><label class="block text-sm font-semibold mb-2">NISN/NBM</label><input type="text" name="nomor_induk" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
-                        <div class="md:col-span-2"><label class="block text-sm font-semibold mb-2">Asal Sekolah</label><input type="text" name="instansi" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
+                        <div><label class="block text-sm font-bold mb-2">Nama Lengkap</label><input type="text" name="nama" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
+                        <div><label class="block text-sm font-bold mb-2">NISN/NBM/NIP</label><input type="text" name="nomor_induk" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-bold mb-2">Asal Instansi</label><input type="text" name="instansi" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
+                        <div><label class="block text-sm font-bold mb-2">Nomor WA</label><input type="tel" name="wa" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
+                        <div><label class="block text-sm font-bold mb-2">Email</label><input type="email" name="email" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none"></div>
                     </div>
                     <h3 class="text-lg font-bold border-b pb-3 mb-6">Data Khusus Kategori</h3>
                     <div id="dynamic-fields" class="space-y-6 mb-10"></div>
                     <div class="flex justify-end gap-4 border-t pt-6">
                         <button type="button" onclick="app.navigate('detail')" class="px-6 py-3 font-semibold text-slate-600">Batal</button>
-                        <button type="submit" class="px-8 py-3 bg-muh-blue text-white font-bold rounded-xl hover:bg-muh-dark">Lanjut Review</button>
+                        <button type="submit" class="px-8 py-3 bg-muh-blue text-white font-bold rounded-xl hover:bg-muh-dark">Review</button>
                     </div>
                 </form>
             </div>
         </section>
 
-        <!-- VIEW: REVIEW -->
+        <!-- REVIEW -->
         <section id="view-review" class="view-section py-12 bg-slate-50">
             <div class="max-w-2xl mx-auto px-4 text-center">
                 <h2 class="text-2xl font-bold mb-8">Review Data Pendaftaran</h2>
@@ -224,40 +203,52 @@
                     <div id="review-content" class="space-y-4 mb-6"></div>
                     <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 flex gap-3">
                         <input type="checkbox" id="agree-cb" class="mt-1 w-5 h-5 cursor-pointer">
-                        <label for="agree-cb" class="text-sm cursor-pointer">Data yang saya unggah benar.</label>
+                        <label for="agree-cb" class="text-sm cursor-pointer">Data yang saya masukkan adalah benar dan valid.</label>
                     </div>
                 </div>
                 <div class="flex gap-4">
-                    <button onclick="app.navigate('form')" class="w-full py-4 font-bold border bg-white rounded-xl">Edit Data</button>
-                    <button onclick="app.finalSubmit()" class="w-full py-4 font-bold text-white bg-green-600 rounded-xl">Submit Pendaftaran</button>
+                    <button onclick="app.navigate('form')" class="w-full py-4 font-bold border bg-white rounded-xl">Edit</button>
+                    <button onclick="app.finalSubmit()" class="w-full py-4 font-bold text-white bg-green-600 rounded-xl">Submit Permanen</button>
                 </div>
             </div>
         </section>
 
-        <!-- VIEW: BUKTI -->
+        <!-- BUKTI DAFTAR -->
         <section id="view-bukti" class="view-section py-12 flex items-center">
             <div class="max-w-md mx-auto px-4 w-full text-center">
                 <div class="bg-white rounded-3xl p-8 shadow-floating border-t-8 border-green-500">
-                    <h2 class="text-2xl font-bold mb-2">Berhasil!</h2>
-                    <p class="text-xs text-slate-500 mb-1">Nomor Registrasi</p>
-                    <p id="bukti-reg" class="text-3xl font-mono font-bold text-muh-blue mb-6"></p>
-                    <button onclick="app.loginAsPeserta()" class="w-full py-3 bg-muh-blue text-white font-bold rounded-xl no-print">Masuk Dashboard</button>
+                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph-bold ph-check text-3xl"></i></div>
+                    <h2 class="text-2xl font-bold mb-2">Pendaftaran Berhasil!</h2>
+                    <p class="text-sm text-slate-500 mb-6">Data tersimpan di database.</p>
+                    <div class="bg-slate-50 p-4 rounded-2xl border mb-6">
+                        <p class="text-xs text-slate-500 uppercase mb-1">Nomor Registrasi Anda</p>
+                        <p id="bukti-reg" class="text-3xl font-mono font-bold text-muh-blue mb-4"></p>
+                    </div>
+                    <div class="flex flex-col gap-3 no-print">
+                        <button onclick="window.print()" class="w-full py-3 border border-muh-blue text-muh-blue font-bold rounded-xl">Cetak Bukti</button>
+                        <button onclick="app.loginAsPeserta()" class="w-full py-3 bg-muh-blue text-white font-bold rounded-xl">Masuk Dashboard</button>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- VIEW: DASHBOARD -->
+        <!-- DASHBOARD PESERTA -->
         <section id="view-dashboard" class="view-section py-12 bg-slate-50">
             <div class="max-w-5xl mx-auto px-4">
-                <h2 class="text-2xl font-bold mb-8">Dashboard Peserta <span id="dash-nama" class="text-muh-blue"></span></h2>
+                <h2 class="text-2xl font-bold mb-8">Dashboard <span id="dash-nama" class="text-muh-blue"></span></h2>
                 <div class="bg-white rounded-3xl p-6 shadow-soft border">
-                    <p class="text-sm font-bold">Kategori: <span id="dash-kat"></span></p>
-                    <p class="text-sm font-bold">Instansi: <span id="dash-instansi"></span></p>
+                    <div class="flex justify-between items-center border-b pb-4 mb-4">
+                        <h3 class="font-bold">Status:</h3><span id="dash-status" class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">Menunggu</span>
+                    </div>
+                    <p class="text-sm">ID Registrasi: <span id="dash-reg" class="font-bold font-mono"></span></p>
+                    <p class="text-sm">Kategori: <span id="dash-kat" class="font-bold"></span></p>
+                    <p class="text-sm">Instansi: <span id="dash-instansi" class="font-bold"></span></p>
+                    <div id="dash-tambahan" class="mt-4 pt-4 border-t text-sm text-slate-600 space-y-2"></div>
                 </div>
             </div>
         </section>
 
-        <!-- VIEW: PENGUMUMAN -->
+        <!-- PENGUMUMAN -->
         <section id="view-pengumuman" class="view-section py-12">
             <div class="print-only">
                 <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" alt="Logo">
@@ -267,356 +258,422 @@
                 <div class="flex justify-between items-center mb-8 no-print">
                     <h2 class="text-3xl font-bold">Pengumuman Lomba</h2>
                     <div class="flex gap-3">
-                        <select id="filter-pengumuman" onchange="app.renderPengumuman()" class="px-4 py-2 border rounded-xl bg-slate-50"><option value="all">Semua Kategori</option></select>
-                        <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2"><i class="ph-bold ph-printer"></i> Cetak Laporan (F4)</button>
+                        <select id="filter-pengumuman" onchange="app.renderPengumuman()" class="px-4 py-2 border rounded-xl bg-slate-50 outline-none"><option value="all">Semua Kategori</option></select>
+                        <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
                     </div>
                 </div>
                 <table class="w-full text-left bg-white rounded-3xl shadow-soft">
-                    <thead class="bg-slate-50"><tr class="text-sm text-slate-500"><th class="p-4">Peringkat</th><th class="p-4">Nama</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori</th></tr></thead>
+                    <thead class="bg-slate-50 border-b"><tr class="text-sm text-slate-500"><th class="p-4">Peringkat</th><th class="p-4">Nama Pemenang</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori Lomba</th><th class="p-4">Skor</th></tr></thead>
                     <tbody id="table-pengumuman" class="divide-y text-sm"></tbody>
                 </table>
             </div>
         </section>
 
-        <!-- VIEW: ADMIN PANEL -->
+        <!-- ADMIN PANEL -->
         <section id="view-admin" class="view-section bg-slate-100 min-h-screen">
             <div class="flex h-[calc(100vh-80px)] overflow-hidden">
-                <div class="admin-sidebar w-64 bg-muh-dark text-white hidden md:flex flex-col shadow-2xl relative">
+                <div class="admin-sidebar w-64 bg-muh-dark text-white hidden md:flex flex-col shadow-2xl relative z-10">
                     <div class="p-6 border-b border-blue-900/50"><h2 class="text-xl font-bold">Panel Admin</h2></div>
                     <div class="p-4 space-y-2">
                         <button onclick="app.switchAdminTab('dashboard')" id="btn-tab-dashboard" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Dashboard</button>
                         <button onclick="app.switchAdminTab('peserta')" id="btn-tab-peserta" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Data Peserta</button>
                         <button onclick="app.switchAdminTab('akses')" id="btn-tab-akses" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Akses</button>
-                        <button id="btn-tab-konten" onclick="app.switchAdminTab('konten')" class="admin-tab-btn w-full flex items-center gap-3 text-blue-200 hover:bg-blue-900/50 hover:text-white px-4 py-3 rounded-xl font-medium transition-colors"><i class="ph-fill ph-browser text-xl"></i> Kelola Konten</button>
+                        <button onclick="app.switchAdminTab('konten')" id="btn-tab-konten" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Pengumuman</button>
                     </div>
                 </div>
                 <div class="flex-1 overflow-y-auto p-4 md:p-8">
                     
-                    <!-- TAB DASHBOARD -->
+                    <!-- ADMIN: DASHBOARD -->
                     <div id="admin-sec-dashboard" class="admin-section active">
                         <div class="flex justify-between mb-8">
                             <h2 class="text-2xl font-bold">Statistik Real-time</h2>
                             <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border">
-                                <span class="text-sm font-bold">Pendaftaran:</span>
-                                <input type="checkbox" checked onchange="app.toggleFormStatus(this)" class="w-5 h-5 cursor-pointer">
+                                <span class="text-sm font-bold">Pendaftaran Terbuka:</span>
+                                <input type="checkbox" id="toggle-form" onchange="app.toggleFormStatus(this)" class="w-5 h-5 cursor-pointer">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                             <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-l-muh-blue"><p class="text-sm">Total Peserta</p><h3 id="stat-total" class="text-3xl font-bold">0</h3></div>
                             <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-l-green-500"><p class="text-sm">Sekolah Terlibat</p><h3 id="stat-sekolah" class="text-3xl font-bold">0</h3></div>
                         </div>
-                        <div class="bg-white rounded-2xl shadow-sm border p-6">
-                            <h3 class="font-bold mb-4 border-b pb-2">Peserta Per Cabang</h3>
-                            <div class="grid grid-cols-3 gap-4" id="stat-per-cabang"></div>
-                        </div>
                     </div>
 
-                    <!-- TAB PESERTA -->
+                    <!-- ADMIN: PESERTA -->
                     <div id="admin-sec-peserta" class="admin-section hidden">
                         <div class="print-only"><h1 style="font-size: 24px; font-weight: bold;">Rekap Data Peserta MEA 2026</h1></div>
                         <div class="flex justify-between items-center mb-6 no-print">
-                            <h2 class="text-2xl font-bold">Data Peserta</h2>
+                            <h2 class="text-2xl font-bold">Data Pendaftar</h2>
                             <div class="flex gap-3">
                                 <select id="admin-filter-kategori" onchange="app.renderAdminPeserta()" class="px-4 py-2 rounded-xl border bg-white"><option value="all">Semua Kategori</option></select>
-                                <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2"><i class="ph-bold ph-printer"></i> Cetak Laporan (F4)</button>
+                                <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
                             </div>
                         </div>
-                        <table class="w-full text-left bg-white rounded-2xl shadow-sm overflow-hidden text-sm">
-                            <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID</th><th class="p-4">Nama</th><th class="p-4">Kategori</th><th class="p-4">Asal Sekolah</th></tr></thead>
-                            <tbody id="admin-table-body" class="divide-y"></tbody>
-                        </table>
+                        <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID / Waktu</th><th class="p-4">Nama Peserta</th><th class="p-4">Asal Sekolah</th><th class="p-4">Kategori Lomba</th></tr></thead>
+                                <tbody id="admin-table-body" class="divide-y"></tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- TAB KELOLA AKSES -->
+                    <!-- ADMIN: AKSES -->
                     <div id="admin-sec-akses" class="admin-section hidden no-print">
-                        <h2 class="text-2xl font-bold mb-6">Kelola Akses Pengguna</h2>
+                        <h2 class="text-2xl font-bold mb-6">Kelola Akses Login</h2>
                         <form onsubmit="app.addAdminUser(event)" class="bg-white p-6 rounded-2xl shadow-sm border mb-8 flex gap-4 items-end">
-                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Username</label><input type="text" name="username" required class="w-full p-2 border rounded"></div>
-                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Password</label><input type="text" name="password" required class="w-full p-2 border rounded"></div>
-                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Role</label><select name="role" class="w-full p-2 border rounded"><option value="admin">Admin</option><option value="operator">Operator</option></select></div>
-                            <button type="submit" class="bg-muh-blue text-white font-bold p-2.5 rounded">Tambah</button>
-                            <button id="btn-tab-konten" onclick="app.switchAdminTab('konten')" class="admin-tab-btn w-full flex items-center gap-3 text-blue-200 hover:bg-blue-900/50 hover:text-white px-4 py-3 rounded-xl font-medium transition-colors"><i class="ph-fill ph-browser text-xl"></i> Kelola Konten</button>
+                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Username</label><input type="text" name="username" required class="w-full p-2 border rounded outline-none"></div>
+                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Password</label><input type="text" name="password" required class="w-full p-2 border rounded outline-none"></div>
+                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Role</label><select name="role" class="w-full p-2 border rounded outline-none"><option value="admin">Admin</option><option value="operator">Operator</option></select></div>
+                            <button type="submit" class="bg-muh-blue text-white font-bold p-2.5 rounded">Tambah Akun</button>
                         </form>
-                        <table class="w-full text-left bg-white rounded-2xl shadow-sm overflow-hidden text-sm"><thead class="bg-slate-50 border-b"><tr><th class="p-4">Username</th><th class="p-4">Role</th></tr></thead><tbody id="admin-users-body" class="divide-y"></tbody></table>
+                        <table class="w-full text-left bg-white rounded-2xl shadow-sm overflow-hidden text-sm"><thead class="bg-slate-50 border-b"><tr><th class="p-4">Username</th><th class="p-4">Role Akses</th></tr></thead><tbody id="admin-users-body" class="divide-y"></tbody></table>
                     </div>
+
+                    <!-- ADMIN: KONTEN (PENGUMUMAN) -->
+                    <div id="admin-sec-konten" class="admin-section hidden no-print">
+                        <h2 class="text-2xl font-bold mb-6">Manajemen Pengumuman Juara</h2>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border max-w-2xl">
+                            <h3 class="font-bold mb-4 border-b pb-2">Terbitkan Pemenang Baru</h3>
+                            <form onsubmit="app.addPengumuman(event)" class="space-y-4">
+                                <div><label class="text-xs font-bold text-slate-600">Nama Pemenang</label><input type="text" name="nama_pemenang" required class="w-full p-2 border rounded bg-slate-50 outline-none"></div>
+                                <div><label class="text-xs font-bold text-slate-600">Asal Instansi</label><input type="text" name="asal_instansi" required class="w-full p-2 border rounded bg-slate-50 outline-none"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="text-xs font-bold text-slate-600">Kategori Lomba</label><select id="admin-select-kat" name="kategori_id" required class="w-full p-2 border rounded bg-slate-50 outline-none"></select></div>
+                                    <div><label class="text-xs font-bold text-slate-600">Peringkat (1, 2, atau 3)</label><input type="number" name="peringkat" min="1" max="3" required class="w-full p-2 border rounded bg-slate-50 outline-none"></div>
+                                </div>
+                                <div><label class="text-xs font-bold text-slate-600">Skor Akhir</label><input type="number" step="0.01" name="skor" required class="w-full p-2 border rounded bg-slate-50 outline-none"></div>
+                                <button type="submit" class="w-full bg-muh-blue text-white font-bold py-3 rounded-lg hover:bg-muh-dark">Simpan Pengumuman ke Database</button>
+                            </form>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-            <!-- TAB KELOLA KONTEN -->
-<div id="admin-sec-konten" class="admin-section hidden no-print">
-    <h2 class="text-2xl font-bold mb-6">Manajemen Konten Aplikasi</h2>
-    
-    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6">
-        <p class="text-sm text-yellow-800 font-bold"><i class="ph-bold ph-warning"></i> Mode Prototype</p>
-        <p class="text-xs text-yellow-700">Perubahan konten saat ini bersifat sementara di memori browser. Jika di-refresh akan hilang. Segera integrasikan Supabase untuk data permanen.</p>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-6">
-        <!-- Kelola Pengumuman -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border">
-            <h3 class="font-bold mb-4 border-b pb-2">Tambah Pengumuman Pemenang</h3>
-            <form onsubmit="app.addPengumuman(event)" class="space-y-4">
-                <div><label class="text-xs font-bold">Nama Peserta</label><input type="text" name="nama" required class="w-full p-2 border rounded bg-slate-50"></div>
-                <div><label class="text-xs font-bold">Asal Instansi</label><input type="text" name="instansi" required class="w-full p-2 border rounded bg-slate-50"></div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-xs font-bold">Kategori Lomba</label>
-                        <select id="admin-select-kat" name="katId" required class="w-full p-2 border rounded bg-slate-50"></select>
-                    </div>
-                    <div><label class="text-xs font-bold">Peringkat (1/2/3)</label><input type="number" name="rank" min="1" max="3" required class="w-full p-2 border rounded bg-slate-50"></div>
-                </div>
-                <div><label class="text-xs font-bold">Skor Akhir</label><input type="number" step="0.1" name="skor" required class="w-full p-2 border rounded bg-slate-50"></div>
-                <button type="submit" class="w-full bg-muh-blue text-white font-bold py-2 rounded">Terbitkan Pengumuman</button>
-            </form>
-        </div>
-
-        <!-- Kelola Kategori (Status Singkat) -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border flex flex-col">
-            <h3 class="font-bold mb-4 border-b pb-2">Daftar Kategori Aktif</h3>
-            <div id="admin-list-kategori" class="flex-1 overflow-y-auto space-y-2 max-h-64"></div>
-            <button onclick="app.showToast('Fitur edit kategori dinamis wajib menggunakan Supabase Database', 'error')" class="mt-4 w-full border border-muh-blue text-muh-blue font-bold py-2 rounded hover:bg-blue-50">Edit Detail Kategori (Terkunci)</button>
-        </div>
-    </div>
-</div>
         </section>
     </main>
 
     <div id="toast-container" class="toast-container no-print"></div>
 
-    <!-- Modal Login -->
+    <!-- MODAL LOGIN -->
     <div id="login-modal" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center px-4 opacity-0 transition-opacity duration-300 no-print">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300" id="login-modal-content">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-slate-800">Masuk Sistem</h3>
+                <h3 class="text-xl font-bold">Masuk Sistem</h3>
                 <button onclick="app.hideLoginModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-xl"></i></button>
             </div>
-            
             <div class="space-y-4 mb-6">
-                <!-- Kolom 1: Username / ID Reg -->
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">ID Reg / Username</label>
-                    <input type="text" id="login-id" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-muh-blue outline-none bg-slate-50" placeholder="Masukkan ID Registrasi atau Username">
+                    <label class="block text-sm font-semibold mb-1">ID Reg / Username</label>
+                    <input type="text" id="login-id" class="w-full px-4 py-3 rounded-xl border outline-none focus:border-muh-blue bg-slate-50" placeholder="Masukkan ID Reg atau Username">
                 </div>
-                
-                <!-- Kolom 2: Password (dengan ikon mata) -->
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Password</label>
+                    <label class="block text-sm font-semibold mb-1">Password</label>
                     <div class="relative">
-                        <input type="password" id="login-password" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-muh-blue outline-none bg-slate-50 pr-12" placeholder="Kosongkan jika login peserta">
-                        <button type="button" onclick="app.togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-slate-600">
-                            <i id="login-pwd-icon" class="ph-bold ph-eye text-xl"></i>
-                        </button>
+                        <input type="password" id="login-password" class="w-full px-4 py-3 rounded-xl border outline-none focus:border-muh-blue bg-slate-50 pr-12" placeholder="Kosongkan jika peserta">
+                        <button type="button" onclick="app.togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-slate-600"><i id="login-pwd-icon" class="ph-bold ph-eye text-xl"></i></button>
                     </div>
                 </div>
             </div>
-            
-            <button onclick="app.processLogin()" class="w-full bg-muh-blue text-white font-bold py-3 rounded-xl hover:bg-muh-dark transition-colors">Masuk</button>
-            <p class="text-xs text-center text-slate-500 mt-4">Login admin/operator memerlukan password.</p>
+            <button onclick="app.processLogin()" class="w-full bg-muh-blue text-white font-bold py-3 rounded-xl hover:bg-muh-dark">Masuk</button>
         </div>
     </div>
 
+    <!-- SUPABASE & APP LOGIC -->
     <script>
-        const MOCK_DATA = {
-            categories: [
-                { id: 'olimpiade-sd', group: 'Siswa Berprestasi', title: 'Olimpiade SD/MI', icon: 'ph-fill ph-calculator', desc: 'Ajang kompetisi akademik mata pelajaran IPA, Matematika, dan Bahasa Inggris.', reqs: ['Siswa SD/MI Muhammadiyah'], rules: ['Peserta hanya 1 mapel'], fields: [{ type: 'select', name: 'mapel', label: 'Mata Pelajaran', options: ['IPA', 'Matematika', 'Bahasa Inggris'] }, { type: 'file', name: 'surat_tugas', label: 'Upload Surat Tugas (PDF)' }] },
-                { id: 'olimpiade-smp', group: 'Siswa Berprestasi', title: 'Olimpiade SMP/MTs', icon: 'ph-fill ph-atom', desc: 'Ajang kompetisi akademik mata pelajaran IPA, Matematika, dan Bahasa Inggris.', reqs: ['Siswa SMP/MTs Muhammadiyah'], rules: ['Peserta hanya 1 mapel'], fields: [{ type: 'select', name: 'mapel', label: 'Mata Pelajaran', options: ['IPA', 'Matematika', 'Bahasa Inggris'] }, { type: 'file', name: 'surat_tugas', label: 'Upload Surat Tugas (PDF)' }] },
-                { id: 'olimpiade-sma', group: 'Siswa Berprestasi', title: 'Olimpiade SMA/SMK/MA', icon: 'ph-fill ph-student', desc: 'Ajang kompetisi akademik mata pelajaran Matematika dan Bahasa Inggris.', reqs: ['Siswa SMA/SMK/MA Muhammadiyah'], rules: ['Peserta hanya 1 mapel'], fields: [{ type: 'select', name: 'mapel', label: 'Mata Pelajaran', options: ['Matematika', 'Bahasa Inggris'] }, { type: 'file', name: 'surat_tugas', label: 'Upload Surat Tugas (PDF)' }] },
-                { id: 'tilawah-pa-pi', group: 'Siswa Berprestasi', title: 'Tilawah Pa & Pi', icon: 'ph-fill ph-microphone-stage', desc: 'Lomba seni baca Al-Qur\'an kategori Putra dan Putri.', reqs: ['Siswa aktif Muhammadiyah'], rules: ['Durasi maksimal 7 menit'], fields: [{ type: 'select', name: 'jenjang', label: 'Kategori', options: ['A (SD/MI)', 'B (SMP/MTs & SMA/SMK/MA)'] }, { type: 'select', name: 'kategori_peserta', label: 'Kategori (Pa/Pi)', options: ['Putra (Pa)', 'Putri (Pi)'] }] },
-                { id: 'guru-bp', group: 'Guru Berprestasi', title: 'Best Practice Guru', icon: 'ph-fill ph-chalkboard-teacher', desc: 'Penghargaan untuk inovasi pembelajaran (STAR).', reqs: ['Guru tetap Muhammadiyah'], rules: ['Naskah PDF max 10 hal'], fields: [{ type: 'text', name: 'judul', label: 'Judul' }, { type: 'file', name: 'naskah', label: 'Upload Naskah' }] },
-                { id: 'sekolah-unggul', group: 'Sekolah Berprestasi', title: 'Sekolah Unggul', icon: 'ph-fill ph-buildings', desc: 'Penilaian institusi berdasarkan 8 SNP.', reqs: ['Profil Sekolah Lengkap'], rules: ['Bersedia divisitasi'], fields: [{ type: 'file', name: 'profil', label: 'Upload Profil' }] },
-                { id: 'voli-pcm', group: 'Kategori Khusus', title: 'Turnamen Voli PCM', icon: 'ph-fill ph-volleyball', desc: 'Ajang silaturahmi antar PCM se-Kabupaten Wonosobo.', reqs: ['Surat pengantar PCM'], rules: ['Sistem gugur'], fields: [{ type: 'text', name: 'nama_tim', label: 'Nama Tim' }] },
-                { id: 'guru-berdedikasi', group: 'Guru Berprestasi', title: 'Guru Berdedikasi', icon: 'ph-fill ph-heart', desc: 'Penghargaan bagi guru yang berdedikasi tinggi.', reqs: ['Masa kerja minimal 10 tahun'], rules: ['Belum pernah juara 1 di event serupa'], fields: [{ type: 'text', name: 'masa_kerja', label: 'Masa Kerja' }, { type: 'file', name: 'rekomendasi', label: 'Upload Rekomendasi' }] }
-            ],
-            pengumuman: [
-                { rank: 1, nama: 'Ahmad Dahlan', instansi: 'SMP Muhammadiyah', katId: 'olimpiade-smp', kat: 'Olimpiade SMP/MTs', skor: 98.5 },
-                { rank: 2, nama: 'Siti Walidah', instansi: 'MTs Muhammadiyah', katId: 'olimpiade-smp', kat: 'Olimpiade SMP/MTs', skor: 95.0 },
-                { rank: 1, nama: 'Budi Santoso', instansi: 'SD Muhammadiyah', katId: 'olimpiade-sd', kat: 'Olimpiade SD/MI', skor: 92.0 },
-                { rank: 1, nama: 'Aisyah', instansi: 'SMA Muhammadiyah', katId: 'tilawah-pa-pi', kat: 'Tilawah Pa & Pi', skor: 91.5 }
-            ],
-            db: { 
-                peserta: [], 
-                users: [{ username: 'admin', password: 'meaberkah26', role: 'admin' }]
+        // CONFIGURASI SUPABASE REST API
+        const SUPABASE_URL = 'https://cpvoofbnbnmtyprrrsfa.supabase.co/rest/v1';
+        const SUPABASE_KEY = 'sb_publishable_IglPnaLKr8BckXp91iPkIw_hvJzXgSv';
+        const DB_HEADERS = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+
+        const db = {
+            get: async (table, query = '') => {
+                const res = await fetch(`${SUPABASE_URL}/${table}${query}`, { headers: DB_HEADERS });
+                if (!res.ok) throw new Error(`Gagal fetch ${table}`);
+                return res.json();
+            },
+            post: async (table, data) => {
+                const res = await fetch(`${SUPABASE_URL}/${table}`, { method: 'POST', headers: DB_HEADERS, body: JSON.stringify(data) });
+                if (!res.ok) throw new Error(`Gagal insert ${table}`);
+                return res.json();
+            },
+            patch: async (table, query, data) => {
+                const res = await fetch(`${SUPABASE_URL}/${table}${query}`, { method: 'PATCH', headers: DB_HEADERS, body: JSON.stringify(data) });
+                if (!res.ok) throw new Error(`Gagal update ${table}`);
+                return res.json();
             }
         };
 
         const app = {
-            state: { view: 'home', category: null, formDraft: null, user: null, isFormOpen: true },
+            state: {
+                view: 'home', category: null, formDraft: null, user: null,
+                categories: [], settings: null, pendaftaran: [], pengumuman: []
+            },
 
+            // CORE INIT & UI HELPERS
+            init: async function() {
+                this.showLoader();
+                try {
+                    // Fetch master data on load
+                    const [cats, setts] = await Promise.all([
+                        db.get('kategori_lomba', '?select=*&is_active=eq.true'),
+                        db.get('pengaturan_web', '?id=eq.1')
+                    ]);
+                    this.state.categories = cats;
+                    this.state.settings = setts[0] || { pendaftaran_buka: false, teks_beranda: 'Koneksi gagal.' };
+                    
+                    // Render Beranda
+                    document.getElementById('teks-beranda').textContent = this.state.settings.teks_beranda;
+                    document.getElementById('teks-jadwal').innerHTML = `Pelaksanaan: ${this.state.settings.tanggal_pelaksanaan||'Segera'}`;
+                    
+                    this.initCountdown();
+                    this.navigate('home');
+                } catch (err) {
+                    this.showToast('Gagal terhubung ke Database Supabase.', 'error');
+                    console.error(err);
+                } finally {
+                    this.hideLoader();
+                }
+            },
+            showLoader: () => document.getElementById('global-loader').classList.remove('hidden'),
+            hideLoader: () => document.getElementById('global-loader').classList.add('hidden'),
+            showToast: function(msg, type='info') {
+                const c = document.getElementById('toast-container'), t = document.createElement('div');
+                let icon = type === 'success' ? '<i class="ph-fill ph-check-circle text-green-400 text-xl"></i>' : type === 'error' ? '<i class="ph-fill ph-warning-circle text-red-400 text-xl"></i>' : '<i class="ph-fill ph-info text-blue-400 text-xl"></i>';
+                t.className = 'toast'; t.innerHTML = `${icon} <span class="text-sm font-medium">${msg}</span>`; c.appendChild(t);
+                setTimeout(() => t.classList.add('show'), 10); setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+            },
             navigate: function(viewId, params = null) {
                 this.state.view = viewId; if(params) this.state.category = params;
                 document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
                 const target = document.getElementById(`view-${viewId}`);
                 if(target) { target.classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-                if(viewId === 'kategori') this.renderCategories();
-                else if(viewId === 'detail') this.renderDetail();
-                else if(viewId === 'form') this.renderForm();
-                else if(viewId === 'review') this.renderReview();
-                else if(viewId === 'dashboard') this.renderDashboard();
-                else if(viewId === 'pengumuman') { this.populateFilter('filter-pengumuman'); this.renderPengumuman(); }
-                else if(viewId === 'admin') this.switchAdminTab('dashboard');
+                document.querySelectorAll('.nav-link').forEach(el => { el.classList[el.dataset.target === viewId ? 'add' : 'remove']('text-muh-blue'); });
+                this.runViewLogic(viewId);
+            },
+            runViewLogic: function(v) {
+                if(v === 'kategori') this.renderCategories();
+                else if(v === 'detail') this.renderDetail();
+                else if(v === 'form') this.renderForm();
+                else if(v === 'review') this.renderReview();
+                else if(v === 'dashboard') this.renderDashboard();
+                else if(v === 'pengumuman') this.renderPengumumanView();
+                else if(v === 'admin') this.switchAdminTab('dashboard');
             },
 
+            // PUBLIC VIEWS
             renderCategories: function() {
                 const grid = document.getElementById('kategori-grid');
-                grid.innerHTML = MOCK_DATA.categories.map(cat => `
-                    <div onclick="app.navigate('detail', '${cat.id}')" class="bg-white rounded-3xl p-6 shadow-soft border cursor-pointer">
-                        <div class="flex items-center gap-4 mb-4"><div class="w-12 h-12 bg-blue-50 text-muh-blue rounded-xl flex items-center justify-center text-2xl"><i class="${cat.icon}"></i></div><h3 class="font-bold text-lg">${cat.title}</h3></div>
-                        <p class="text-sm text-slate-500">${cat.desc}</p>
+                grid.innerHTML = this.state.categories.map(c => `
+                    <div onclick="app.navigate('detail', '${c.id}')" class="bg-white rounded-3xl p-6 shadow-soft border cursor-pointer hover:-translate-y-1 transition-all">
+                        <div class="w-12 h-12 bg-blue-50 text-muh-blue rounded-xl flex items-center justify-center text-2xl mb-4"><i class="${c.ikon}"></i></div>
+                        <h3 class="font-bold text-lg mb-2">${c.judul}</h3><p class="text-sm text-slate-500 line-clamp-2">${c.deskripsi}</p>
                     </div>`).join('');
             },
             renderDetail: function() {
-                const cat = MOCK_DATA.categories.find(c => c.id === this.state.category);
+                const cat = this.state.categories.find(c => c.id === this.state.category);
                 if(!cat) return this.navigate('kategori');
-                document.getElementById('detail-icon').innerHTML = `<i class="${cat.icon}"></i>`;
-                document.getElementById('detail-title').textContent = cat.title;
-                document.getElementById('detail-desc').textContent = cat.desc;
-                document.getElementById('detail-reqs').innerHTML = cat.reqs.map(r => `<li>- ${r}</li>`).join('');
-                document.getElementById('detail-rules').innerHTML = cat.rules.map(r => `<li>- ${r}</li>`).join('');
+                document.getElementById('detail-icon').innerHTML = `<i class="${cat.ikon}"></i>`;
+                document.getElementById('detail-group').textContent = cat.grup;
+                document.getElementById('detail-title').textContent = cat.judul;
+                document.getElementById('detail-desc').textContent = cat.deskripsi;
+                document.getElementById('detail-reqs').innerHTML = (cat.persyaratan||[]).map(r => `<li>- ${r}</li>`).join('');
+                document.getElementById('detail-rules').innerHTML = (cat.ketentuan||[]).map(r => `<li>- ${r}</li>`).join('');
             },
             startForm: function() {
-                if(!this.state.isFormOpen) return this.showToast('Pendaftaran ditutup oleh admin.', 'error');
+                if(this.state.settings && !this.state.settings.pendaftaran_buka) return this.showToast('Pendaftaran ditutup oleh admin.', 'error');
                 this.navigate('form');
             },
             renderForm: function() {
-                const cat = MOCK_DATA.categories.find(c => c.id === this.state.category);
-                document.getElementById('form-category-subtitle').textContent = `Kategori: ${cat.title}`;
-                document.getElementById('dynamic-fields').innerHTML = cat.fields.map(f => {
+                const cat = this.state.categories.find(c => c.id === this.state.category);
+                document.getElementById('form-category-subtitle').textContent = `Kategori: ${cat.judul}`;
+                document.getElementById('dynamic-fields').innerHTML = (cat.form_fields||[]).map(f => {
                     let input = f.type === 'select' ? `<select name="${f.name}" required class="w-full p-3 border rounded-xl bg-slate-50"><option value="">Pilih...</option>${f.options.map(o=>`<option>${o}</option>`).join('')}</select>` 
-                    : f.type === 'file' ? `<input type="file" name="${f.name}" required class="w-full">` 
+                    : f.type === 'file' ? `<input type="file" name="${f.name}" required class="w-full text-sm">` 
                     : `<input type="text" name="${f.name}" required class="w-full p-3 border rounded-xl bg-slate-50">`;
                     return `<div><label class="block text-sm font-bold mb-2">${f.label}</label>${input}</div>`;
                 }).join('');
             },
             submitForm: function(e) {
-                e.preventDefault();
-                const data = Object.fromEntries(new FormData(e.target).entries());
-                for(let key in data) if(data[key] instanceof File) data[key] = data[key].name;
+                e.preventDefault(); const data = Object.fromEntries(new FormData(e.target).entries());
+                for(let key in data) if(data[key] instanceof File) data[key] = data[key].name; // Mock file upload
                 this.state.formDraft = data; this.navigate('review');
             },
             renderReview: function() {
                 if(!this.state.formDraft) return this.navigate('form');
-                let html = '';
-                for(let key in this.state.formDraft) html += `<p><b>${key.replace('_',' ')}:</b> ${this.state.formDraft[key]}</p>`;
-                document.getElementById('review-content').innerHTML = html;
-                document.getElementById('agree-cb').checked = false;
+                let html = ''; for(let key in this.state.formDraft) html += `<p class="mb-2"><b class="capitalize text-slate-500">${key.replace('_',' ')}:</b> <br/>${this.state.formDraft[key]}</p>`;
+                document.getElementById('review-content').innerHTML = html; document.getElementById('agree-cb').checked = false;
             },
-            finalSubmit: function() {
+            finalSubmit: async function() {
                 if(!document.getElementById('agree-cb').checked) return this.showToast('Centang persetujuan!', 'error');
-                const regId = 'REG-' + Math.floor(Math.random()*90000+10000);
-                const newData = { id: regId, kategoriId: this.state.category, status: 'Menunggu', ...this.state.formDraft };
-                MOCK_DATA.db.peserta.unshift(newData);
-                document.getElementById('bukti-reg').textContent = regId;
-                this.state.user = { role: 'peserta', name: newData.nama, data: newData };
-                this.updateNavState(); this.navigate('bukti'); this.showToast('Berhasil!', 'success');
+                this.showLoader();
+                try {
+                    const regId = 'REG-' + Math.floor(Math.random()*90000+10000);
+                    const d = this.state.formDraft;
+                    const payload = {
+                        reg_id: regId, nama_lengkap: d.nama, nomor_induk: d.nomor_induk, asal_instansi: d.instansi,
+                        nomor_wa: d.wa, email: d.email, kategori_id: this.state.category, data_tambahan: d
+                    };
+                    await db.post('pendaftaran', payload);
+                    
+                    document.getElementById('bukti-reg').textContent = regId;
+                    this.state.user = { role: 'peserta', name: payload.nama_lengkap, data: payload };
+                    this.state.formDraft = null;
+                    this.updateNavState(); this.navigate('bukti'); this.showToast('Pendaftaran Berhasil!', 'success');
+                } catch(e) { this.showToast('Gagal submit pendaftaran. Cek koneksi.', 'error'); } 
+                finally { this.hideLoader(); }
             },
+
+            // PESERTA LOGIC
             loginAsPeserta: function() { this.navigate('dashboard'); },
             renderDashboard: function() {
-                const d = this.state.user.data; const cat = MOCK_DATA.categories.find(c => c.id === d.kategoriId);
-                document.getElementById('dash-nama').textContent = d.nama; document.getElementById('dash-kat').textContent = cat.title; document.getElementById('dash-instansi').textContent = d.instansi;
+                if(!this.state.user || this.state.user.role !== 'peserta') { this.showToast('Sesi tidak valid.', 'error'); return this.navigate('home'); }
+                const d = this.state.user.data; const cat = this.state.categories.find(c => c.id === d.kategori_id);
+                document.getElementById('dash-nama').textContent = d.nama_lengkap; document.getElementById('dash-reg').textContent = d.reg_id;
+                document.getElementById('dash-kat').textContent = cat ? cat.judul : '-'; document.getElementById('dash-instansi').textContent = d.asal_instansi;
+                document.getElementById('dash-status').textContent = d.status_verifikasi || 'Menunggu';
+                
+                let addHtml = '';
+                for(let key in d.data_tambahan) if(!['nama','nomor_induk','instansi','wa','email'].includes(key)) addHtml += `<p><b>${key}:</b> ${d.data_tambahan[key]}</p>`;
+                document.getElementById('dash-tambahan').innerHTML = addHtml || 'Tidak ada data tambahan.';
             },
-            populateFilter: function(elId) {
-                const sel = document.getElementById(elId);
-                if(sel && sel.options.length <= 1) MOCK_DATA.categories.forEach(c => { sel.innerHTML += `<option value="${c.id}">${c.title}</option>`; });
+            
+            // PENGUMUMAN LOGIC
+            renderPengumumanView: async function() {
+                const sel = document.getElementById('filter-pengumuman');
+                if(sel && sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+                
+                this.showLoader();
+                try {
+                    this.state.pengumuman = await db.get('pengumuman', '?select=*,kategori_lomba(judul)&order=kategori_id.asc,peringkat.asc');
+                    this.renderTabelPengumuman();
+                } catch(e) { this.showToast('Gagal memuat pengumuman', 'error'); } finally { this.hideLoader(); }
             },
-            renderPengumuman: function() {
+            renderTabelPengumuman: function() {
                 const fVal = document.getElementById('filter-pengumuman').value;
                 const tbody = document.getElementById('table-pengumuman');
-                let data = MOCK_DATA.pengumuman.filter(p => fVal === 'all' || p.katId === fVal);
-                tbody.innerHTML = data.map(p => `<tr><td class="p-4 font-bold">Juara ${p.rank}</td><td class="p-4">${p.nama}</td><td class="p-4">${p.instansi}</td><td class="p-4">${p.kat}</td></tr>`).join('');
+                let data = this.state.pengumuman;
+                if(fVal !== 'all') data = data.filter(p => p.kategori_id === fVal);
+                
+                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada pengumuman</td></tr>`;
+                tbody.innerHTML = data.map(p => `<tr><td class="p-4 font-bold text-muh-blue">Juara ${p.peringkat}</td><td class="p-4 font-bold">${p.nama_pemenang}</td><td class="p-4">${p.asal_instansi}</td><td class="p-4 text-xs font-bold bg-slate-50 rounded">${p.kategori_lomba?.judul||'-'}</td><td class="p-4 font-bold">${p.skor}</td></tr>`).join('');
             },
 
-            // --- ADMIN LOGIC ---
-            // 1. TIMPA FUNGSI INI
-            switchAdminTab: function(tab) {
+            // ADMIN LOGIC
+            switchAdminTab: async function(tab) {
+                if(!this.state.user || !['admin','operator'].includes(this.state.user.role)) return this.navigate('home');
                 document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
                 document.getElementById(`admin-sec-${tab}`).classList.remove('hidden');
-                document.querySelectorAll('.admin-tab-btn').forEach(el => { el.classList.remove('bg-blue-800/50', 'text-white'); });
+                document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('bg-blue-800/50', 'text-white'));
                 document.getElementById(`btn-tab-${tab}`).classList.add('bg-blue-800/50', 'text-white');
-                if(tab === 'dashboard') this.renderAdminDashboard();
-                if(tab === 'peserta') { this.populateFilter('admin-filter-kategori'); this.renderAdminPeserta(); }
-                if(tab === 'akses') this.renderAdminAkses();
-                if(tab === 'konten') this.renderAdminKonten();
+                
+                this.showLoader();
+                try {
+                    if(tab === 'dashboard') await this.renderAdminDashboard();
+                    if(tab === 'peserta') await this.renderAdminPeserta();
+                    if(tab === 'akses') await this.renderAdminAkses();
+                    if(tab === 'konten') this.renderAdminKonten();
+                } catch(e) { this.showToast('Gagal memuat data admin', 'error'); } finally { this.hideLoader(); }
             },
-
+            renderAdminDashboard: async function() {
+                const data = await db.get('pendaftaran', '?select=kategori_id,asal_instansi');
+                document.getElementById('stat-total').textContent = data.length;
+                document.getElementById('stat-sekolah').textContent = new Set(data.map(p => p.asal_instansi)).size;
+                document.getElementById('toggle-form').checked = this.state.settings.pendaftaran_buka;
+            },
+            toggleFormStatus: async function(el) {
+                try {
+                    await db.patch('pengaturan_web', '?id=eq.1', { pendaftaran_buka: el.checked });
+                    this.state.settings.pendaftaran_buka = el.checked;
+                    this.showToast(el.checked ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup', 'success');
+                } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
+            },
+            renderAdminPeserta: async function() {
+                const sel = document.getElementById('admin-filter-kategori');
+                if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+                
+                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,waktu_daftar&order=waktu_daftar.desc';
+                if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
+                
+                const data = await db.get('pendaftaran', query);
+                const tbody = document.getElementById('admin-table-body');
+                if(!data.length) return tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Data Kosong</td></tr>`;
+                tbody.innerHTML = data.map(p => `<tr><td class="p-4 font-mono text-xs">${p.reg_id}<br><span class="text-slate-400">${new Date(p.waktu_daftar).toLocaleDateString('id-ID')}</span></td><td class="p-4 font-bold">${p.nama_lengkap}</td><td class="p-4">${p.asal_instansi}</td><td class="p-4">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</td></tr>`).join('');
+            },
+            renderAdminAkses: async function() {
+                const data = await db.get('akun_pengguna', '?select=username,role');
+                document.getElementById('admin-users-body').innerHTML = data.map(u => `<tr><td class="p-4 font-bold">${u.username}</td><td class="p-4 uppercase text-xs">${u.role}</td></tr>`).join('');
+            },
+            addAdminUser: async function(e) {
+                e.preventDefault(); const data = Object.fromEntries(new FormData(e.target).entries());
+                this.showLoader();
+                try {
+                    await db.post('akun_pengguna', data);
+                    e.target.reset(); await this.renderAdminAkses(); this.showToast('Akun ditambah', 'success');
+                } catch(err) { this.showToast('Gagal / Username sudah ada', 'error'); } finally { this.hideLoader(); }
+            },
             renderAdminKonten: function() {
                 const selKat = document.getElementById('admin-select-kat');
-                if (selKat && selKat.options.length === 0) {
-                    selKat.innerHTML = `<option value="">Pilih Kategori...</option>` + 
-                        MOCK_DATA.categories.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
-                }
-                const listKat = document.getElementById('admin-list-kategori');
-                if(listKat) {
-                    listKat.innerHTML = MOCK_DATA.categories.map(c => `
-                        <div class="flex justify-between items-center p-2 bg-slate-50 border rounded text-sm">
-                            <span class="font-bold text-slate-700"><i class="${c.icon} text-muh-blue mr-2"></i>${c.title}</span>
-                            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Aktif</span>
-                        </div>
-                    `).join('');
-                }
+                if (selKat.options.length === 0) selKat.innerHTML = `<option value="">Pilih...</option>` + this.state.categories.map(c => `<option value="${c.id}">${c.judul}</option>`).join('');
+            },
+            addPengumuman: async function(e) {
+                e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+                this.showLoader();
+                try {
+                    await db.post('pengumuman', { kategori_id: d.kategori_id, peringkat: parseInt(d.peringkat), nama_pemenang: d.nama_pemenang, asal_instansi: d.asal_instansi, skor: parseFloat(d.skor) });
+                    e.target.reset(); this.showToast('Pengumuman disimpan!', 'success');
+                } catch(err) { this.showToast('Gagal menyimpan pengumuman', 'error'); } finally { this.hideLoader(); }
             },
 
-            addPengumuman: function(e) {
-                e.preventDefault();
-                const data = Object.fromEntries(new FormData(e.target).entries());
-                const kategoriInfo = MOCK_DATA.categories.find(c => c.id === data.katId);
-                
-                MOCK_DATA.pengumuman.push({
-                    rank: parseInt(data.rank),
-                    nama: data.nama,
-                    instansi: data.instansi,
-                    katId: data.katId,
-                    kat: kategoriInfo ? kategoriInfo.title : 'Kategori',
-                    skor: parseFloat(data.skor)
-                });
-                
-                MOCK_DATA.pengumuman.sort((a, b) => a.katId.localeCompare(b.katId) || a.rank - b.rank);
-                e.target.reset();
-                this.showToast('Pengumuman ditambahkan!', 'success');
-                this.renderPengumuman(); 
-            },
-
-            // --- AUTH ---
-            showLoginModal: function() {
-                const m = document.getElementById('login-modal'); m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10);
-            },
-            hideLoginModal: function() {
-                const m = document.getElementById('login-modal'); m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300);
-            },
-            togglePassword: function() {
-                const inp = document.getElementById('login-password'); const ico = document.getElementById('login-pwd-icon');
-                if(inp.type === 'password') { inp.type = 'text'; ico.className = 'ph-bold ph-eye-slash text-xl'; } else { inp.type = 'password'; ico.className = 'ph-bold ph-eye text-xl'; }
-            },
-            processLogin: function() {
+            // AUTH & SYSTEM
+            showLoginModal: function() { const m = document.getElementById('login-modal'); m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10); },
+            hideLoginModal: function() { const m = document.getElementById('login-modal'); m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300); },
+            togglePassword: function() { const inp = document.getElementById('login-password'); const ico = document.getElementById('login-pwd-icon'); if(inp.type === 'password') { inp.type = 'text'; ico.className = 'ph-bold ph-eye-slash text-xl'; } else { inp.type = 'password'; ico.className = 'ph-bold ph-eye text-xl'; } },
+            
+            processLogin: async function() {
                 const id = document.getElementById('login-id').value.trim(); const pwd = document.getElementById('login-password').value;
-                const usr = MOCK_DATA.db.users.find(u => u.username === id);
-                if(usr) {
-                    if(pwd === usr.password) {
-                        this.state.user = { role: usr.role, name: usr.role.toUpperCase() };
-                        this.hideLoginModal(); this.updateNavState(); this.navigate('admin'); this.showToast(`Login ${usr.role} Berhasil`, 'success');
-                        document.getElementById('login-id').value = ''; document.getElementById('login-password').value = '';
-                    } else this.showToast('Password admin salah!', 'error');
-                } else if(id.startsWith('REG-')) {
-                    const p = MOCK_DATA.db.peserta.find(x => x.id === id);
-                    if(p) { this.state.user = { role: 'peserta', name: p.nama, data: p }; this.hideLoginModal(); this.updateNavState(); this.navigate('dashboard'); this.showToast('Login Berhasil', 'success'); } 
-                    else this.showToast('ID Reg tidak ditemukan.', 'error');
-                } else this.showToast('ID/Username tidak valid.', 'error');
+                if(!id) return this.showToast('ID/Username tidak boleh kosong', 'error');
+                
+                this.showLoader();
+                try {
+                    if(id.startsWith('REG-')) {
+                        // Login Peserta
+                        const res = await db.get('pendaftaran', `?reg_id=eq.${id}&select=*`);
+                        if(res.length) {
+                            this.state.user = { role: 'peserta', name: res[0].nama_lengkap, data: res[0] };
+                            this.hideLoginModal(); this.updateNavState(); this.navigate('dashboard'); this.showToast('Login Berhasil', 'success');
+                        } else this.showToast('ID Reg tidak ditemukan', 'error');
+                    } else {
+                        // Login Admin/Operator
+                        const res = await db.get('akun_pengguna', `?username=eq.${id}&select=*`);
+                        if(res.length && res[0].password === pwd) {
+                            this.state.user = { role: res[0].role, name: res[0].role.toUpperCase() };
+                            this.hideLoginModal(); this.updateNavState(); this.navigate('admin'); this.showToast(`Login ${res[0].role} Berhasil`, 'success');
+                        } else this.showToast('Kredensial Admin tidak valid!', 'error');
+                    }
+                } catch(e) { this.showToast('Terjadi kesalahan jaringan', 'error'); } finally { this.hideLoader(); }
             },
             logout: function() { this.state.user = null; this.updateNavState(); this.navigate('home'); this.showToast('Berhasil keluar.', 'success'); },
             updateNavState: function() {
-                const authBtns = document.getElementById('auth-buttons'), userMenu = document.getElementById('user-menu'), navDashBtn = document.getElementById('nav-dash-btn'), navName = document.getElementById('nav-username');
+                const authBtns = document.getElementById('auth-buttons'), userMenu = document.getElementById('user-menu'), mobAuthBtns = document.getElementById('mobile-auth-buttons'), mobUserMenu = document.getElementById('mobile-user-menu'), navDashBtn = document.getElementById('nav-dash-btn'), mobDashBtn = document.getElementById('mob-dash-btn'), navUserIcon = document.getElementById('nav-user-icon');
                 if(this.state.user) {
                     authBtns.classList.add('hidden'); userMenu.classList.remove('hidden'); userMenu.classList.add('flex');
-                    if (['admin', 'operator'].includes(this.state.user.role)) { navDashBtn.setAttribute('onclick', "app.navigate('admin')"); navName.textContent = 'Panel Admin'; } 
-                    else { navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); navName.textContent = this.state.user.name.split(' ')[0]; }
-                } else { authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); userMenu.classList.remove('flex'); }
+                    mobAuthBtns.classList.add('hidden'); mobUserMenu.classList.remove('hidden'); mobUserMenu.classList.add('flex');
+                    if (['admin', 'operator'].includes(this.state.user.role)) { navDashBtn.setAttribute('onclick', "app.navigate('admin')"); document.getElementById('nav-username').textContent = 'Panel Admin'; navUserIcon.className = 'ph-fill ph-shield-check text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('admin'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Panel Admin'; } 
+                    else { navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dashboard Saya'; }
+                } else { authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); userMenu.classList.remove('flex'); mobAuthBtns.classList.remove('hidden'); mobUserMenu.classList.add('hidden'); mobUserMenu.classList.remove('flex'); }
             },
-            showToast: function(msg, type='info') {
-                const c = document.getElementById('toast-container'); const t = document.createElement('div');
-                let icon = type === 'success' ? '<i class="ph-fill ph-check-circle text-green-400 text-xl"></i>' : type === 'error' ? '<i class="ph-fill ph-warning-circle text-red-400 text-xl"></i>' : '<i class="ph-fill ph-info text-blue-400 text-xl"></i>';
-                t.className = 'toast'; t.innerHTML = `${icon} <span class="text-sm font-medium">${msg}</span>`; c.appendChild(t);
-                setTimeout(() => t.classList.add('show'), 10); setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
-            },
-            init: function() { this.navigate('home'); }
+            toggleMobileMenu: function() { const menu = document.getElementById('mobile-menu'); if(menu.classList.contains('hidden')) { menu.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } else { menu.classList.add('hidden'); document.body.style.overflow = ''; } },
+            initCountdown: function() {
+                const target = new Date('2026-11-28T00:00:00').getTime();
+                setInterval(() => { const diff = target - new Date().getTime(); if(diff > 0) { document.getElementById('cd-days').textContent = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0'); document.getElementById('cd-hours').textContent = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0'); document.getElementById('cd-mins').textContent = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0'); document.getElementById('cd-secs').textContent = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0'); } }, 1000);
+            }
         };
+
+        window.addEventListener('scroll', () => { const nav = document.getElementById('main-nav'); if(window.scrollY > 20) nav.classList.add('shadow-sm'); else nav.classList.remove('shadow-sm'); });
         window.onload = () => { app.init(); };
     </script>
 </body>
