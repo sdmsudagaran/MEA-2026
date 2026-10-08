@@ -1314,14 +1314,16 @@
                 <button onclick="app.hideLoginModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-xl"></i></button>
             </div>
             <div class="space-y-4 mb-6">
+                <!-- Kolom Username yang Diperbaiki -->
                 <div>
-                    <label class="block text-sm font-semibold mb-1">ID Reg / Username</label>
-                    <input type="text" id="login-id" class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue" placeholder="ID Registrasi atau Username">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">ID Reg / Username</label>
+                    <input type="text" id="login-id" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-muh-blue outline-none bg-slate-50" placeholder="ID Registrasi atau Username">
                 </div>
+                <!-- Kolom Password dengan ikon mata -->
                 <div>
-                    <label class="block text-sm font-semibold mb-1">Password</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Password</label>
                     <div class="relative">
-                        <input type="password" id="login-password" class="w-full px-4 py-3 rounded-xl border bg-slate-50 pr-12 outline-none focus:border-muh-blue" placeholder="Kosongkan jika login peserta">
+                        <input type="password" id="login-password" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-muh-blue outline-none bg-slate-50 pr-12" placeholder="Kosongkan jika login peserta">
                         <button onclick="app.togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-slate-600"><i id="login-pwd-icon" class="ph-bold ph-eye text-xl"></i></button>
                     </div>
                 </div>
