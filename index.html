@@ -167,8 +167,8 @@
                     </div>
                     <p id="detail-desc" class="text-lg text-slate-600 mb-8 pb-8 border-b"></p>
                     <div class="grid md:grid-cols-2 gap-8 mb-10">
-                        <div><h3 class="font-bold mb-4"><i class="ph-fill ph-file-text text-muh-blue"></i> Persyaratan</h3><ul id="detail-reqs" class="space-y-3 text-slate-600"></ul></div>
-                        <div><h3 class="font-bold mb-4"><i class="ph-fill ph-info text-muh-blue"></i> Ketentuan</h3><ul id="detail-rules" class="space-y-3 text-slate-600"></ul></div>
+                        <div><h3 class="font-bold mb-4"><i class="ph-fill ph-file-text text-muh-blue"></i> Persyaratan</h3><ul id="detail-reqs" class="space-y-3 text-slate-600 list-disc pl-4"></ul></div>
+                        <div><h3 class="font-bold mb-4"><i class="ph-fill ph-info text-muh-blue"></i> Ketentuan</h3><ul id="detail-rules" class="space-y-3 text-slate-600 list-disc pl-4"></ul></div>
                     </div>
                     <div class="bg-blue-50 p-6 rounded-2xl flex justify-between items-center">
                         <p class="font-bold text-muh-dark">Siap berpartisipasi?</p>
@@ -295,7 +295,7 @@
                     <div class="p-4 space-y-2">
                         <button onclick="app.switchAdminTab('dashboard')" id="btn-tab-dashboard" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Dasbor Utama</button>
                         <button onclick="app.switchAdminTab('rekap')" id="btn-tab-rekap" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Rekap Peserta</button>
-                        <button onclick="app.switchAdminTab('juri')" id="btn-tab-juri" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-blue-200 hover:bg-blue-900/50 hover:text-white transition-colors">Penilaian Juri</button>
+                        <button onclick="app.switchAdminTab('juri')" id="btn-tab-juri" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Penilaian Juri</button>
                         <button onclick="app.switchAdminTab('konten')" id="btn-tab-konten" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Konten (CMS)</button>
                         <button onclick="app.switchAdminTab('akses')" id="btn-tab-akses" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Akses</button>
                     </div>
@@ -369,14 +369,15 @@
                     <!-- 3. ADMIN JURI -->
                     <div id="admin-sec-juri" class="admin-section hidden no-print">
                         <div class="flex justify-between items-center mb-6">
-                            <div><h2 class="text-2xl font-bold">Penilaian Juri</h2><p class="text-sm text-slate-500">Hanya menampilkan peserta berstatus Terverifikasi.</p></div>
+                            <div><h2 class="text-2xl font-bold">Penilaian Juri Terpadu</h2><p class="text-sm text-slate-500">Menampilkan peserta yang telah berstatus Terverifikasi.</p></div>
                         </div>
                         <div class="flex gap-3 mb-6">
                             <select id="juri-filter-kategori" onchange="app.renderAdminJuri()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[250px]"><option value="all">Pilih Kategori Lomba...</option></select>
                         </div>
+                        
                         <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                             <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Berkas / Detail</th><th class="p-4 text-center">Skor Juri</th><th class="p-4 text-right">Aksi</th></tr></thead>
+                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Berkas / URL</th><th class="p-4 text-center">Skor Juri</th><th class="p-4 text-right">Aksi Penilaian</th></tr></thead>
                                 <tbody id="juri-table-body" class="divide-y"></tbody>
                             </table>
                         </div>
@@ -411,14 +412,14 @@
                                         <input type="hidden" name="id" id="edit-kat-id">
                                         <div class="grid grid-cols-2 gap-4">
                                             <div><label class="text-xs font-bold text-slate-600 block mb-1">Judul Kategori</label><input type="text" name="judul" id="edit-kat-judul" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
-                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Urutan Tampil (Angka)</label><input type="number" name="urutan" id="edit-kat-urutan" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm" placeholder="Contoh: 1"></div>
-                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Grup (Misal: Siswa Berprestasi)</label><input type="text" name="grup" id="edit-kat-grup" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
-                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Ikon (Class Phosphor)</label><input type="text" name="ikon" id="edit-kat-ikon" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
+                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Urutan Tampil</label><input type="number" name="urutan" id="edit-kat-urutan" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
+                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Grup Klasifikasi</label><input type="text" name="grup" id="edit-kat-grup" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
+                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Ikon Phosphor</label><input type="text" name="ikon" id="edit-kat-ikon" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
                                         </div>
                                         <div><label class="text-xs font-bold text-slate-600 block mb-1">Deskripsi Singkat</label><textarea name="deskripsi" id="edit-kat-desc" rows="2" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></textarea></div>
-                                        <div><label class="text-xs font-bold text-slate-600 block mb-1">Persyaratan (Pisahkan dengan Enter)</label><textarea name="persyaratan" id="edit-kat-reqs" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm leading-relaxed" placeholder="Syarat 1&#10;Syarat 2"></textarea></div>
-                                        <div><label class="text-xs font-bold text-slate-600 block mb-1">Ketentuan Khusus (Pisahkan dengan Enter)</label><textarea name="ketentuan" id="edit-kat-rules" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm leading-relaxed" placeholder="Ketentuan 1&#10;Ketentuan 2"></textarea></div>
-                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Simpan Perubahan & Urutan</button>
+                                        <div><label class="text-xs font-bold text-slate-600 block mb-1">Persyaratan (Pisah baris dengan Enter)</label><textarea name="persyaratan" id="edit-kat-reqs" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></textarea></div>
+                                        <div><label class="text-xs font-bold text-slate-600 block mb-1">Ketentuan Khusus (Pisah baris dengan Enter)</label><textarea name="ketentuan" id="edit-kat-rules" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></textarea></div>
+                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Simpan Perubahan Kategori</button>
                                     </form>
                                 </div>
                             </div>
@@ -465,7 +466,23 @@
         </section>
     </main>
 
-    <!-- MODAL LOGIN (DIJAMIN 1 KOLOM USERNAME, 1 KOLOM PASSWORD, BISA ENTER) -->
+    <!-- MODAL JURI (NILAI DETAIL) -->
+    <div id="juri-modal" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center px-4 opacity-0 transition-opacity duration-300 no-print">
+        <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300" id="juri-modal-content">
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 class="text-xl font-bold" id="juri-modal-title">Penilaian Peserta</h3>
+                <button onclick="app.tutupModalJuri()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1" id="juri-modal-body">
+                <!-- Injected via JS based on Category -->
+            </div>
+            <div class="p-6 border-t bg-slate-50 rounded-b-3xl flex justify-end">
+                <button onclick="app.simpanSkorJuri()" class="bg-muh-blue text-white font-bold px-6 py-3 rounded-xl hover:bg-muh-dark">Simpan Nilai Ke Database</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LOGIN -->
     <div id="login-modal" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center px-4 opacity-0 transition-opacity duration-300 no-print">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300" id="login-modal-content">
             <div class="flex justify-between items-center mb-6">
@@ -523,7 +540,7 @@
         };
 
         const app = {
-            state: { view: 'home', category: null, formDraft: null, user: null, categories: [], settings: null, pengumuman: [] },
+            state: { view: 'home', category: null, formDraft: null, user: null, categories: [], settings: null, pengumuman: [], pendaftaran: [], juriTarget: null },
 
             init: async function() {
                 this.showLoader('Menghubungkan ke Server...');
@@ -618,7 +635,6 @@
                     const d = this.state.formDraft;
                     const finalDataTambahan = {};
 
-                    // Proses Upload File jika ada
                     for (let key in d) {
                         if (d[key] instanceof File && d[key].name) {
                             finalDataTambahan[key] = await db.uploadFile(d[key]);
@@ -627,7 +643,6 @@
                         }
                     }
 
-                    // Proses Insert DB
                     this.showLoader('Menyimpan Data Pendaftaran...');
                     const regId = 'REG-' + Math.floor(Math.random()*90000+10000);
                     const payload = { 
@@ -658,7 +673,12 @@
                 statEl.className = `px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${d.status_verifikasi==='Terverifikasi'?'bg-green-100 text-green-700':d.status_verifikasi==='Ditolak'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700'}`;
                 
                 let addHtml = '';
+                if(d.data_tambahan && d.data_tambahan.skor_juri) {
+                    addHtml += `<div class="bg-blue-50 border border-muh-blue p-3 rounded-xl mb-4"><p class="text-xs text-muh-blue uppercase font-bold mb-1">Skor Penilaian Juri</p><p class="text-3xl font-bold text-muh-dark">${d.data_tambahan.skor_juri}</p></div>`;
+                }
+
                 for(let key in d.data_tambahan) {
+                    if(key === 'skor_juri' || key === 'skor_detail') continue;
                     let val = d.data_tambahan[key];
                     if(typeof val === 'string' && val.startsWith('http')) val = `<a href="${val}" target="_blank" class="text-muh-blue underline">Lihat Berkas <i class="ph-bold ph-arrow-up-right"></i></a>`;
                     addHtml += `<p class="mb-2"><b class="capitalize text-slate-500">${key.replace('_',' ')}:</b> <br/>${val}</p>`;
@@ -688,7 +708,7 @@
                 setTimeout(() => document.getElementById('edit-teks-beranda').focus(), 300);
             },
             editKategoriInline: function(e, id) {
-                e.stopPropagation(); // Mencegah klik menembus ke view detail
+                e.stopPropagation(); 
                 this.navigate('admin'); this.switchAdminTab('konten');
                 document.getElementById('edit-kat-select').value = id;
                 this.loadEditKategori(id);
@@ -708,7 +728,7 @@
                     if(tab === 'juri') await this.renderAdminJuri();
                     if(tab === 'akses') await this.renderAdminAkses();
                     if(tab === 'konten') await this.renderAdminKonten();
-                } catch(e) { this.showToast('Gagal memuat data admin. Cek RLS SQL.', 'error'); } finally { this.hideLoader(); }
+                } catch(e) { this.showToast('Gagal memuat data admin.', 'error'); } finally { this.hideLoader(); }
             },
             renderAdminDashboard: async function() {
                 const data = await db.get('pendaftaran', '?select=kategori_id,asal_instansi');
@@ -724,7 +744,7 @@
                 } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
             },
             
-            // ADMIN REKAP PESERTA (DENGAN MAPEL DINAMIS, CHECKBOX & EXCEL)
+            // ADMIN REKAP PESERTA
             renderAdminRekap: async function() {
                 const selKat = document.getElementById('admin-filter-kategori');
                 const selMapel = document.getElementById('admin-filter-mapel');
@@ -756,14 +776,13 @@
                     let mapelInfo = '-';
 
                     if(p.data_tambahan) {
-                        // Ekstraksi Detail Khusus / Mapel
                         if(p.data_tambahan.mapel) mapelInfo = p.data_tambahan.mapel;
                         else if(p.data_tambahan.jenjang) mapelInfo = p.data_tambahan.jenjang;
                         else if(p.data_tambahan.nama_tim) mapelInfo = p.data_tambahan.nama_tim;
 
                         for(let key in p.data_tambahan) {
                             if(typeof p.data_tambahan[key] === 'string' && p.data_tambahan[key].startsWith('http')) {
-                                infoTambahan += `<a href="${p.data_tambahan[key]}" target="_blank" class="block text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded mt-1 border hover:bg-blue-100 max-w-[150px] truncate"><i class="ph-bold ph-link"></i> ${key.replace('_',' ')}</a>`;
+                                infoTambahan += `<a href="${p.data_tambahan[key]}" target="_blank" class="block text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded mt-1 border hover:bg-blue-100 max-w-[150px] truncate"><i class="ph-bold ph-link"></i> Lihat Berkas ${key.replace('_',' ')}</a>`;
                             }
                         }
                     }
@@ -792,10 +811,7 @@
                     this.showToast(`Status ${regId} diperbarui`, 'success'); this.renderAdminRekap(); 
                 } catch(e) { this.showToast('Gagal merubah status', 'error'); } finally { this.hideLoader(); }
             },
-            toggleCheckAll: function(el) {
-                document.querySelectorAll('.cb-peserta').forEach(cb => cb.checked = el.checked);
-                this.toggleBulkAction();
-            },
+            toggleCheckAll: function(el) { document.querySelectorAll('.cb-peserta').forEach(cb => cb.checked = el.checked); this.toggleBulkAction(); },
             toggleBulkAction: function() {
                 const checked = document.querySelectorAll('.cb-peserta:checked').length;
                 const container = document.getElementById('bulk-action-container');
@@ -815,8 +831,7 @@
                     await Promise.all(promises);
                     this.showToast('Aksi massal berhasil diterapkan!', 'success');
                     document.getElementById('checkAll').checked = false;
-                    this.toggleBulkAction();
-                    this.renderAdminRekap();
+                    this.toggleBulkAction(); this.renderAdminRekap();
                 } catch(e) { this.showToast('Gagal memproses data massal', 'error'); } finally { this.hideLoader(); }
             },
             downloadExcel: async function() {
@@ -828,7 +843,7 @@
                     if(selKat.startsWith('olimpiade') && selMapel !== 'all') query += `&data_tambahan->>mapel=eq.${selMapel}`;
                 }
 
-                this.showLoader('Menyiapkan file Excel...');
+                this.showLoader('Menyiapkan Excel...');
                 try {
                     const data = await db.get('pendaftaran', query);
                     if(!data.length) return this.showToast('Tidak ada data untuk diunduh', 'error');
@@ -839,11 +854,7 @@
                         const waktu = new Date(p.waktu_daftar).toLocaleString('id-ID');
                         let tamb = '';
                         if(p.data_tambahan) {
-                            for(let k in p.data_tambahan) {
-                                if(!['nama_lengkap','nomor_induk','asal_instansi','nomor_wa','email'].includes(k)) {
-                                    tamb += `${k}: ${p.data_tambahan[k]} | `;
-                                }
-                            }
+                            for(let k in p.data_tambahan) if(!['nama_lengkap','nomor_induk','asal_instansi','nomor_wa','email'].includes(k)) tamb += `${k}: ${p.data_tambahan[k]} | `;
                         }
                         const row = [p.reg_id, waktu, p.nama_lengkap, p.nomor_induk, p.asal_instansi, p.nomor_wa, p.email, kat, p.status_verifikasi, tamb].map(field => `"${String(field || '').replace(/"/g, '""')}"`).join(',');
                         csv += row + '\n';
@@ -858,7 +869,7 @@
                 } catch(e) { this.showToast('Gagal mengunduh Excel', 'error'); } finally { this.hideLoader(); }
             },
 
-            // ADMIN JURI (Penilaian Terpadu)
+            // ADMIN JURI (DINAMIS TILAWAH & BEST PRACTICE)
             renderAdminJuri: async function() {
                 const sel = document.getElementById('juri-filter-kategori');
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
@@ -867,43 +878,152 @@
                 if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
 
                 const data = await db.get('pendaftaran', query);
+                this.state.pendaftaran = data; 
                 const tbody = document.getElementById('juri-table-body');
 
-                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta yang "Terverifikasi" di kategori ini.</td></tr>`;
+                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
 
                 tbody.innerHTML = data.map(p => {
                     let berkas = '-';
                     if(p.data_tambahan) {
                         const links = Object.entries(p.data_tambahan).filter(([k,v]) => typeof v === 'string' && v.startsWith('http'));
-                        if(links.length > 0) {
-                            berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded border hover:bg-blue-100 inline-block mb-1"><i class="ph-bold ph-link"></i> ${k.replace('_',' ')}</a>`).join('<br>');
-                        }
+                        if(links.length > 0) berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded border hover:bg-blue-100 inline-block mb-1"><i class="ph-bold ph-link"></i> ${k.replace('_',' ')}</a>`).join('<br>');
                     }
-                    const skorSaatIni = p.data_tambahan?.skor_juri || '';
-                    const encodedData = encodeURIComponent(JSON.stringify(p.data_tambahan || {}));
+                    const skorSaatIni = p.data_tambahan?.skor_juri ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${p.data_tambahan.skor_juri}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
 
                     return `<tr>
                         <td class="p-4 font-mono text-xs">${p.reg_id}</td>
                         <td class="p-4"><span class="font-bold block">${p.nama_lengkap}</span><span class="text-xs text-slate-500">${p.asal_instansi}</span></td>
                         <td class="p-4">${berkas}</td>
-                        <td class="p-4 text-center"><input type="number" id="skor-${p.reg_id}" value="${skorSaatIni}" step="0.01" class="w-20 p-2 border rounded-xl text-center outline-none focus:border-muh-blue" placeholder="0.00"></td>
-                        <td class="p-4 text-right"><button onclick="app.simpanSkorJuri('${p.reg_id}', '${encodedData}')" class="bg-green-600 text-white font-bold px-3 py-1.5 rounded-lg hover:bg-green-700 text-xs shadow-sm">Simpan Nilai</button></td>
+                        <td class="p-4 text-center">${skorSaatIni}</td>
+                        <td class="p-4 text-right"><button onclick="app.bukaModalJuri('${p.reg_id}')" class="bg-muh-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-muh-dark text-xs shadow-sm">Beri Nilai</button></td>
                     </tr>`;
                 }).join('');
             },
-            simpanSkorJuri: async function(regId, dataTambahanString) {
-                const inputEl = document.getElementById(`skor-${regId}`);
-                const skor = parseFloat(inputEl.value);
-                if(isNaN(skor)) return this.showToast('Masukkan angka skor yang valid', 'error');
+            bukaModalJuri: function(regId) {
+                const p = this.state.pendaftaran.find(x => x.reg_id === regId);
+                if(!p) return;
+                this.state.juriTarget = p;
+                const skor = p.data_tambahan?.skor_detail || {};
+                
+                let html = '';
+                if(p.kategori_id === 'tilawah-pa-pi') {
+                    html = `
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid (0-100)</h4>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div><label>Makharijul Huruf</label><input type="number" id="juri-t1" value="${skor.t1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Sifatul Huruf</label><input type="number" id="juri-t2" value="${skor.t2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Ahkāmul Huruf</label><input type="number" id="juri-t3" value="${skor.t3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Ahkām Mad wal Qasr</label><input type="number" id="juri-t4" value="${skor.t4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                                <h4 class="font-bold text-green-700 mb-3 border-b border-green-200 pb-2">2. Aspek Suara (0-100)</h4>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div><label>Kejernihan</label><input type="number" id="juri-s1" value="${skor.s1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Kehalusan</label><input type="number" id="juri-s2" value="${skor.s2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Kenyaringan</label><input type="number" id="juri-s3" value="${skor.s3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Keutuhan</label><input type="number" id="juri-s4" value="${skor.s4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div class="col-span-2"><label>Pengaturan Nafas</label><input type="number" id="juri-s5" value="${skor.s5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                </div>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                                <h4 class="font-bold text-yellow-700 mb-3 border-b border-yellow-200 pb-2">3. Aspek Lagu (0-100)</h4>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div><label>Lagu pertama & penutup</label><input type="number" id="juri-l1" value="${skor.l1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Jumlah lagu</label><input type="number" id="juri-l2" value="${skor.l2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Peralihan tempo</label><input type="number" id="juri-l3" value="${skor.l3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Irama dan gaya</label><input type="number" id="juri-l4" value="${skor.l4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div class="col-span-2"><label>Gaya / Variasi</label><input type="number" id="juri-l5" value="${skor.l5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                </div>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                <h4 class="font-bold text-purple-700 mb-3 border-b border-purple-200 pb-2">4. Fasahah dan Adab (0-100)</h4>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div><label>Ahkāmul waqf wal ibtida’</label><input type="number" id="juri-f1" value="${skor.f1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Mura’atul huruf wal harakat</label><input type="number" id="juri-f2" value="${skor.f2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div class="col-span-2"><label>Mura’atul kalimat wal ayat</label><input type="number" id="juri-f3" value="${skor.f3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if(p.kategori_id === 'guru-bp') {
+                    html = `
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                <h4 class="font-bold text-muh-blue mb-4 border-b border-blue-200 pb-2">Penilaian Best Practice Guru (0-100)</h4>
+                                <div class="space-y-3 text-sm">
+                                    <div><label class="flex justify-between"><span>Kreativitas & Kebaruan Inovasi</span> <span class="font-bold">25%</span></label><input type="number" id="juri-bp1" value="${skor.bp1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Relevansi Pembelajaran Mendalam</span> <span class="font-bold">15%</span></label><input type="number" id="juri-bp2" value="${skor.bp2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Keterlibatan Aktif Peserta Didik</span> <span class="font-bold">15%</span></label><input type="number" id="juri-bp3" value="${skor.bp3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Dampak 8 Dimensi Profil Lulusan</span> <span class="font-bold">20%</span></label><input type="number" id="juri-bp4" value="${skor.bp4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Keberlanjutan dan Replikasi</span> <span class="font-bold">10%</span></label><input type="number" id="juri-bp5" value="${skor.bp5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Kualitas Presentasi & Dokumentasi</span> <span class="font-bold">15%</span></label><input type="number" id="juri-bp6" value="${skor.bp6||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html = `
+                        <div class="bg-gray-50 p-4 rounded-xl border">
+                            <label class="font-bold block mb-2">Skor Akhir (0-100)</label>
+                            <input type="number" id="juri-umum" value="${skor.umum||''}" class="w-full p-3 border rounded-xl outline-none focus:border-muh-blue">
+                        </div>
+                    `;
+                }
 
-                this.showLoader('Menyimpan Skor Juri...');
+                document.getElementById('juri-modal-title').textContent = `Nilai: ${p.nama_lengkap}`;
+                document.getElementById('juri-modal-body').innerHTML = html;
+                const m = document.getElementById('juri-modal');
+                m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10);
+            },
+            tutupModalJuri: function() {
+                const m = document.getElementById('juri-modal');
+                m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300);
+            },
+            simpanSkorJuri: async function() {
+                const p = this.state.juriTarget;
+                if(!p) return;
+                
+                let detail = {};
+                let finalSkor = 0;
+                
+                if(p.kategori_id === 'tilawah-pa-pi') {
+                    detail = {
+                        t1: Number(document.getElementById('juri-t1').value)||0, t2: Number(document.getElementById('juri-t2').value)||0,
+                        t3: Number(document.getElementById('juri-t3').value)||0, t4: Number(document.getElementById('juri-t4').value)||0,
+                        s1: Number(document.getElementById('juri-s1').value)||0, s2: Number(document.getElementById('juri-s2').value)||0,
+                        s3: Number(document.getElementById('juri-s3').value)||0, s4: Number(document.getElementById('juri-s4').value)||0,
+                        s5: Number(document.getElementById('juri-s5').value)||0, l1: Number(document.getElementById('juri-l1').value)||0,
+                        l2: Number(document.getElementById('juri-l2').value)||0, l3: Number(document.getElementById('juri-l3').value)||0,
+                        l4: Number(document.getElementById('juri-l4').value)||0, l5: Number(document.getElementById('juri-l5').value)||0,
+                        f1: Number(document.getElementById('juri-f1').value)||0, f2: Number(document.getElementById('juri-f2').value)||0,
+                        f3: Number(document.getElementById('juri-f3').value)||0
+                    };
+                    const sum = Object.values(detail).reduce((a,b)=>a+b, 0);
+                    finalSkor = (sum / 17).toFixed(2); // Menghitung rata-rata dari 17 parameter
+                } else if(p.kategori_id === 'guru-bp') {
+                    detail = {
+                        bp1: Number(document.getElementById('juri-bp1').value)||0, bp2: Number(document.getElementById('juri-bp2').value)||0,
+                        bp3: Number(document.getElementById('juri-bp3').value)||0, bp4: Number(document.getElementById('juri-bp4').value)||0,
+                        bp5: Number(document.getElementById('juri-bp5').value)||0, bp6: Number(document.getElementById('juri-bp6').value)||0
+                    };
+                    finalSkor = ((detail.bp1 * 0.25) + (detail.bp2 * 0.15) + (detail.bp3 * 0.15) + (detail.bp4 * 0.20) + (detail.bp5 * 0.10) + (detail.bp6 * 0.15)).toFixed(2);
+                } else {
+                    detail = { umum: Number(document.getElementById('juri-umum').value)||0 };
+                    finalSkor = detail.umum.toFixed(2);
+                }
+
+                const updatedDataTambahan = { ...p.data_tambahan, skor_juri: finalSkor, skor_detail: detail };
+
+                this.showLoader('Menyimpan Skor ke Database...');
                 try {
-                    const currentData = JSON.parse(decodeURIComponent(dataTambahanString));
-                    currentData.skor_juri = skor;
-
-                    await db.patch('pendaftaran', `?reg_id=eq.${regId}`, { data_tambahan: currentData });
-                    this.showToast(`Skor peserta ${regId} tersimpan!`, 'success');
-                    this.renderAdminJuri(); // Refresh UI to update encoded string
+                    await db.patch('pendaftaran', `?reg_id=eq.${p.reg_id}`, { data_tambahan: updatedDataTambahan });
+                    this.showToast(`Skor berhasil disimpan! Total: ${finalSkor}`, 'success');
+                    this.tutupModalJuri();
+                    this.renderAdminJuri();
                 } catch(e) { this.showToast('Gagal menyimpan skor', 'error'); } finally { this.hideLoader(); }
             },
             
@@ -950,24 +1070,20 @@
             updateKategori: async function(e) {
                 e.preventDefault(); 
                 const d = Object.fromEntries(new FormData(e.target).entries());
-                
                 const reqsArray = d.persyaratan.split('\n').map(s => s.trim()).filter(s => s !== '');
                 const rulesArray = d.ketentuan.split('\n').map(s => s.trim()).filter(s => s !== '');
 
                 const payload = { judul: d.judul, deskripsi: d.deskripsi, urutan: parseInt(d.urutan) || 99, grup: d.grup, ikon: d.ikon, persyaratan: reqsArray, ketentuan: rulesArray };
 
-                this.showLoader('Menyimpan Pengaturan Kategori...');
+                this.showLoader();
                 try {
                     await db.patch('kategori_lomba', `?id=eq.${d.id}`, payload);
                     const idx = this.state.categories.findIndex(c => c.id === d.id);
                     if(idx > -1) { this.state.categories[idx] = { ...this.state.categories[idx], ...payload }; }
                     
                     this.showToast('Kategori berhasil diperbarui!', 'success');
-                    this.renderCategories(); 
-                    e.target.reset();
-                    document.getElementById('form-edit-kategori').classList.add('hidden');
-                    document.getElementById('edit-kat-select').value = '';
-                } catch(err) { this.showToast('Gagal mengupdate kategori. Pastikan kolom urutan sudah ada di SQL.', 'error'); } finally { this.hideLoader(); }
+                    e.target.reset(); document.getElementById('form-edit-kategori').classList.add('hidden'); document.getElementById('edit-kat-select').value = '';
+                } catch(err) { this.showToast('Gagal mengupdate kategori. Pastikan kolom urutan ada di SQL.', 'error'); } finally { this.hideLoader(); }
             },
             addPengumuman: async function(e) {
                 e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
@@ -1032,27 +1148,4 @@
                         if(homeEditBtn) homeEditBtn.classList.remove('hidden');
                         if(navPengaturan) navPengaturan.classList.remove('hidden');
                     } else { 
-                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dashboard Saya'; 
-                        if(homeEditBtn) homeEditBtn.classList.add('hidden');
-                        if(navPengaturan) navPengaturan.classList.add('hidden');
-                    }
-                } else { 
-                    authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); userMenu.classList.remove('flex'); mobAuthBtns.classList.remove('hidden'); mobUserMenu.classList.add('hidden'); mobUserMenu.classList.remove('flex'); 
-                    if(homeEditBtn) homeEditBtn.classList.add('hidden');
-                    if(navPengaturan) navPengaturan.classList.add('hidden');
-                }
-                
-                if(this.state.view === 'kategori') this.renderCategories();
-            },
-            toggleMobileMenu: function() { const menu = document.getElementById('mobile-menu'); if(menu.classList.contains('hidden')) { menu.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } else { menu.classList.add('hidden'); document.body.style.overflow = ''; } },
-            initCountdown: function() {
-                const target = new Date('2026-11-28T00:00:00').getTime();
-                setInterval(() => { const diff = target - new Date().getTime(); if(diff > 0) { document.getElementById('cd-days').textContent = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0'); document.getElementById('cd-hours').textContent = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0'); document.getElementById('cd-mins').textContent = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0'); document.getElementById('cd-secs').textContent = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0'); } }, 1000);
-            }
-        };
-
-        window.addEventListener('scroll', () => { const nav = document.getElementById('main-nav'); if(window.scrollY > 20) nav.classList.add('shadow-sm'); else nav.classList.remove('shadow-sm'); });
-        window.onload = () => { app.init(); };
-    </script>
-</body>
-</html>
+                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate
