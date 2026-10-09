@@ -114,6 +114,7 @@
         
         <!-- =================== VIEW: BERANDA =================== -->
         <section id="view-home" class="view-section active">
+            <!-- Tombol Edit Cepat Khusus Admin -->
             <div id="admin-home-edit-btn" class="hidden absolute top-24 right-8 z-20">
                 <button onclick="app.editBerandaInline()" class="bg-yellow-400 text-yellow-900 font-bold px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 border border-yellow-500 hover:bg-yellow-500 transition-colors">
                     <i class="ph-bold ph-pencil-simple"></i> Edit Beranda
@@ -295,7 +296,7 @@
                     <div class="p-4 space-y-2">
                         <button onclick="app.switchAdminTab('dashboard')" id="btn-tab-dashboard" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Dasbor Utama</button>
                         <button onclick="app.switchAdminTab('rekap')" id="btn-tab-rekap" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Rekap Peserta</button>
-                        <button onclick="app.switchAdminTab('juri')" id="btn-tab-juri" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Penilaian Juri</button>
+                        <button onclick="app.switchAdminTab('juri')" id="btn-tab-juri" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-blue-200 hover:bg-blue-900/50 hover:text-white transition-colors">Penilaian Juri</button>
                         <button onclick="app.switchAdminTab('konten')" id="btn-tab-konten" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Konten (CMS)</button>
                         <button onclick="app.switchAdminTab('akses')" id="btn-tab-akses" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Akses</button>
                     </div>
@@ -615,7 +616,7 @@
             },
             submitForm: function(e) {
                 e.preventDefault(); const formData = new FormData(e.target);
-                const data = {}; for (let [key, value] of formData.entries()) { data[key] = value; } // Store File objects as is for review
+                const data = {}; for (let [key, value] of formData.entries()) { data[key] = value; }
                 this.state.formDraft = data; this.navigate('review');
             },
             renderReview: function() {
@@ -662,7 +663,7 @@
 
             // DASHBOARD PESERTA
             loginAsPeserta: function() { this.navigate('dashboard'); },
-            renderDashboard: function() {
+            renderDashboard: async function() {
                 if(!this.state.user || this.state.user.role !== 'peserta') return this.navigate('home');
                 const d = this.state.user.data; const cat = this.state.categories.find(c => c.id === d.kategori_id);
                 document.getElementById('dash-nama').textContent = d.nama_lengkap; document.getElementById('dash-reg').textContent = d.reg_id;
@@ -673,12 +674,16 @@
                 statEl.className = `px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${d.status_verifikasi==='Terverifikasi'?'bg-green-100 text-green-700':d.status_verifikasi==='Ditolak'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700'}`;
                 
                 let addHtml = '';
-                if(d.data_tambahan && d.data_tambahan.skor_juri) {
-                    addHtml += `<div class="bg-blue-50 border border-muh-blue p-3 rounded-xl mb-4"><p class="text-xs text-muh-blue uppercase font-bold mb-1">Skor Penilaian Juri</p><p class="text-3xl font-bold text-muh-dark">${d.data_tambahan.skor_juri}</p></div>`;
-                }
+                
+                // Fetch skor juri if exists
+                try {
+                    const juriData = await db.get('penjurian', `?reg_id=eq.${d.reg_id}`);
+                    if(juriData.length && juriData[0].skor_akhir > 0) {
+                        addHtml += `<div class="bg-blue-50 border border-muh-blue p-3 rounded-xl mb-4"><p class="text-xs text-muh-blue uppercase font-bold mb-1">Skor Penilaian Juri</p><p class="text-3xl font-bold text-muh-dark">${juriData[0].skor_akhir}</p></div>`;
+                    }
+                } catch(e) {}
 
                 for(let key in d.data_tambahan) {
-                    if(key === 'skor_juri' || key === 'skor_detail') continue;
                     let val = d.data_tambahan[key];
                     if(typeof val === 'string' && val.startsWith('http')) val = `<a href="${val}" target="_blank" class="text-muh-blue underline">Lihat Berkas <i class="ph-bold ph-arrow-up-right"></i></a>`;
                     addHtml += `<p class="mb-2"><b class="capitalize text-slate-500">${key.replace('_',' ')}:</b> <br/>${val}</p>`;
@@ -702,7 +707,7 @@
                 } catch(e) { this.showToast('Gagal memuat pengumuman', 'error'); } finally { this.hideLoader(); }
             },
 
-            // ADMIN LOGIC (SMART INLINE EDITING)
+            // ADMIN LOGIC
             editBerandaInline: function() {
                 this.navigate('admin'); this.switchAdminTab('konten');
                 setTimeout(() => document.getElementById('edit-teks-beranda').focus(), 300);
@@ -728,7 +733,7 @@
                     if(tab === 'juri') await this.renderAdminJuri();
                     if(tab === 'akses') await this.renderAdminAkses();
                     if(tab === 'konten') await this.renderAdminKonten();
-                } catch(e) { this.showToast('Gagal memuat data admin.', 'error'); } finally { this.hideLoader(); }
+                } catch(e) { this.showToast('Gagal memuat data admin. Cek RLS SQL.', 'error'); } finally { this.hideLoader(); }
             },
             renderAdminDashboard: async function() {
                 const data = await db.get('pendaftaran', '?select=kategori_id,asal_instansi');
@@ -843,7 +848,7 @@
                     if(selKat.startsWith('olimpiade') && selMapel !== 'all') query += `&data_tambahan->>mapel=eq.${selMapel}`;
                 }
 
-                this.showLoader('Menyiapkan Excel...');
+                this.showLoader('Menyiapkan file Excel...');
                 try {
                     const data = await db.get('pendaftaran', query);
                     if(!data.length) return this.showToast('Tidak ada data untuk diunduh', 'error');
@@ -869,31 +874,40 @@
                 } catch(e) { this.showToast('Gagal mengunduh Excel', 'error'); } finally { this.hideLoader(); }
             },
 
-            // ADMIN JURI (DINAMIS TILAWAH & BEST PRACTICE)
-            // ADMIN JURI (Penilaian Terpadu)
+            // ADMIN JURI 
             renderAdminJuri: async function() {
                 const sel = document.getElementById('juri-filter-kategori');
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
 
-                // Mengambil data peserta TERVERIFIKASI dan melakukan JOIN (relasi) dengan tabel penjurian
-                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan,penjurian(skor_akhir,skor_detail)&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
+                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
                 if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
 
                 const data = await db.get('pendaftaran', query);
-                this.state.pendaftaran = data; 
+                
+                let penjurianData = [];
+                try {
+                    penjurianData = await db.get('penjurian', '');
+                } catch(e) {
+                    console.warn('Tabel penjurian belum dibuat di database.');
+                }
+
+                // Gabungkan data
+                this.state.pendaftaran = data.map(p => {
+                    p.penjurian = penjurianData.find(j => j.reg_id === p.reg_id) || null;
+                    return p;
+                });
+
                 const tbody = document.getElementById('juri-table-body');
+                if(!this.state.pendaftaran.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
 
-                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
-
-                tbody.innerHTML = data.map(p => {
+                tbody.innerHTML = this.state.pendaftaran.map(p => {
                     let berkas = '-';
                     if(p.data_tambahan) {
                         const links = Object.entries(p.data_tambahan).filter(([k,v]) => typeof v === 'string' && v.startsWith('http'));
                         if(links.length > 0) berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded border hover:bg-blue-100 inline-block mb-1"><i class="ph-bold ph-link"></i> ${k.replace('_',' ')}</a>`).join('<br>');
                     }
                     
-                    // Mengekstrak data dari relasi tabel penjurian
-                    const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
+                    const dataJuri = p.penjurian;
                     const skorSaatIni = dataJuri ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${dataJuri.skor_akhir}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
 
                     return `<tr>
@@ -910,11 +924,9 @@
                 if(!p) return;
                 this.state.juriTarget = p;
                 
-                // Ambil skor detail jika sudah pernah dinilai
-                const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
-                const skor = dataJuri ? dataJuri.skor_detail : {};
-                
+                const skor = p.penjurian ? p.penjurian.skor_detail : {};
                 let html = '';
+
                 if(p.kategori_id === 'tilawah-pa-pi') {
                     html = `
                         <div class="space-y-4">
@@ -998,7 +1010,6 @@
                 let detail = {};
                 let finalSkor = 0;
                 
-                // Menghitung bobot/rata-rata berdasarkan kategori spesifik
                 if(p.kategori_id === 'tilawah-pa-pi') {
                     detail = {
                         t1: Number(document.getElementById('juri-t1').value)||0, t2: Number(document.getElementById('juri-t2').value)||0,
@@ -1025,30 +1036,18 @@
                     finalSkor = detail.umum.toFixed(2);
                 }
 
-                const payload = {
-                    reg_id: p.reg_id,
-                    kategori_id: p.kategori_id,
-                    skor_detail: detail,
-                    skor_akhir: parseFloat(finalSkor)
-                };
+                const payload = { reg_id: p.reg_id, kategori_id: p.kategori_id, skor_detail: detail, skor_akhir: parseFloat(finalSkor) };
 
                 this.showLoader('Menyimpan Skor ke Tabel Penjurian...');
                 try {
-                    // Logika Upsert: Lakukan PATCH jika ada, POST jika belum ada
-                    const cek = await db.get('penjurian', `?reg_id=eq.${p.reg_id}`);
-                    if(cek.length > 0) {
+                    if(p.penjurian) {
                         await db.patch('penjurian', `?reg_id=eq.${p.reg_id}`, payload);
                     } else {
                         await db.post('penjurian', payload);
                     }
                     this.showToast(`Skor berhasil disimpan! Total: ${finalSkor}`, 'success');
-                    this.tutupModalJuri();
-                    this.renderAdminJuri();
-                } catch(e) { 
-                    this.showToast('Gagal menyimpan skor. Pastikan tabel penjurian sudah dieksekusi di SQL.', 'error'); 
-                } finally { 
-                    this.hideLoader(); 
-                }
+                    this.tutupModalJuri(); this.renderAdminJuri();
+                } catch(e) { this.showToast('Gagal menyimpan skor. Pastikan tabel penjurian sudah dieksekusi di SQL.', 'error'); } finally { this.hideLoader(); }
             },
             
             // ADMIN CMS (KELOLA KONTEN)
@@ -1172,4 +1171,27 @@
                         if(homeEditBtn) homeEditBtn.classList.remove('hidden');
                         if(navPengaturan) navPengaturan.classList.remove('hidden');
                     } else { 
-                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate
+                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dashboard Saya'; 
+                        if(homeEditBtn) homeEditBtn.classList.add('hidden');
+                        if(navPengaturan) navPengaturan.classList.add('hidden');
+                    }
+                } else { 
+                    authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); userMenu.classList.remove('flex'); mobAuthBtns.classList.remove('hidden'); mobUserMenu.classList.add('hidden'); mobUserMenu.classList.remove('flex'); 
+                    if(homeEditBtn) homeEditBtn.classList.add('hidden');
+                    if(navPengaturan) navPengaturan.classList.add('hidden');
+                }
+                
+                if(this.state.view === 'kategori') this.renderCategories();
+            },
+            toggleMobileMenu: function() { const menu = document.getElementById('mobile-menu'); if(menu.classList.contains('hidden')) { menu.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } else { menu.classList.add('hidden'); document.body.style.overflow = ''; } },
+            initCountdown: function() {
+                const target = new Date('2026-11-28T00:00:00').getTime();
+                setInterval(() => { const diff = target - new Date().getTime(); if(diff > 0) { document.getElementById('cd-days').textContent = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0'); document.getElementById('cd-hours').textContent = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0'); document.getElementById('cd-mins').textContent = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0'); document.getElementById('cd-secs').textContent = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0'); } }, 1000);
+            }
+        };
+
+        window.addEventListener('scroll', () => { const nav = document.getElementById('main-nav'); if(window.scrollY > 20) nav.classList.add('shadow-sm'); else nav.classList.remove('shadow-sm'); });
+        window.onload = () => { app.init(); };
+    </script>
+</body>
+</html>
