@@ -393,12 +393,30 @@
                                         <label class="text-sm font-bold block mb-1">Pilih Kategori:</label>
                                         <select id="edit-kat-select" onchange="app.loadEditKategori(this.value)" class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"></select>
                                     </div>
-                                    <form onsubmit="app.updateKategori(event)" id="form-edit-kategori" class="space-y-4 hidden">
-                                        <input type="hidden" name="id" id="edit-kat-id">
-                                        <div><label class="text-sm font-bold text-slate-600 block mb-1">Ubah Judul Kategori</label><input type="text" name="judul" id="edit-kat-judul" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"></div>
-                                        <div><label class="text-sm font-bold text-slate-600 block mb-1">Ubah Deskripsi Singkat</label><textarea name="deskripsi" id="edit-kat-desc" rows="3" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"></textarea></div>
-                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Update Kategori</button>
-                                    </form>
+                                    <form onsubmit="app.updateKategori(event)" id="form-edit-kategori" class="space-y-4 hidden mt-4 border-t pt-4">
+    <input type="hidden" name="id" id="edit-kat-id">
+    
+    <div class="grid grid-cols-2 gap-4">
+        <div><label class="text-xs font-bold text-slate-600 block mb-1">Judul Kategori</label><input type="text" name="judul" id="edit-kat-judul" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
+        <div><label class="text-xs font-bold text-slate-600 block mb-1">Urutan Tampil (Angka)</label><input type="number" name="urutan" id="edit-kat-urutan" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm" placeholder="Contoh: 1"></div>
+        <div><label class="text-xs font-bold text-slate-600 block mb-1">Grup (Misal: Siswa Berprestasi)</label><input type="text" name="grup" id="edit-kat-grup" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
+        <div><label class="text-xs font-bold text-slate-600 block mb-1">Ikon (Class Phosphor)</label><input type="text" name="ikon" id="edit-kat-ikon" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
+    </div>
+
+    <div><label class="text-xs font-bold text-slate-600 block mb-1">Deskripsi Singkat</label><textarea name="deskripsi" id="edit-kat-desc" rows="2" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></textarea></div>
+    
+    <div>
+        <label class="text-xs font-bold text-slate-600 block mb-1">Persyaratan (Pisahkan dengan menekan Enter)</label>
+        <textarea name="persyaratan" id="edit-kat-reqs" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm leading-relaxed" placeholder="Syarat 1&#10;Syarat 2"></textarea>
+    </div>
+    
+    <div>
+        <label class="text-xs font-bold text-slate-600 block mb-1">Ketentuan Khusus (Pisahkan dengan menekan Enter)</label>
+        <textarea name="ketentuan" id="edit-kat-rules" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm leading-relaxed" placeholder="Ketentuan 1&#10;Ketentuan 2"></textarea>
+    </div>
+
+    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Simpan Perubahan & Urutan</button>
+</form>
                                 </div>
                             </div>
 
@@ -543,7 +561,10 @@
             // PUBLIK UI
             renderCategories: function() {
                 const isAdmin = this.state.user && this.state.user.role === 'admin';
-                document.getElementById('kategori-grid').innerHTML = this.state.categories.map(c => `
+                // Urutkan kategori berdasarkan properti 'urutan' dari database
+                const sortedCategories = [...this.state.categories].sort((a, b) => (a.urutan || 99) - (b.urutan || 99));
+
+                document.getElementById('kategori-grid').innerHTML = sortedCategories.map(c => `
                     <div onclick="app.navigate('detail', '${c.id}')" class="bg-white rounded-3xl p-6 shadow-soft border cursor-pointer hover:-translate-y-1 transition-all relative">
                         ${isAdmin ? `<button onclick="app.editKategoriInline(event, '${c.id}')" class="absolute top-4 right-4 text-[10px] bg-yellow-400 text-yellow-900 px-2 py-1 rounded shadow hover:bg-yellow-500 font-bold z-10"><i class="ph-bold ph-pencil-simple"></i> Edit</button>` : ''}
                         <div class="w-12 h-12 bg-blue-50 text-muh-blue rounded-xl flex items-center justify-center text-2xl mb-4"><i class="${c.ikon}"></i></div>
@@ -853,20 +874,61 @@
                 } catch(err) { this.showToast('Gagal update Beranda', 'error'); } finally { this.hideLoader(); }
             },
             loadEditKategori: function(id) {
-                const form = document.getElementById('form-edit-kategori'); if(!id) { form.classList.add('hidden'); return; }
+                const form = document.getElementById('form-edit-kategori'); 
+                if(!id) { form.classList.add('hidden'); return; }
                 const cat = this.state.categories.find(c => c.id === id);
-                document.getElementById('edit-kat-id').value = cat.id; document.getElementById('edit-kat-judul').value = cat.judul; document.getElementById('edit-kat-desc').value = cat.deskripsi;
+                
+                document.getElementById('edit-kat-id').value = cat.id; 
+                document.getElementById('edit-kat-judul').value = cat.judul; 
+                document.getElementById('edit-kat-desc').value = cat.deskripsi;
+                document.getElementById('edit-kat-urutan').value = cat.urutan || 99;
+                document.getElementById('edit-kat-grup').value = cat.grup || '';
+                document.getElementById('edit-kat-ikon').value = cat.ikon || '';
+                
+                // Konversi Array dari JSONB Database menjadi baris teks biasa (newline)
+                document.getElementById('edit-kat-reqs').value = Array.isArray(cat.persyaratan) ? cat.persyaratan.join('\n') : '';
+                document.getElementById('edit-kat-rules').value = Array.isArray(cat.ketentuan) ? cat.ketentuan.join('\n') : '';
+                
                 form.classList.remove('hidden');
             },
             updateKategori: async function(e) {
-                e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
-                this.showLoader();
+                e.preventDefault(); 
+                const d = Object.fromEntries(new FormData(e.target).entries());
+                
+                // Konversi kembali baris teks menjadi Array JSON untuk database
+                const reqsArray = d.persyaratan.split('\n').map(s => s.trim()).filter(s => s !== '');
+                const rulesArray = d.ketentuan.split('\n').map(s => s.trim()).filter(s => s !== '');
+
+                const payload = {
+                    judul: d.judul,
+                    deskripsi: d.deskripsi,
+                    urutan: parseInt(d.urutan) || 99,
+                    grup: d.grup,
+                    ikon: d.ikon,
+                    persyaratan: reqsArray,
+                    ketentuan: rulesArray
+                };
+
+                this.showLoader('Menyimpan Pengaturan Kategori...');
                 try {
-                    await db.patch('kategori_lomba', `?id=eq.${d.id}`, { judul: d.judul, deskripsi: d.deskripsi });
+                    await db.patch('kategori_lomba', `?id=eq.${d.id}`, payload);
+                    
+                    // Update state lokal agar tidak perlu refresh
                     const idx = this.state.categories.findIndex(c => c.id === d.id);
-                    if(idx > -1) { this.state.categories[idx].judul = d.judul; this.state.categories[idx].deskripsi = d.deskripsi; }
-                    this.showToast('Kategori berhasil diperbarui!', 'success'); e.target.reset(); document.getElementById('form-edit-kategori').classList.add('hidden'); document.getElementById('edit-kat-select').value = '';
-                } catch(err) { this.showToast('Gagal mengupdate kategori', 'error'); } finally { this.hideLoader(); }
+                    if(idx > -1) { 
+                        this.state.categories[idx] = { ...this.state.categories[idx], ...payload };
+                    }
+                    
+                    this.showToast('Kategori berhasil diperbarui!', 'success');
+                    this.renderCategories(); 
+                    e.target.reset();
+                    document.getElementById('form-edit-kategori').classList.add('hidden');
+                    document.getElementById('edit-kat-select').value = '';
+                } catch(err) { 
+                    this.showToast('Gagal mengupdate kategori. Cek kolom database.', 'error'); 
+                } finally { 
+                    this.hideLoader(); 
+                }
             },
             addPengumuman: async function(e) {
                 e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
