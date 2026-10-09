@@ -55,7 +55,7 @@
     <!-- GLOBAL LOADER -->
     <div id="global-loader" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[999] flex flex-col items-center justify-center transition-opacity duration-300">
         <div class="loader mb-4"></div>
-        <p class="text-sm font-bold text-muh-blue animate-pulse">Menyiapkan Sistem...</p>
+        <p id="loader-text" class="text-sm font-bold text-muh-blue animate-pulse">Sinkronisasi Database...</p>
     </div>
 
     <!-- NAVBAR -->
@@ -102,7 +102,7 @@
                 <button onclick="app.navigate('kategori'); app.toggleMobileMenu()" class="bg-muh-blue text-white font-bold py-4 rounded-2xl w-full">Daftar Sekarang</button>
             </div>
             <div id="mobile-user-menu" class="hidden flex-col gap-3 pt-4">
-                 <button id="mob-dash-btn" onclick="app.navigate('dashboard'); app.toggleMobileMenu()" class="bg-muh-light text-muh-blue font-bold py-4 rounded-2xl w-full">Dashboard Saya</button>
+                 <button id="mob-dash-btn" onclick="app.navigate('dashboard'); app.toggleMobileMenu()" class="bg-muh-light text-muh-blue font-bold py-4 rounded-2xl w-full">Dasbor Saya</button>
                  <button onclick="app.logout(); app.toggleMobileMenu()" class="text-red-500 font-bold py-4 rounded-2xl w-full border border-red-100">Keluar</button>
             </div>
         </div>
@@ -191,7 +191,7 @@
                         <div><label class="block text-sm font-bold mb-2">Nomor WA</label><input type="tel" name="nomor_wa" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
                         <div><label class="block text-sm font-bold mb-2">Email</label><input type="email" name="email" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
                     </div>
-                    <h3 class="text-lg font-bold border-b pb-3 mb-6">Data Khusus Kategori</h3>
+                    <h3 class="text-lg font-bold border-b pb-3 mb-6">Data Khusus & Upload Berkas (PDF)</h3>
                     <div id="dynamic-fields" class="space-y-6 mb-10"></div>
                     <div class="flex justify-end gap-4 border-t pt-6">
                         <button type="button" onclick="app.navigate('detail')" class="px-6 py-3 font-semibold text-slate-600">Batal</button>
@@ -209,7 +209,7 @@
                     <div id="review-content" class="space-y-4 mb-6 text-sm"></div>
                     <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 flex gap-3">
                         <input type="checkbox" id="agree-cb" class="mt-1 w-5 h-5 cursor-pointer">
-                        <label for="agree-cb" class="text-sm cursor-pointer">Data yang saya masukkan adalah benar dan valid.</label>
+                        <label for="agree-cb" class="text-sm cursor-pointer">Saya menyetujui seluruh data dan bersedia berkas saya diunggah ke server panitia.</label>
                     </div>
                 </div>
                 <div class="flex gap-4">
@@ -226,7 +226,7 @@
                     <div class="bg-white rounded-3xl p-8 shadow-floating border-t-8 border-green-500">
                         <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph-bold ph-check text-3xl"></i></div>
                         <h2 class="text-2xl font-bold mb-2">Pendaftaran Berhasil!</h2>
-                        <p class="text-sm text-slate-500 mb-6">Data tersimpan di sistem.</p>
+                        <p class="text-sm text-slate-500 mb-6">Data & berkas tersimpan di database Supabase.</p>
                         <div class="bg-slate-50 p-4 rounded-2xl border mb-6">
                             <p class="text-xs text-slate-500 uppercase mb-1">Nomor Registrasi Anda</p>
                             <p id="bukti-reg" class="text-3xl font-mono font-bold text-muh-blue mb-4"></p>
@@ -321,10 +321,16 @@
                     <!-- 2. ADMIN REKAP PESERTA -->
                     <div id="admin-sec-rekap" class="admin-section hidden">
                         <div class="print-only"><h1 style="font-size: 24px; font-weight: bold;">Dasbor Rekap Peserta MEA 2026</h1></div>
-                        <div class="flex justify-between items-center mb-6 no-print">
-                            <div><h2 class="text-2xl font-bold">Dasbor Rekap Peserta</h2><p class="text-sm text-slate-500">Manajemen dan verifikasi seluruh peserta.</p></div>
-                            <div class="flex gap-3">
-                                <select id="admin-filter-kategori" onchange="app.renderAdminRekap()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue"><option value="all">Semua Kategori Lomba</option></select>
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 no-print">
+                            <div><h2 class="text-2xl font-bold">Dasbor Rekap Peserta</h2><p class="text-sm text-slate-500">Manajemen, verifikasi, dan unduh berkas.</p></div>
+                            <div class="flex gap-2">
+                                <select id="admin-filter-kategori" onchange="app.renderAdminRekap()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[200px]"><option value="all">Semua Kategori</option></select>
+                                <select id="admin-filter-mapel" onchange="app.renderAdminRekap()" class="hidden px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[150px]">
+                                    <option value="all">Semua Mapel</option>
+                                    <option value="IPA">IPA</option>
+                                    <option value="Matematika">Matematika</option>
+                                    <option value="Bahasa Inggris">Bahasa Inggris</option>
+                                </select>
                                 <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
                             </div>
                         </div>
@@ -332,13 +338,13 @@
                         <!-- Tabel Rekap -->
                         <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                             <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID / Waktu</th><th class="p-4">Nama Peserta</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori Lomba</th><th class="p-4 no-print">Status & Aksi</th></tr></thead>
+                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID / Waktu</th><th class="p-4">Nama Peserta</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori & Berkas</th><th class="p-4 no-print">Status & Aksi</th></tr></thead>
                                 <tbody id="admin-table-body" class="divide-y"></tbody>
                             </table>
                         </div>
                     </div>
 
-                    <!-- 3. ADMIN KONTEN (CMS) -->
+                    <!-- 3. ADMIN KONTEN (CMS: Beranda, Kategori, Pengumuman) -->
                     <div id="admin-sec-konten" class="admin-section hidden no-print">
                         <h2 class="text-2xl font-bold mb-6">Manajemen Konten (CMS)</h2>
                         
@@ -357,7 +363,7 @@
                                 </div>
 
                                 <!-- Edit Kategori -->
-                                <div class="bg-white p-6 rounded-2xl shadow-sm border" id="form-edit-kategori-section">
+                                <div class="bg-white p-6 rounded-2xl shadow-sm border">
                                     <h3 class="font-bold mb-4 border-b pb-2 text-muh-blue">2. Ubah Kategori Lomba</h3>
                                     <div class="mb-4">
                                         <label class="text-sm font-bold block mb-1">Pilih Kategori:</label>
@@ -387,6 +393,7 @@
                                         <button type="submit" class="w-full bg-muh-blue text-white font-bold py-3 rounded-lg hover:bg-muh-dark">Simpan Pengumuman</button>
                                     </form>
 
+                                    <!-- Tabel Daftar Pengumuman -->
                                     <h4 class="font-bold text-sm mb-2">Daftar Pengumuman Aktif</h4>
                                     <div class="border rounded-xl overflow-hidden max-h-48 overflow-y-auto">
                                         <table class="w-full text-left text-xs"><tbody id="admin-list-pengumuman" class="divide-y bg-slate-50"></tbody></table>
@@ -413,7 +420,7 @@
         </section>
     </main>
 
-    <!-- MODAL LOGIN (1 USERNAME, 1 PASSWORD, BISA ENTER) -->
+    <!-- MODAL LOGIN (DIJAMIN 1 KOLOM USERNAME, 1 KOLOM PASSWORD, BISA ENTER) -->
     <div id="login-modal" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center px-4 opacity-0 transition-opacity duration-300 no-print">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300" id="login-modal-content">
             <div class="flex justify-between items-center mb-6">
@@ -428,9 +435,7 @@
                 <div>
                     <label class="block text-sm font-semibold mb-1">Password</label>
                     <div class="relative">
-                        <!-- Fitur Enter pada input password -->
                         <input type="password" id="login-password" onkeydown="if(event.key === 'Enter') app.processLogin()" class="w-full px-4 py-3 rounded-xl border outline-none focus:border-muh-blue bg-slate-50 pr-12" placeholder="Kosongkan jika peserta">
-                        <!-- Fitur Lihat Password -->
                         <button type="button" onclick="app.togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-slate-600"><i id="login-pwd-icon" class="ph-bold ph-eye text-xl"></i></button>
                     </div>
                 </div>
@@ -439,42 +444,57 @@
         </div>
     </div>
 
-    <!-- APP LOGIC & LOCAL DATABASE -->
+    <!-- APP LOGIC & SUPABASE REST API INTEGRATION -->
     <script>
-        const DB_KEY = 'MEA_2026_DATABASE_V3';
-        const defaultData = {
-            pengaturan: { pendaftaran_buka: true, teks_beranda: 'Membangun Generasi Emas Berkemajuan. Ajang kompetisi dan penghargaan bergengsi untuk siswa, guru, karyawan, dan sekolah se-Kabupaten Wonosobo.', tanggal_pelaksanaan: '7-8 November 2026' },
-            kategori: [
-                { id: 'olimpiade-sd', grup: 'Siswa Berprestasi', judul: 'Olimpiade SD/MI', ikon: 'ph-fill ph-calculator', deskripsi: 'Ajang kompetisi akademik mata pelajaran IPA, Matematika, dan Bahasa Inggris untuk jenjang SD/MI.', persyaratan: ['Siswa aktif SD/MI Muhammadiyah', 'Surat Tugas'], ketentuan: ['Maksimal 1 mapel'], form_fields: [{ type: 'select', name: 'mapel', label: 'Pilih Mata Pelajaran', options: ['IPA', 'Matematika', 'Bahasa Inggris'] }, { type: 'file', name: 'surat_tugas', label: 'Upload Surat Tugas (PDF)' }] },
-                { id: 'olimpiade-smp', grup: 'Siswa Berprestasi', judul: 'Olimpiade SMP/MTs', ikon: 'ph-fill ph-atom', deskripsi: 'Ajang kompetisi akademik mata pelajaran IPA, Matematika, dan Bahasa Inggris untuk jenjang SMP/MTs.', persyaratan: ['Siswa aktif SMP/MTs Muhammadiyah', 'Surat Tugas'], ketentuan: ['Maksimal 1 mapel'], form_fields: [{ type: 'select', name: 'mapel', label: 'Pilih Mata Pelajaran', options: ['IPA', 'Matematika', 'Bahasa Inggris'] }, { type: 'file', name: 'surat_tugas', label: 'Upload Surat Tugas (PDF)' }] },
-                { id: 'olimpiade-sma', grup: 'Siswa Berprestasi', judul: 'Olimpiade SMA/SMK/MA', ikon: 'ph-fill ph-student', deskripsi: 'Ajang kompetisi akademik mata pelajaran Matematika dan Bahasa Inggris untuk jenjang SMA/SMK/MA.', persyaratan: ['Siswa aktif SMA/SMK/MA Muhammadiyah', 'Surat Tugas'], ketentuan: ['Maksimal 1 mapel'], form_fields: [{ type: 'select', name: 'mapel', label: 'Pilih Mata Pelajaran', options: ['Matematika', 'Bahasa Inggris'] }, { type: 'file', name: 'surat_tugas', label: 'Upload Surat Tugas (PDF)' }] },
-                { id: 'tilawah-pa-pi', grup: 'Siswa Berprestasi', judul: 'Tilawah Pa & Pi', ikon: 'ph-fill ph-microphone-stage', deskripsi: 'Lomba seni baca Al-Qur\'an kategori Putra (Pa) dan Putri (Pi).', persyaratan: ['Siswa aktif Muhammadiyah', 'Mengisi form maqra'], ketentuan: ['Durasi maksimal 7 menit'], form_fields: [{ type: 'select', name: 'jenjang', label: 'Kategori', options: ['A (SD/MI)', 'B (SMP/MTs & SMA/SMK/MA)'] }, { type: 'select', name: 'kategori_peserta', label: 'Kategori (Pa/Pi)', options: ['Putra (Pa)', 'Putri (Pi)'] }] },
-                { id: 'guru-bp', grup: 'Guru Berprestasi', judul: 'Best Practice Guru', ikon: 'ph-fill ph-chalkboard-teacher', deskripsi: 'Penghargaan untuk inovasi pembelajaran guru dengan metode STAR.', persyaratan: ['Guru tetap Muhammadiyah'], ketentuan: ['Naskah PDF max 10 hal'], form_fields: [{ type: 'text', name: 'judul_naskah', label: 'Judul Best Practice' }, { type: 'file', name: 'naskah', label: 'Upload Naskah (PDF)' }] },
-                { id: 'sekolah-unggul', grup: 'Sekolah Berprestasi', judul: 'Sekolah Unggul', ikon: 'ph-fill ph-buildings', deskripsi: 'Penilaian institusi Muhammadiyah berdasarkan 8 Standar Nasional Pendidikan.', persyaratan: ['Profil Lengkap', 'Portofolio 3 Tahun'], ketentuan: ['Bersedia divisitasi'], form_fields: [{ type: 'file', name: 'profil_sekolah', label: 'Upload Profil Sekolah' }] },
-                { id: 'voli-pcm', grup: 'Kategori Khusus', judul: 'Turnamen Voli PCM', ikon: 'ph-fill ph-volleyball', deskripsi: 'Ajang silaturahmi antar PCM se-Kabupaten Wonosobo.', persyaratan: ['Surat Pengantar', 'KTA'], ketentuan: ['Sistem Gugur'], form_fields: [{ type: 'text', name: 'nama_tim', label: 'Nama Tim (PCM)' }, { type: 'file', name: 'berkas_tim', label: 'Upload Daftar Pemain & KTA' }] },
-                { id: 'guru-berdedikasi', grup: 'Guru Berprestasi', judul: 'Guru Berdedikasi', ikon: 'ph-fill ph-heart', deskripsi: 'Penghargaan bagi guru yang memiliki pengabdian panjang di AUM Wonosobo.', persyaratan: ['Masa kerja min 10 tahun', 'Surat Rekomendasi'], ketentuan: ['Belum pernah juara 1'], form_fields: [{ type: 'text', name: 'masa_kerja', label: 'Masa Kerja (Tahun)' }, { type: 'file', name: 'portofolio', label: 'Upload Bukti Dedikasi' }] }
-            ],
-            pengumuman: [], pendaftaran: [], akun: [{ username: 'admin', password: 'meaberkah26', role: 'admin' }]
-        };
+        const SUPABASE_URL = 'https://cpvoofbnbnmtyprrrsfa.supabase.co';
+        const SUPABASE_REST = `${SUPABASE_URL}/rest/v1`;
+        const SUPABASE_STORAGE = `${SUPABASE_URL}/storage/v1/object/berkas-lomba`;
+        const SUPABASE_KEY = 'sb_publishable_IglPnaLKr8BckXp91iPkIw_hvJzXgSv';
+        const DB_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=representation' };
 
         const db = {
-            data: null,
-            init: function() { const stored = localStorage.getItem(DB_KEY); this.data = stored ? JSON.parse(stored) : defaultData; },
-            save: function() { localStorage.setItem(DB_KEY, JSON.stringify(this.data)); }
+            get: async (table, query = '') => {
+                const res = await fetch(`${SUPABASE_REST}/${table}${query}`, { headers: { ...DB_HEADERS, 'Content-Type': 'application/json' } });
+                if (!res.ok) throw new Error(`Gagal fetch ${table}`); return res.json();
+            },
+            post: async (table, data) => {
+                const res = await fetch(`${SUPABASE_REST}/${table}`, { method: 'POST', headers: { ...DB_HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (!res.ok) throw new Error(`Gagal insert ${table}`); return res.json();
+            },
+            patch: async (table, query, data) => {
+                const res = await fetch(`${SUPABASE_REST}/${table}${query}`, { method: 'PATCH', headers: { ...DB_HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (!res.ok) throw new Error(`Gagal update ${table}`); const text = await res.text(); return text ? JSON.parse(text) : {};
+            },
+            delete: async (table, query) => {
+                const res = await fetch(`${SUPABASE_REST}/${table}${query}`, { method: 'DELETE', headers: DB_HEADERS });
+                if (!res.ok) throw new Error(`Gagal delete ${table}`); return true;
+            },
+            uploadFile: async (file) => {
+                const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
+                const res = await fetch(`${SUPABASE_STORAGE}/${fileName}`, { method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': file.type }, body: file });
+                if (!res.ok) throw new Error(`Upload gagal`);
+                return `${SUPABASE_URL}/storage/v1/object/public/berkas-lomba/${fileName}`;
+            }
         };
-        db.init();
 
         const app = {
-            state: { view: 'home', category: null, formDraft: null, user: null },
+            state: { view: 'home', category: null, formDraft: null, user: null, categories: [], settings: null, pengumuman: [] },
 
-            init: function() {
-                setTimeout(() => {
-                    document.getElementById('teks-beranda').textContent = db.data.pengaturan.teks_beranda;
-                    document.getElementById('teks-jadwal').textContent = db.data.pengaturan.tanggal_pelaksanaan;
-                    document.getElementById('global-loader').classList.add('hidden');
+            init: async function() {
+                this.showLoader('Menghubungkan ke Server...');
+                try {
+                    const [cats, setts] = await Promise.all([ db.get('kategori_lomba', '?order=id.asc'), db.get('pengaturan_web', '?id=eq.1') ]);
+                    this.state.categories = cats;
+                    this.state.settings = setts[0] || { pendaftaran_buka: false, teks_beranda: 'Koneksi ke Supabase gagal.', tanggal_pelaksanaan: 'Cek koneksi' };
+                    
+                    document.getElementById('teks-beranda').textContent = this.state.settings.teks_beranda;
+                    document.getElementById('teks-jadwal').textContent = this.state.settings.tanggal_pelaksanaan;
+                    
                     this.initCountdown(); this.navigate('home');
-                }, 400);
+                } catch (err) { this.showToast('Koneksi ke Supabase terputus. Pastikan izin SQL RLS sudah dijalankan.', 'error'); console.error(err); } finally { this.hideLoader(); }
             },
+            showLoader: function(txt = 'Memproses...') { document.getElementById('loader-text').textContent = txt; document.getElementById('global-loader').classList.remove('hidden'); },
+            hideLoader: () => document.getElementById('global-loader').classList.add('hidden'),
             showToast: function(msg, type='info') {
                 const c = document.getElementById('toast-container'), t = document.createElement('div');
                 let icon = type === 'success' ? '<i class="ph-fill ph-check-circle text-green-400 text-xl"></i>' : type === 'error' ? '<i class="ph-fill ph-warning-circle text-red-400 text-xl"></i>' : '<i class="ph-fill ph-info text-blue-400 text-xl"></i>';
@@ -499,15 +519,15 @@
             // PUBLIK UI
             renderCategories: function() {
                 const isAdmin = this.state.user && this.state.user.role === 'admin';
-                document.getElementById('kategori-grid').innerHTML = db.data.kategori.map(c => `
+                document.getElementById('kategori-grid').innerHTML = this.state.categories.map(c => `
                     <div onclick="app.navigate('detail', '${c.id}')" class="bg-white rounded-3xl p-6 shadow-soft border cursor-pointer hover:-translate-y-1 transition-all relative">
-                        ${isAdmin ? `<button onclick="app.editKategoriInline(event, '${c.id}')" class="absolute top-4 right-4 text-xs bg-yellow-400 text-yellow-900 px-3 py-1 rounded-lg font-bold shadow hover:bg-yellow-500">Edit Kategori</button>` : ''}
+                        ${isAdmin ? `<button onclick="app.editKategoriInline(event, '${c.id}')" class="absolute top-4 right-4 text-[10px] bg-yellow-400 text-yellow-900 px-2 py-1 rounded shadow hover:bg-yellow-500 font-bold z-10"><i class="ph-bold ph-pencil-simple"></i> Edit</button>` : ''}
                         <div class="w-12 h-12 bg-blue-50 text-muh-blue rounded-xl flex items-center justify-center text-2xl mb-4"><i class="${c.ikon}"></i></div>
                         <h3 class="font-bold text-lg mb-2">${c.judul}</h3><p class="text-sm text-slate-500 line-clamp-2">${c.deskripsi}</p>
                     </div>`).join('');
             },
             renderDetail: function() {
-                const cat = db.data.kategori.find(c => c.id === this.state.category);
+                const cat = this.state.categories.find(c => c.id === this.state.category);
                 if(!cat) return this.navigate('kategori');
                 document.getElementById('detail-icon').innerHTML = `<i class="${cat.ikon}"></i>`;
                 document.getElementById('detail-group').textContent = cat.grup; document.getElementById('detail-title').textContent = cat.judul;
@@ -516,45 +536,73 @@
                 document.getElementById('detail-rules').innerHTML = (cat.ketentuan||[]).map(r => `<li>- ${r}</li>`).join('');
             },
             startForm: function() {
-                if(!db.data.pengaturan.pendaftaran_buka) return this.showToast('Pendaftaran ditutup oleh admin.', 'error');
+                if(!this.state.settings.pendaftaran_buka) return this.showToast('Pendaftaran ditutup oleh admin.', 'error');
                 this.navigate('form');
             },
             renderForm: function() {
-                const cat = db.data.kategori.find(c => c.id === this.state.category);
+                const cat = this.state.categories.find(c => c.id === this.state.category);
                 document.getElementById('form-category-subtitle').textContent = `Kategori: ${cat.judul}`;
                 document.getElementById('dynamic-fields').innerHTML = (cat.form_fields||[]).map(f => {
                     let input = f.type === 'select' ? `<select name="${f.name}" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"><option value="">Pilih...</option>${f.options.map(o=>`<option>${o}</option>`).join('')}</select>` 
-                    : f.type === 'file' ? `<input type="file" name="${f.name}" required class="w-full text-sm">` 
+                    : f.type === 'file' ? `<input type="file" name="${f.name}" required accept=".pdf" class="w-full text-sm">` 
                     : `<input type="text" name="${f.name}" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue">`;
                     return `<div><label class="block text-sm font-bold mb-2">${f.label}</label>${input}</div>`;
                 }).join('');
             },
             submitForm: function(e) {
-                e.preventDefault(); const data = Object.fromEntries(new FormData(e.target).entries());
-                for(let key in data) if(data[key] instanceof File) data[key] = data[key].name; 
+                e.preventDefault(); const formData = new FormData(e.target);
+                const data = {}; for (let [key, value] of formData.entries()) { data[key] = value; } // Store File objects as is for review
                 this.state.formDraft = data; this.navigate('review');
             },
             renderReview: function() {
                 if(!this.state.formDraft) return this.navigate('form');
-                let html = ''; for(let key in this.state.formDraft) html += `<p class="mb-2"><b class="capitalize text-slate-500">${key.replace('_',' ')}:</b> <br/>${this.state.formDraft[key]}</p>`;
+                let html = ''; 
+                for(let key in this.state.formDraft) {
+                    let val = this.state.formDraft[key];
+                    if(val instanceof File) val = val.name ? `📄 ${val.name}` : '-';
+                    html += `<p class="mb-2"><b class="capitalize text-slate-500">${key.replace('_',' ')}:</b> <br/>${val}</p>`;
+                }
                 document.getElementById('review-content').innerHTML = html; document.getElementById('agree-cb').checked = false;
             },
-            finalSubmit: function() {
+            finalSubmit: async function() {
                 if(!document.getElementById('agree-cb').checked) return this.showToast('Centang persetujuan form!', 'error');
-                const regId = 'REG-' + Math.floor(Math.random()*90000+10000);
-                const payload = { reg_id: regId, kategori_id: this.state.category, status_verifikasi: 'Menunggu', waktu_daftar: new Date().toISOString(), ...this.state.formDraft };
-                db.data.pendaftaran.unshift(payload); db.save();
-                
-                document.getElementById('bukti-reg').textContent = regId;
-                this.state.user = { role: 'peserta', name: payload.nama_lengkap, data: payload };
-                this.state.formDraft = null; this.updateNavState(); this.navigate('bukti'); this.showToast('Berhasil Mendaftar!', 'success');
+                this.showLoader('Mengunggah berkas...');
+                try {
+                    const d = this.state.formDraft;
+                    const finalDataTambahan = {};
+
+                    // Proses Upload File jika ada
+                    for (let key in d) {
+                        if (d[key] instanceof File && d[key].name) {
+                            finalDataTambahan[key] = await db.uploadFile(d[key]);
+                        } else if (!['nama_lengkap','nomor_induk','asal_instansi','nomor_wa','email'].includes(key)) {
+                            finalDataTambahan[key] = d[key];
+                        }
+                    }
+
+                    // Proses Insert DB
+                    this.showLoader('Menyimpan Data Pendaftaran...');
+                    const regId = 'REG-' + Math.floor(Math.random()*90000+10000);
+                    const payload = { 
+                        reg_id: regId, nama_lengkap: d.nama_lengkap, nomor_induk: d.nomor_induk, asal_instansi: d.asal_instansi, 
+                        nomor_wa: d.nomor_wa, email: d.email, kategori_id: this.state.category, status_verifikasi: 'Menunggu', 
+                        data_tambahan: finalDataTambahan 
+                    };
+                    await db.post('pendaftaran', payload);
+                    
+                    document.getElementById('bukti-reg').textContent = regId;
+                    this.state.user = { role: 'peserta', name: payload.nama_lengkap, data: payload };
+                    this.state.formDraft = null; this.updateNavState(); this.navigate('bukti'); this.showToast('Pendaftaran Berhasil!', 'success');
+                } catch(e) { 
+                    this.showToast('Gagal mendaftar. Pastikan bucket "berkas-lomba" sudah dibuat dan Public.', 'error'); console.error(e); 
+                } finally { this.hideLoader(); }
             },
 
             // DASHBOARD PESERTA
             loginAsPeserta: function() { this.navigate('dashboard'); },
             renderDashboard: function() {
                 if(!this.state.user || this.state.user.role !== 'peserta') return this.navigate('home');
-                const d = this.state.user.data; const cat = db.data.kategori.find(c => c.id === d.kategori_id);
+                const d = this.state.user.data; const cat = this.state.categories.find(c => c.id === d.kategori_id);
                 document.getElementById('dash-nama').textContent = d.nama_lengkap; document.getElementById('dash-reg').textContent = d.reg_id;
                 document.getElementById('dash-kat').textContent = cat ? cat.judul : '-'; document.getElementById('dash-instansi').textContent = d.asal_instansi;
                 
@@ -563,21 +611,28 @@
                 statEl.className = `px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${d.status_verifikasi==='Terverifikasi'?'bg-green-100 text-green-700':d.status_verifikasi==='Ditolak'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700'}`;
                 
                 let addHtml = '';
-                for(let key in d) if(!['nama_lengkap','nomor_induk','asal_instansi','nomor_wa','email','reg_id','kategori_id','status_verifikasi','waktu_daftar'].includes(key)) addHtml += `<p class="mb-1"><b class="capitalize">${key.replace('_',' ')}:</b> ${d[key]}</p>`;
-                document.getElementById('dash-tambahan').innerHTML = addHtml || 'Tidak ada berkas tambahan.';
+                for(let key in d.data_tambahan) {
+                    let val = d.data_tambahan[key];
+                    if(typeof val === 'string' && val.startsWith('http')) val = `<a href="${val}" target="_blank" class="text-muh-blue underline">Lihat Berkas <i class="ph-bold ph-arrow-up-right"></i></a>`;
+                    addHtml += `<p class="mb-2"><b class="capitalize text-slate-500">${key.replace('_',' ')}:</b> <br/>${val}</p>`;
+                }
+                document.getElementById('dash-tambahan').innerHTML = addHtml || 'Tidak ada data tambahan.';
             },
             
             // PENGUMUMAN PUBLIK
-            renderPengumumanView: function() {
+            renderPengumumanView: async function() {
                 const sel = document.getElementById('filter-pengumuman');
-                if(sel.options.length <= 1) db.data.kategori.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
-                
-                const fVal = sel.value; const tbody = document.getElementById('table-pengumuman');
-                let data = db.data.pengumuman; if(fVal !== 'all') data = data.filter(p => p.kategori_id === fVal);
-                data.sort((a,b) => a.peringkat - b.peringkat);
-                
-                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada pengumuman untuk kategori ini.</td></tr>`;
-                tbody.innerHTML = data.map(p => `<tr><td class="p-4 pl-6 font-bold text-muh-blue">Juara ${p.peringkat}</td><td class="p-4 font-bold">${p.nama_pemenang}</td><td class="p-4">${p.asal_instansi}</td><td class="p-4 text-xs font-bold bg-slate-50">${db.data.kategori.find(k=>k.id===p.kategori_id)?.judul||'-'}</td><td class="p-4 pr-6 font-bold">${p.skor}</td></tr>`).join('');
+                if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+                this.showLoader('Memuat pengumuman...');
+                try {
+                    const res = await db.get('pengumuman', '?select=*,kategori_lomba(judul)&order=peringkat.asc');
+                    this.state.pengumuman = res;
+                    const fVal = sel.value; const tbody = document.getElementById('table-pengumuman');
+                    let data = res; if(fVal !== 'all') data = data.filter(p => p.kategori_id === fVal);
+                    
+                    if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada pengumuman untuk kategori ini.</td></tr>`;
+                    tbody.innerHTML = data.map(p => `<tr><td class="p-4 pl-6 font-bold text-muh-blue">Juara ${p.peringkat}</td><td class="p-4 font-bold">${p.nama_pemenang}</td><td class="p-4">${p.asal_instansi}</td><td class="p-4 text-xs font-bold bg-slate-50">${p.kategori_lomba?.judul||'-'}</td><td class="p-4 pr-6 font-bold">${p.skor}</td></tr>`).join('');
+                } catch(e) { this.showToast('Gagal memuat pengumuman', 'error'); } finally { this.hideLoader(); }
             },
 
             // ADMIN LOGIC (SMART INLINE EDITING)
@@ -586,51 +641,83 @@
                 setTimeout(() => document.getElementById('edit-teks-beranda').focus(), 300);
             },
             editKategoriInline: function(e, id) {
-                e.stopPropagation(); // Mencegah klik menembus ke view detail
+                e.stopPropagation(); 
                 this.navigate('admin'); this.switchAdminTab('konten');
                 document.getElementById('edit-kat-select').value = id;
                 this.loadEditKategori(id);
                 setTimeout(() => document.getElementById('edit-kat-judul').focus(), 300);
             },
-            switchAdminTab: function(tab) {
+            switchAdminTab: async function(tab) {
                 if(!this.state.user || !['admin','operator'].includes(this.state.user.role)) return this.navigate('home');
                 document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
                 document.getElementById(`admin-sec-${tab}`).classList.remove('hidden');
                 document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('bg-blue-800/50', 'text-white'));
                 document.getElementById(`btn-tab-${tab}`).classList.add('bg-blue-800/50', 'text-white');
                 
-                if(tab === 'dashboard') this.renderAdminDashboard();
-                if(tab === 'rekap') this.renderAdminRekap();
-                if(tab === 'akses') this.renderAdminAkses();
-                if(tab === 'konten') this.renderAdminKonten();
+                this.showLoader();
+                try {
+                    if(tab === 'dashboard') await this.renderAdminDashboard();
+                    if(tab === 'rekap') await this.renderAdminRekap();
+                    if(tab === 'akses') await this.renderAdminAkses();
+                    if(tab === 'konten') await this.renderAdminKonten();
+                } catch(e) { this.showToast('Gagal memuat data admin. Cek RLS SQL.', 'error'); } finally { this.hideLoader(); }
             },
-            renderAdminDashboard: function() {
-                document.getElementById('stat-total').textContent = db.data.pendaftaran.length;
-                document.getElementById('stat-sekolah').textContent = new Set(db.data.pendaftaran.map(p => p.asal_instansi)).size;
-                document.getElementById('toggle-form').checked = db.data.pengaturan.pendaftaran_buka;
+            renderAdminDashboard: async function() {
+                const data = await db.get('pendaftaran', '?select=kategori_id,asal_instansi');
+                document.getElementById('stat-total').textContent = data.length;
+                document.getElementById('stat-sekolah').textContent = new Set(data.map(p => p.asal_instansi)).size;
+                document.getElementById('toggle-form').checked = this.state.settings.pendaftaran_buka;
             },
-            toggleFormStatus: function(el) {
-                db.data.pengaturan.pendaftaran_buka = el.checked; db.save();
-                this.showToast(el.checked ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup', 'success');
+            toggleFormStatus: async function(el) {
+                try {
+                    await db.patch('pengaturan_web', '?id=eq.1', { pendaftaran_buka: el.checked });
+                    this.state.settings.pendaftaran_buka = el.checked;
+                    this.showToast(el.checked ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup', 'success');
+                } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
             },
             
-            // ADMIN REKAP PESERTA
-            renderAdminRekap: function() {
-                const sel = document.getElementById('admin-filter-kategori');
-                if(sel.options.length <= 1) db.data.kategori.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+            // ADMIN REKAP PESERTA (DENGAN FILTER & LIHAT BERKAS)
+            renderAdminRekap: async function() {
+                const selKat = document.getElementById('admin-filter-kategori');
+                const selMapel = document.getElementById('admin-filter-mapel');
+                if(selKat.options.length <= 1) this.state.categories.forEach(c => selKat.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
                 
-                let data = db.data.pendaftaran;
-                if(sel.value !== 'all') data = data.filter(p => p.kategori_id === sel.value);
+                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,status_verifikasi,waktu_daftar,data_tambahan&order=waktu_daftar.desc';
                 
+                if(selKat.value !== 'all') {
+                    query += `&kategori_id=eq.${selKat.value}`;
+                    // Tampilkan filter mapel HANYA jika kategori depannya olimpiade
+                    if(selKat.value.startsWith('olimpiade')) {
+                        selMapel.classList.remove('hidden');
+                        if(selMapel.value !== 'all') query += `&data_tambahan->>mapel=eq.${selMapel.value}`;
+                    } else {
+                        selMapel.classList.add('hidden'); selMapel.value = 'all';
+                    }
+                } else {
+                    selMapel.classList.add('hidden'); selMapel.value = 'all';
+                }
+                
+                const data = await db.get('pendaftaran', query);
                 const tbody = document.getElementById('admin-table-body');
                 if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada pendaftar.</td></tr>`;
                 
-                tbody.innerHTML = data.map(p => `
+                tbody.innerHTML = data.map(p => {
+                    let infoTambahan = `<span class="block font-bold text-xs">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</span>`;
+                    if(p.data_tambahan) {
+                        for(let key in p.data_tambahan) {
+                            if(typeof p.data_tambahan[key] === 'string' && p.data_tambahan[key].startsWith('http')) {
+                                infoTambahan += `<a href="${p.data_tambahan[key]}" target="_blank" class="block text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded mt-1 border hover:bg-blue-100 max-w-[150px] truncate"><i class="ph-bold ph-link"></i> ${key.replace('_',' ')}</a>`;
+                            } else if (key === 'mapel' || key === 'jenjang') {
+                                infoTambahan += `<span class="block text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded mt-1 font-bold w-max">${p.data_tambahan[key]}</span>`;
+                            }
+                        }
+                    }
+                    return `
                     <tr>
                         <td class="p-4 font-mono text-xs">${p.reg_id}<br><span class="text-slate-400">${new Date(p.waktu_daftar).toLocaleDateString('id-ID')}</span></td>
                         <td class="p-4 font-bold text-slate-800">${p.nama_lengkap}</td>
-                        <td class="p-4">${p.asal_instansi}</td>
-                        <td class="p-4 font-bold text-xs">${db.data.kategori.find(c=>c.id===p.kategori_id)?.judul||'-'}</td>
+                        <td class="p-4 text-xs">${p.asal_instansi}</td>
+                        <td class="p-4">${infoTambahan}</td>
                         <td class="p-4 no-print">
                             <select onchange="app.updateStatusPeserta('${p.reg_id}', this.value)" class="p-1 text-xs border rounded ${p.status_verifikasi === 'Terverifikasi' ? 'bg-green-100 text-green-700' : p.status_verifikasi === 'Ditolak' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'} outline-none cursor-pointer">
                                 <option value="Menunggu" ${p.status_verifikasi === 'Menunggu' ? 'selected' : ''}>Menunggu</option>
@@ -638,125 +725,122 @@
                                 <option value="Ditolak" ${p.status_verifikasi === 'Ditolak' ? 'selected' : ''}>Tolak</option>
                             </select>
                         </td>
-                    </tr>`).join('');
+                    </tr>`;
+                }).join('');
             },
-            updateStatusPeserta: function(regId, status) {
-                const idx = db.data.pendaftaran.findIndex(p => p.reg_id === regId);
-                if(idx > -1) { db.data.pendaftaran[idx].status_verifikasi = status; db.save(); this.showToast('Status Diperbarui', 'success'); this.renderAdminRekap(); }
+            updateStatusPeserta: async function(regId, status) {
+                this.showLoader('Update status...');
+                try {
+                    await db.patch('pendaftaran', `?reg_id=eq.${regId}`, { status_verifikasi: status });
+                    this.showToast(`Status ${regId} diperbarui`, 'success'); this.renderAdminRekap(); 
+                } catch(e) { this.showToast('Gagal merubah status', 'error'); } finally { this.hideLoader(); }
             },
             
             // ADMIN CMS (KELOLA KONTEN)
-            renderAdminKonten: function() {
-                // Beranda
-                document.getElementById('edit-teks-beranda').value = db.data.pengaturan.teks_beranda;
-                document.getElementById('edit-teks-jadwal').value = db.data.pengaturan.tanggal_pelaksanaan;
+            renderAdminKonten: async function() {
+                document.getElementById('edit-teks-beranda').value = this.state.settings.teks_beranda;
+                document.getElementById('edit-teks-jadwal').value = this.state.settings.tanggal_pelaksanaan;
 
-                // Kategori & Pengumuman
-                const opts = `<option value="">Pilih Kategori...</option>` + db.data.kategori.map(c => `<option value="${c.id}">${c.judul}</option>`).join('');
-                document.getElementById('edit-kat-select').innerHTML = opts; 
-                document.getElementById('admin-select-kat').innerHTML = opts;
+                const opts = `<option value="">Pilih Kategori...</option>` + this.state.categories.map(c => `<option value="${c.id}">${c.judul}</option>`).join('');
+                document.getElementById('edit-kat-select').innerHTML = opts; document.getElementById('admin-select-kat').innerHTML = opts;
 
-                // List Pengumuman Aktif
+                const pData = await db.get('pengumuman', '?select=*,kategori_lomba(judul)&order=created_at.desc');
                 const tb = document.getElementById('admin-list-pengumuman');
-                if(!db.data.pengumuman.length) tb.innerHTML = `<tr><td class="p-3 text-center text-slate-500">Belum ada pengumuman terbit.</td></tr>`;
-                else tb.innerHTML = db.data.pengumuman.map(p => `<tr><td class="p-3"><span class="font-bold">${p.nama_pemenang}</span> (Juara ${p.peringkat})<br><span class="text-xs text-slate-400">${db.data.kategori.find(k=>k.id===p.kategori_id)?.judul||''}</span></td><td class="p-3 text-right"><button onclick="app.hapusPengumuman('${p.id}')" class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Hapus</button></td></tr>`).join('');
+                if(!pData.length) tb.innerHTML = `<tr><td class="p-3 text-center text-slate-500">Belum ada pengumuman terbit.</td></tr>`;
+                else tb.innerHTML = pData.map(p => `<tr><td class="p-3"><span class="font-bold">${p.nama_pemenang}</span> (Juara ${p.peringkat})<br><span class="text-xs text-slate-400">${p.kategori_lomba?.judul||''}</span></td><td class="p-3 text-right"><button onclick="app.hapusPengumuman('${p.id}')" class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Hapus</button></td></tr>`).join('');
             },
-            updateBeranda: function(e) {
+            updateBeranda: async function(e) {
                 e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
-                db.data.pengaturan.teks_beranda = d.teks_beranda; 
-                db.data.pengaturan.tanggal_pelaksanaan = d.tanggal_pelaksanaan; 
-                db.save();
-                
-                // Langsung ubah di UI public
-                document.getElementById('teks-beranda').textContent = d.teks_beranda; 
-                document.getElementById('teks-jadwal').textContent = `Pelaksanaan: ${d.tanggal_pelaksanaan}`;
-                this.showToast('Beranda berhasil diperbarui!', 'success');
+                this.showLoader();
+                try {
+                    await db.patch('pengaturan_web', '?id=eq.1', d);
+                    this.state.settings.teks_beranda = d.teks_beranda; this.state.settings.tanggal_pelaksanaan = d.tanggal_pelaksanaan;
+                    document.getElementById('teks-beranda').textContent = d.teks_beranda; document.getElementById('teks-jadwal').textContent = `Pelaksanaan: ${d.tanggal_pelaksanaan}`;
+                    this.showToast('Beranda berhasil diperbarui!', 'success');
+                } catch(err) { this.showToast('Gagal update Beranda', 'error'); } finally { this.hideLoader(); }
             },
             loadEditKategori: function(id) {
-                const form = document.getElementById('form-edit-kategori'); 
-                if(!id) { form.classList.add('hidden'); return; }
-                const cat = db.data.kategori.find(c => c.id === id);
-                document.getElementById('edit-kat-id').value = cat.id; 
-                document.getElementById('edit-kat-judul').value = cat.judul; 
-                document.getElementById('edit-kat-desc').value = cat.deskripsi;
+                const form = document.getElementById('form-edit-kategori'); if(!id) { form.classList.add('hidden'); return; }
+                const cat = this.state.categories.find(c => c.id === id);
+                document.getElementById('edit-kat-id').value = cat.id; document.getElementById('edit-kat-judul').value = cat.judul; document.getElementById('edit-kat-desc').value = cat.deskripsi;
                 form.classList.remove('hidden');
             },
-            updateKategori: function(e) {
-                e.preventDefault(); 
-                const d = Object.fromEntries(new FormData(e.target).entries());
-                const idx = db.data.kategori.findIndex(c => c.id === d.id);
-                if(idx > -1) { 
-                    db.data.kategori[idx].judul = d.judul; 
-                    db.data.kategori[idx].deskripsi = d.deskripsi; 
-                    db.save(); 
-                    
-                    this.showToast('Kategori berhasil diperbarui!', 'success');
-                    e.target.reset();
-                    document.getElementById('form-edit-kategori').classList.add('hidden');
-                    document.getElementById('edit-kat-select').value = '';
-                }
-            },
-            addPengumuman: function(e) {
+            updateKategori: async function(e) {
                 e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
-                db.data.pengumuman.unshift({ id: 'P-'+Date.now(), kategori_id: d.kategori_id, peringkat: parseInt(d.peringkat), nama_pemenang: d.nama_pemenang, asal_instansi: d.asal_instansi, skor: parseFloat(d.skor) });
-                db.save(); e.target.reset(); this.showToast('Pengumuman dirilis!', 'success'); this.renderAdminKonten();
+                this.showLoader();
+                try {
+                    await db.patch('kategori_lomba', `?id=eq.${d.id}`, { judul: d.judul, deskripsi: d.deskripsi });
+                    const idx = this.state.categories.findIndex(c => c.id === d.id);
+                    if(idx > -1) { this.state.categories[idx].judul = d.judul; this.state.categories[idx].deskripsi = d.deskripsi; }
+                    this.showToast('Kategori berhasil diperbarui!', 'success'); e.target.reset(); document.getElementById('form-edit-kategori').classList.add('hidden'); document.getElementById('edit-kat-select').value = '';
+                } catch(err) { this.showToast('Gagal mengupdate kategori', 'error'); } finally { this.hideLoader(); }
             },
-            hapusPengumuman: function(id) {
+            addPengumuman: async function(e) {
+                e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+                this.showLoader();
+                try {
+                    await db.post('pengumuman', { kategori_id: d.kategori_id, peringkat: parseInt(d.peringkat), nama_pemenang: d.nama_pemenang, asal_instansi: d.asal_instansi, skor: parseFloat(d.skor) });
+                    e.target.reset(); this.showToast('Pengumuman dirilis!', 'success'); this.renderAdminKonten();
+                } catch(err) { this.showToast('Gagal menerbitkan pengumuman', 'error'); } finally { this.hideLoader(); }
+            },
+            hapusPengumuman: async function(id) {
                 if(!confirm('Hapus pengumuman ini?')) return;
-                db.data.pengumuman = db.data.pengumuman.filter(p => p.id !== id); db.save(); this.showToast('Terhapus', 'success'); this.renderAdminKonten();
+                this.showLoader();
+                try { await db.delete('pengumuman', `?id=eq.${id}`); this.showToast('Terhapus', 'success'); this.renderAdminKonten(); } 
+                catch(err) { this.showToast('Gagal menghapus', 'error'); } finally { this.hideLoader(); }
             },
 
             // ADMIN AKSES
-            renderAdminAkses: function() {
-                document.getElementById('admin-users-body').innerHTML = db.data.akun.map(u => `<tr><td class="p-4 font-bold">${u.username}</td><td class="p-4 text-right uppercase text-xs">${u.role}</td></tr>`).join('');
+            renderAdminAkses: async function() {
+                const data = await db.get('akun_pengguna', '?select=username,role');
+                document.getElementById('admin-users-body').innerHTML = data.map(u => `<tr><td class="p-4 font-bold">${u.username}</td><td class="p-4 text-right uppercase text-xs">${u.role}</td></tr>`).join('');
             },
-            addAdminUser: function(e) {
+            addAdminUser: async function(e) {
                 e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
-                if(db.data.akun.find(u => u.username === d.username)) return this.showToast('Username terpakai', 'error');
-                db.data.akun.push(d); db.save(); e.target.reset(); this.renderAdminAkses(); this.showToast('Akun ditambah', 'success');
+                this.showLoader();
+                try { await db.post('akun_pengguna', d); e.target.reset(); await this.renderAdminAkses(); this.showToast('Akun ditambah', 'success'); } 
+                catch(err) { this.showToast('Gagal / Username sudah ada', 'error'); } finally { this.hideLoader(); }
             },
 
             // LOGIN
             showLoginModal: function() { const m = document.getElementById('login-modal'); m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10); document.getElementById('login-id').focus(); },
             hideLoginModal: function() { const m = document.getElementById('login-modal'); m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300); },
             togglePassword: function() { const inp = document.getElementById('login-password'); const ico = document.getElementById('login-pwd-icon'); if(inp.type === 'password') { inp.type = 'text'; ico.className = 'ph-bold ph-eye-slash text-xl'; } else { inp.type = 'password'; ico.className = 'ph-bold ph-eye text-xl'; } },
-            processLogin: function() {
+            processLogin: async function() {
                 const id = document.getElementById('login-id').value.trim(); const pwd = document.getElementById('login-password').value;
                 if(!id) return this.showToast('Masukkan ID/Username', 'error');
                 
-                if(id.startsWith('REG-')) {
-                    const p = db.data.pendaftaran.find(x => x.reg_id === id);
-                    if(p) { this.state.user = { role: 'peserta', name: p.nama_lengkap, data: p }; this.hideLoginModal(); this.updateNavState(); this.navigate('dashboard'); this.showToast('Login Berhasil', 'success'); } 
-                    else this.showToast('ID Reg tidak ditemukan', 'error');
-                } else {
-                    const usr = db.data.akun.find(u => u.username === id);
-                    if(usr && usr.password === pwd) { this.state.user = { role: usr.role, name: usr.role.toUpperCase() }; this.hideLoginModal(); this.updateNavState(); this.navigate('admin'); this.showToast(`Login ${usr.role} Berhasil`, 'success'); } 
-                    else this.showToast('Kredensial Admin tidak valid!', 'error');
-                }
+                this.showLoader();
+                try {
+                    if(id.startsWith('REG-')) {
+                        const res = await db.get('pendaftaran', `?reg_id=eq.${id}&select=*`);
+                        if(res.length) { this.state.user = { role: 'peserta', name: res[0].nama_lengkap, data: res[0] }; this.hideLoginModal(); this.updateNavState(); this.navigate('dashboard'); this.showToast('Login Berhasil', 'success'); } 
+                        else this.showToast('ID Reg tidak ditemukan', 'error');
+                    } else {
+                        const res = await db.get('akun_pengguna', `?username=eq.${id}&select=*`);
+                        if(res.length && res[0].password === pwd) { this.state.user = { role: res[0].role, name: res[0].role.toUpperCase() }; this.hideLoginModal(); this.updateNavState(); this.navigate('admin'); this.showToast(`Login ${res[0].role} Berhasil`, 'success'); } 
+                        else this.showToast('Kredensial Admin tidak valid!', 'error');
+                    }
+                } catch(e) { this.showToast('Terjadi kesalahan jaringan', 'error'); } finally { this.hideLoader(); }
             },
             logout: function() { this.state.user = null; this.updateNavState(); this.navigate('home'); this.showToast('Berhasil keluar.', 'success'); },
             updateNavState: function() {
                 const authBtns = document.getElementById('auth-buttons'), userMenu = document.getElementById('user-menu'), mobAuthBtns = document.getElementById('mobile-auth-buttons'), mobUserMenu = document.getElementById('mobile-user-menu'), navDashBtn = document.getElementById('nav-dash-btn'), mobDashBtn = document.getElementById('mob-dash-btn'), navUserIcon = document.getElementById('nav-user-icon');
-                
-                // Toggle Admin UI (Tombol Edit Beranda)
                 const homeEditBtn = document.getElementById('admin-home-edit-btn');
                 
                 if(this.state.user) {
-                    authBtns.classList.add('hidden'); userMenu.classList.remove('hidden'); userMenu.classList.add('flex');
-                    mobAuthBtns.classList.add('hidden'); mobUserMenu.classList.remove('hidden'); mobUserMenu.classList.add('flex');
+                    authBtns.classList.add('hidden'); userMenu.classList.remove('hidden'); userMenu.classList.add('flex'); mobAuthBtns.classList.add('hidden'); mobUserMenu.classList.remove('hidden'); mobUserMenu.classList.add('flex');
                     if (['admin', 'operator'].includes(this.state.user.role)) { 
                         navDashBtn.setAttribute('onclick', "app.navigate('admin')"); document.getElementById('nav-username').textContent = 'Panel Admin'; navUserIcon.className = 'ph-fill ph-shield-check text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('admin'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Panel Admin'; 
                         if(homeEditBtn) homeEditBtn.classList.remove('hidden');
                     } else { 
-                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dashboard Saya'; 
+                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dasbor Saya'; 
                         if(homeEditBtn) homeEditBtn.classList.add('hidden');
                     }
                 } else { 
                     authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); userMenu.classList.remove('flex'); mobAuthBtns.classList.remove('hidden'); mobUserMenu.classList.add('hidden'); mobUserMenu.classList.remove('flex'); 
                     if(homeEditBtn) homeEditBtn.classList.add('hidden');
                 }
-                
-                // Refresh views immediately if they are active to show/hide admin buttons
                 if(this.state.view === 'kategori') this.renderCategories();
             },
             toggleMobileMenu: function() { const menu = document.getElementById('mobile-menu'); if(menu.classList.contains('hidden')) { menu.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } else { menu.classList.add('hidden'); document.body.style.overflow = ''; } },
