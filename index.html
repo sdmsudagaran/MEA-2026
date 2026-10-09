@@ -870,11 +870,13 @@
             },
 
             // ADMIN JURI (DINAMIS TILAWAH & BEST PRACTICE)
+            // ADMIN JURI (Penilaian Terpadu)
             renderAdminJuri: async function() {
                 const sel = document.getElementById('juri-filter-kategori');
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
 
-                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
+                // Mengambil data peserta TERVERIFIKASI dan melakukan JOIN (relasi) dengan tabel penjurian
+                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan,penjurian(skor_akhir,skor_detail)&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
                 if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
 
                 const data = await db.get('pendaftaran', query);
@@ -889,7 +891,10 @@
                         const links = Object.entries(p.data_tambahan).filter(([k,v]) => typeof v === 'string' && v.startsWith('http'));
                         if(links.length > 0) berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded border hover:bg-blue-100 inline-block mb-1"><i class="ph-bold ph-link"></i> ${k.replace('_',' ')}</a>`).join('<br>');
                     }
-                    const skorSaatIni = p.data_tambahan?.skor_juri ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${p.data_tambahan.skor_juri}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
+                    
+                    // Mengekstrak data dari relasi tabel penjurian
+                    const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
+                    const skorSaatIni = dataJuri ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${dataJuri.skor_akhir}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
 
                     return `<tr>
                         <td class="p-4 font-mono text-xs">${p.reg_id}</td>
@@ -904,14 +909,17 @@
                 const p = this.state.pendaftaran.find(x => x.reg_id === regId);
                 if(!p) return;
                 this.state.juriTarget = p;
-                const skor = p.data_tambahan?.skor_detail || {};
+                
+                // Ambil skor detail jika sudah pernah dinilai
+                const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
+                const skor = dataJuri ? dataJuri.skor_detail : {};
                 
                 let html = '';
                 if(p.kategori_id === 'tilawah-pa-pi') {
                     html = `
                         <div class="space-y-4">
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid (0-100)</h4>
+                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Makharijul Huruf</label><input type="number" id="juri-t1" value="${skor.t1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Sifatul Huruf</label><input type="number" id="juri-t2" value="${skor.t2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -920,7 +928,7 @@
                                 </div>
                             </div>
                             <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-                                <h4 class="font-bold text-green-700 mb-3 border-b border-green-200 pb-2">2. Aspek Suara (0-100)</h4>
+                                <h4 class="font-bold text-green-700 mb-3 border-b border-green-200 pb-2">2. Aspek Suara</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Kejernihan</label><input type="number" id="juri-s1" value="${skor.s1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Kehalusan</label><input type="number" id="juri-s2" value="${skor.s2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -930,7 +938,7 @@
                                 </div>
                             </div>
                             <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                                <h4 class="font-bold text-yellow-700 mb-3 border-b border-yellow-200 pb-2">3. Aspek Lagu (0-100)</h4>
+                                <h4 class="font-bold text-yellow-700 mb-3 border-b border-yellow-200 pb-2">3. Aspek Lagu</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Lagu pertama & penutup</label><input type="number" id="juri-l1" value="${skor.l1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Jumlah lagu</label><input type="number" id="juri-l2" value="${skor.l2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -940,7 +948,7 @@
                                 </div>
                             </div>
                             <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                <h4 class="font-bold text-purple-700 mb-3 border-b border-purple-200 pb-2">4. Fasahah dan Adab (0-100)</h4>
+                                <h4 class="font-bold text-purple-700 mb-3 border-b border-purple-200 pb-2">4. Fasahah dan Adab</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Ahkāmul waqf wal ibtida’</label><input type="number" id="juri-f1" value="${skor.f1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Mura’atul huruf wal harakat</label><input type="number" id="juri-f2" value="${skor.f2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -955,12 +963,12 @@
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                                 <h4 class="font-bold text-muh-blue mb-4 border-b border-blue-200 pb-2">Penilaian Best Practice Guru (0-100)</h4>
                                 <div class="space-y-3 text-sm">
-                                    <div><label class="flex justify-between"><span>Kreativitas & Kebaruan Inovasi</span> <span class="font-bold">25%</span></label><input type="number" id="juri-bp1" value="${skor.bp1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Relevansi Pembelajaran Mendalam</span> <span class="font-bold">15%</span></label><input type="number" id="juri-bp2" value="${skor.bp2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Keterlibatan Aktif Peserta Didik</span> <span class="font-bold">15%</span></label><input type="number" id="juri-bp3" value="${skor.bp3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Dampak 8 Dimensi Profil Lulusan</span> <span class="font-bold">20%</span></label><input type="number" id="juri-bp4" value="${skor.bp4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Keberlanjutan dan Replikasi</span> <span class="font-bold">10%</span></label><input type="number" id="juri-bp5" value="${skor.bp5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Kualitas Presentasi & Dokumentasi</span> <span class="font-bold">15%</span></label><input type="number" id="juri-bp6" value="${skor.bp6||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Kreativitas & Kebaruan Inovasi</span> <span class="font-bold text-muh-blue">25%</span></label><input type="number" id="juri-bp1" value="${skor.bp1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Relevansi Pembelajaran Mendalam</span> <span class="font-bold text-muh-blue">15%</span></label><input type="number" id="juri-bp2" value="${skor.bp2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Keterlibatan Aktif Peserta Didik</span> <span class="font-bold text-muh-blue">15%</span></label><input type="number" id="juri-bp3" value="${skor.bp3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Dampak 8 Dimensi Profil Lulusan</span> <span class="font-bold text-muh-blue">20%</span></label><input type="number" id="juri-bp4" value="${skor.bp4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Keberlanjutan dan Replikasi</span> <span class="font-bold text-muh-blue">10%</span></label><input type="number" id="juri-bp5" value="${skor.bp5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Kualitas Presentasi & Dokumentasi</span> <span class="font-bold text-muh-blue">15%</span></label><input type="number" id="juri-bp6" value="${skor.bp6||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                 </div>
                             </div>
                         </div>
@@ -990,6 +998,7 @@
                 let detail = {};
                 let finalSkor = 0;
                 
+                // Menghitung bobot/rata-rata berdasarkan kategori spesifik
                 if(p.kategori_id === 'tilawah-pa-pi') {
                     detail = {
                         t1: Number(document.getElementById('juri-t1').value)||0, t2: Number(document.getElementById('juri-t2').value)||0,
@@ -1003,7 +1012,7 @@
                         f3: Number(document.getElementById('juri-f3').value)||0
                     };
                     const sum = Object.values(detail).reduce((a,b)=>a+b, 0);
-                    finalSkor = (sum / 17).toFixed(2); // Menghitung rata-rata dari 17 parameter
+                    finalSkor = (sum / 17).toFixed(2);
                 } else if(p.kategori_id === 'guru-bp') {
                     detail = {
                         bp1: Number(document.getElementById('juri-bp1').value)||0, bp2: Number(document.getElementById('juri-bp2').value)||0,
@@ -1016,15 +1025,30 @@
                     finalSkor = detail.umum.toFixed(2);
                 }
 
-                const updatedDataTambahan = { ...p.data_tambahan, skor_juri: finalSkor, skor_detail: detail };
+                const payload = {
+                    reg_id: p.reg_id,
+                    kategori_id: p.kategori_id,
+                    skor_detail: detail,
+                    skor_akhir: parseFloat(finalSkor)
+                };
 
-                this.showLoader('Menyimpan Skor ke Database...');
+                this.showLoader('Menyimpan Skor ke Tabel Penjurian...');
                 try {
-                    await db.patch('pendaftaran', `?reg_id=eq.${p.reg_id}`, { data_tambahan: updatedDataTambahan });
+                    // Logika Upsert: Lakukan PATCH jika ada, POST jika belum ada
+                    const cek = await db.get('penjurian', `?reg_id=eq.${p.reg_id}`);
+                    if(cek.length > 0) {
+                        await db.patch('penjurian', `?reg_id=eq.${p.reg_id}`, payload);
+                    } else {
+                        await db.post('penjurian', payload);
+                    }
                     this.showToast(`Skor berhasil disimpan! Total: ${finalSkor}`, 'success');
                     this.tutupModalJuri();
                     this.renderAdminJuri();
-                } catch(e) { this.showToast('Gagal menyimpan skor', 'error'); } finally { this.hideLoader(); }
+                } catch(e) { 
+                    this.showToast('Gagal menyimpan skor. Pastikan tabel penjurian sudah dieksekusi di SQL.', 'error'); 
+                } finally { 
+                    this.hideLoader(); 
+                }
             },
             
             // ADMIN CMS (KELOLA KONTEN)
