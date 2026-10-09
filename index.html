@@ -39,7 +39,7 @@
         @media print {
             @page { size: 215mm 330mm; margin: 20mm; }
             body { background-color: white; color: black; }
-            nav, #mobile-menu, button, .no-print, .toast-container, .admin-sidebar, #global-loader, #admin-home-edit-btn { display: none !important; }
+            nav, #mobile-menu, button, .no-print, .toast-container, .admin-sidebar, #global-loader, #admin-home-edit-btn, #bulk-action-container { display: none !important; }
             .print-only { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px; }
             .print-only img { height: 70px; margin: 0 auto 10px auto; }
             .view-section { display: none !important; } .view-section.active { display: block !important; padding: 0 !important; margin: 0 !important; }
@@ -73,6 +73,8 @@
                 <div class="hidden md:flex items-center space-x-8">
                     <button onclick="app.navigate('home')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="home">Beranda</button>
                     <button onclick="app.navigate('kategori')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="kategori">Kategori</button>
+                    <!-- Navigasi Pengaturan Khusus Admin -->
+                    <button id="nav-pengaturan" onclick="app.navigate('admin')" class="hidden text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="admin">Pengaturan</button>
                     <button onclick="app.navigate('pengumuman')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="pengumuman">Pengumuman</button>
                     <div class="h-6 w-px bg-slate-300"></div>
                     <div id="auth-buttons" class="flex gap-3">
@@ -323,7 +325,7 @@
                         <div class="print-only"><h1 style="font-size: 24px; font-weight: bold;">Dasbor Rekap Peserta MEA 2026</h1></div>
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 no-print">
                             <div><h2 class="text-2xl font-bold">Dasbor Rekap Peserta</h2><p class="text-sm text-slate-500">Manajemen, verifikasi, dan unduh berkas.</p></div>
-                            <div class="flex gap-2">
+                            <div class="flex flex-wrap gap-2">
                                 <select id="admin-filter-kategori" onchange="app.renderAdminRekap()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[200px]"><option value="all">Semua Kategori</option></select>
                                 <select id="admin-filter-mapel" onchange="app.renderAdminRekap()" class="hidden px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[150px]">
                                     <option value="all">Semua Mapel</option>
@@ -331,14 +333,36 @@
                                     <option value="Matematika">Matematika</option>
                                     <option value="Bahasa Inggris">Bahasa Inggris</option>
                                 </select>
-                                <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
+                                <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
+                                <button onclick="app.downloadExcel()" class="bg-green-600 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-green-700 transition-colors"><i class="ph-bold ph-microsoft-excel-logo"></i> Unduh Excel</button>
                             </div>
+                        </div>
+
+                        <!-- Baris Aksi Massal (Checkbox Edit) -->
+                        <div id="bulk-action-container" class="hidden items-center gap-3 mb-4 p-3 bg-blue-50 border border-blue-100 rounded-xl no-print">
+                            <span class="text-sm font-bold text-muh-blue">Aksi Massal:</span>
+                            <select id="bulk-action-select" class="px-3 py-2 rounded-lg border text-sm outline-none">
+                                <option value="">-- Pilih Status --</option>
+                                <option value="Terverifikasi">Verifikasi Terpilih</option>
+                                <option value="Ditolak">Tolak Terpilih</option>
+                                <option value="Menunggu">Kembalikan ke Menunggu</option>
+                            </select>
+                            <button onclick="app.applyBulkAction()" class="bg-muh-blue text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-muh-dark transition-colors">Terapkan</button>
                         </div>
                         
                         <!-- Tabel Rekap -->
                         <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                             <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID / Waktu</th><th class="p-4">Nama Peserta</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori & Berkas</th><th class="p-4 no-print">Status & Aksi</th></tr></thead>
+                                <thead class="bg-slate-50 border-b">
+                                    <tr>
+                                        <th class="p-4 w-10 no-print text-center"><input type="checkbox" id="checkAll" onchange="app.toggleCheckAll(this)" class="w-4 h-4 cursor-pointer"></th>
+                                        <th class="p-4">Reg ID / Waktu</th>
+                                        <th class="p-4">Nama Peserta</th>
+                                        <th class="p-4">Asal Instansi</th>
+                                        <th class="p-4">Kategori & Berkas</th>
+                                        <th class="p-4 no-print">Status & Aksi</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="admin-table-body" class="divide-y"></tbody>
                             </table>
                         </div>
@@ -641,7 +665,7 @@
                 setTimeout(() => document.getElementById('edit-teks-beranda').focus(), 300);
             },
             editKategoriInline: function(e, id) {
-                e.stopPropagation(); 
+                e.stopPropagation(); // Mencegah klik menembus ke view detail
                 this.navigate('admin'); this.switchAdminTab('konten');
                 document.getElementById('edit-kat-select').value = id;
                 this.loadEditKategori(id);
@@ -676,13 +700,13 @@
                 } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
             },
             
-            // ADMIN REKAP PESERTA (DENGAN FILTER & LIHAT BERKAS)
+            // ADMIN REKAP PESERTA (DENGAN CHECKBOX EDIT MASSAL & EXCEL)
             renderAdminRekap: async function() {
                 const selKat = document.getElementById('admin-filter-kategori');
                 const selMapel = document.getElementById('admin-filter-mapel');
                 if(selKat.options.length <= 1) this.state.categories.forEach(c => selKat.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
                 
-                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,status_verifikasi,waktu_daftar,data_tambahan&order=waktu_daftar.desc';
+                let query = '?select=reg_id,nama_lengkap,nomor_induk,asal_instansi,nomor_wa,email,kategori_id,status_verifikasi,waktu_daftar,data_tambahan&order=waktu_daftar.desc';
                 
                 if(selKat.value !== 'all') {
                     query += `&kategori_id=eq.${selKat.value}`;
@@ -699,14 +723,17 @@
                 
                 const data = await db.get('pendaftaran', query);
                 const tbody = document.getElementById('admin-table-body');
-                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada pendaftar.</td></tr>`;
+                document.getElementById('checkAll').checked = false;
+                this.toggleBulkAction(); // Sembunyikan panel aksi massal
+                
+                if(!data.length) return tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Belum ada pendaftar.</td></tr>`;
                 
                 tbody.innerHTML = data.map(p => {
                     let infoTambahan = `<span class="block font-bold text-xs">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</span>`;
                     if(p.data_tambahan) {
                         for(let key in p.data_tambahan) {
                             if(typeof p.data_tambahan[key] === 'string' && p.data_tambahan[key].startsWith('http')) {
-                                infoTambahan += `<a href="${p.data_tambahan[key]}" target="_blank" class="block text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded mt-1 border hover:bg-blue-100 max-w-[150px] truncate"><i class="ph-bold ph-link"></i> ${key.replace('_',' ')}</a>`;
+                                infoTambahan += `<a href="${p.data_tambahan[key]}" target="_blank" class="block text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded mt-1 border hover:bg-blue-100 max-w-[150px] truncate"><i class="ph-bold ph-link"></i> Lihat Berkas ${key.replace('_',' ')}</a>`;
                             } else if (key === 'mapel' || key === 'jenjang') {
                                 infoTambahan += `<span class="block text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded mt-1 font-bold w-max">${p.data_tambahan[key]}</span>`;
                             }
@@ -714,6 +741,7 @@
                     }
                     return `
                     <tr>
+                        <td class="p-4 no-print text-center"><input type="checkbox" class="cb-peserta w-4 h-4 cursor-pointer" value="${p.reg_id}" onchange="app.toggleBulkAction()"></td>
                         <td class="p-4 font-mono text-xs">${p.reg_id}<br><span class="text-slate-400">${new Date(p.waktu_daftar).toLocaleDateString('id-ID')}</span></td>
                         <td class="p-4 font-bold text-slate-800">${p.nama_lengkap}</td>
                         <td class="p-4 text-xs">${p.asal_instansi}</td>
@@ -734,6 +762,71 @@
                     await db.patch('pendaftaran', `?reg_id=eq.${regId}`, { status_verifikasi: status });
                     this.showToast(`Status ${regId} diperbarui`, 'success'); this.renderAdminRekap(); 
                 } catch(e) { this.showToast('Gagal merubah status', 'error'); } finally { this.hideLoader(); }
+            },
+            toggleCheckAll: function(el) {
+                document.querySelectorAll('.cb-peserta').forEach(cb => cb.checked = el.checked);
+                this.toggleBulkAction();
+            },
+            toggleBulkAction: function() {
+                const checked = document.querySelectorAll('.cb-peserta:checked').length;
+                const container = document.getElementById('bulk-action-container');
+                if(checked > 0) { container.classList.remove('hidden'); container.classList.add('flex'); } 
+                else { container.classList.add('hidden'); container.classList.remove('flex'); }
+            },
+            applyBulkAction: async function() {
+                const action = document.getElementById('bulk-action-select').value;
+                if(!action) return this.showToast('Pilih status aksi terlebih dahulu', 'error');
+                const cbs = document.querySelectorAll('.cb-peserta:checked');
+                if(cbs.length === 0) return;
+                if(!confirm(`Ubah status ${cbs.length} peserta menjadi ${action}?`)) return;
+
+                this.showLoader('Memproses Massal...');
+                try {
+                    const promises = Array.from(cbs).map(cb => db.patch('pendaftaran', `?reg_id=eq.${cb.value}`, { status_verifikasi: action }));
+                    await Promise.all(promises);
+                    this.showToast('Aksi massal berhasil diterapkan!', 'success');
+                    document.getElementById('checkAll').checked = false;
+                    this.toggleBulkAction();
+                    this.renderAdminRekap();
+                } catch(e) { this.showToast('Gagal memproses data massal', 'error'); } finally { this.hideLoader(); }
+            },
+            downloadExcel: async function() {
+                const selKat = document.getElementById('admin-filter-kategori').value;
+                const selMapel = document.getElementById('admin-filter-mapel').value;
+                let query = '?select=reg_id,nama_lengkap,nomor_induk,asal_instansi,nomor_wa,email,kategori_id,status_verifikasi,waktu_daftar,data_tambahan&order=waktu_daftar.desc';
+                if(selKat !== 'all') {
+                    query += `&kategori_id=eq.${selKat}`;
+                    if(selKat.startsWith('olimpiade') && selMapel !== 'all') query += `&data_tambahan->>mapel=eq.${selMapel}`;
+                }
+
+                this.showLoader('Menyiapkan file Excel...');
+                try {
+                    const data = await db.get('pendaftaran', query);
+                    if(!data.length) return this.showToast('Tidak ada data untuk diunduh', 'error');
+
+                    let csv = 'Reg ID,Waktu Daftar,Nama Lengkap,NISN/NBM,Asal Instansi,Nomor WA,Email,Kategori,Status Verifikasi,Data Tambahan\n';
+                    data.forEach(p => {
+                        const kat = this.state.categories.find(c=>c.id === p.kategori_id)?.judul || p.kategori_id;
+                        const waktu = new Date(p.waktu_daftar).toLocaleString('id-ID');
+                        let tamb = '';
+                        if(p.data_tambahan) {
+                            for(let k in p.data_tambahan) {
+                                if(!['nama_lengkap','nomor_induk','asal_instansi','nomor_wa','email'].includes(k)) {
+                                    tamb += `${k}: ${p.data_tambahan[k]} | `;
+                                }
+                            }
+                        }
+                        const row = [p.reg_id, waktu, p.nama_lengkap, p.nomor_induk, p.asal_instansi, p.nomor_wa, p.email, kat, p.status_verifikasi, tamb].map(field => `"${String(field || '').replace(/"/g, '""')}"`).join(',');
+                        csv += row + '\n';
+                    });
+
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `Rekap_Peserta_MEA_${new Date().getTime()}.csv`;
+                    link.click();
+                    this.showToast('Berhasil mengunduh Excel (CSV)', 'success');
+                } catch(e) { this.showToast('Gagal mengunduh Excel', 'error'); } finally { this.hideLoader(); }
             },
             
             // ADMIN CMS (KELOLA KONTEN)
@@ -810,7 +903,7 @@
                 const id = document.getElementById('login-id').value.trim(); const pwd = document.getElementById('login-password').value;
                 if(!id) return this.showToast('Masukkan ID/Username', 'error');
                 
-                this.showLoader();
+                this.showLoader('Memeriksa Kredensial...');
                 try {
                     if(id.startsWith('REG-')) {
                         const res = await db.get('pendaftaran', `?reg_id=eq.${id}&select=*`);
@@ -826,21 +919,28 @@
             logout: function() { this.state.user = null; this.updateNavState(); this.navigate('home'); this.showToast('Berhasil keluar.', 'success'); },
             updateNavState: function() {
                 const authBtns = document.getElementById('auth-buttons'), userMenu = document.getElementById('user-menu'), mobAuthBtns = document.getElementById('mobile-auth-buttons'), mobUserMenu = document.getElementById('mobile-user-menu'), navDashBtn = document.getElementById('nav-dash-btn'), mobDashBtn = document.getElementById('mob-dash-btn'), navUserIcon = document.getElementById('nav-user-icon');
+                
                 const homeEditBtn = document.getElementById('admin-home-edit-btn');
+                const navPengaturan = document.getElementById('nav-pengaturan');
                 
                 if(this.state.user) {
-                    authBtns.classList.add('hidden'); userMenu.classList.remove('hidden'); userMenu.classList.add('flex'); mobAuthBtns.classList.add('hidden'); mobUserMenu.classList.remove('hidden'); mobUserMenu.classList.add('flex');
+                    authBtns.classList.add('hidden'); userMenu.classList.remove('hidden'); userMenu.classList.add('flex');
+                    mobAuthBtns.classList.add('hidden'); mobUserMenu.classList.remove('hidden'); mobUserMenu.classList.add('flex');
                     if (['admin', 'operator'].includes(this.state.user.role)) { 
                         navDashBtn.setAttribute('onclick', "app.navigate('admin')"); document.getElementById('nav-username').textContent = 'Panel Admin'; navUserIcon.className = 'ph-fill ph-shield-check text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('admin'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Panel Admin'; 
                         if(homeEditBtn) homeEditBtn.classList.remove('hidden');
+                        if(navPengaturan) navPengaturan.classList.remove('hidden');
                     } else { 
                         navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dasbor Saya'; 
                         if(homeEditBtn) homeEditBtn.classList.add('hidden');
+                        if(navPengaturan) navPengaturan.classList.add('hidden');
                     }
                 } else { 
                     authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); userMenu.classList.remove('flex'); mobAuthBtns.classList.remove('hidden'); mobUserMenu.classList.add('hidden'); mobUserMenu.classList.remove('flex'); 
                     if(homeEditBtn) homeEditBtn.classList.add('hidden');
+                    if(navPengaturan) navPengaturan.classList.add('hidden');
                 }
+                
                 if(this.state.view === 'kategori') this.renderCategories();
             },
             toggleMobileMenu: function() { const menu = document.getElementById('mobile-menu'); if(menu.classList.contains('hidden')) { menu.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } else { menu.classList.add('hidden'); document.body.style.overflow = ''; } },
