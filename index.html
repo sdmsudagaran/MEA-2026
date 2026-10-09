@@ -296,7 +296,8 @@
                     <div class="p-4 space-y-2">
                         <button onclick="app.switchAdminTab('dashboard')" id="btn-tab-dashboard" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Dasbor Utama</button>
                         <button onclick="app.switchAdminTab('rekap')" id="btn-tab-rekap" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Rekap Peserta</button>
-                        <button onclick="app.switchAdminTab('juri')" id="btn-tab-juri" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-blue-200 hover:bg-blue-900/50 hover:text-white transition-colors">Penilaian Juri</button>
+                        <button onclick="app.switchAdminTab('juri')" id="btn-tab-juri" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Penilaian Juri</button>
+                        <button onclick="app.switchAdminTab('rekap_nilai')" id="btn-tab-rekap_nilai" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Rekap Penilaian</button>
                         <button onclick="app.switchAdminTab('konten')" id="btn-tab-konten" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Konten (CMS)</button>
                         <button onclick="app.switchAdminTab('akses')" id="btn-tab-akses" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Akses</button>
                     </div>
@@ -456,10 +457,35 @@
                         <form onsubmit="app.addAdminUser(event)" class="bg-white p-6 rounded-2xl shadow-sm border mb-8 flex gap-4 items-end">
                             <div class="flex-1"><label class="block text-sm font-bold mb-2">Username</label><input type="text" name="username" required class="w-full p-3 border rounded-xl outline-none focus:border-muh-blue bg-slate-50"></div>
                             <div class="flex-1"><label class="block text-sm font-bold mb-2">Password</label><input type="password" name="password" required class="w-full p-3 border rounded-xl outline-none focus:border-muh-blue bg-slate-50"></div>
-                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Role</label><select name="role" class="w-full p-3 border rounded-xl outline-none focus:border-muh-blue bg-slate-50"><option value="admin">Admin</option><option value="operator">Operator</option></select></div>
+                            <div class="flex-1"><label class="block text-sm font-bold mb-2">Role</label>
+                                <select name="role" class="w-full p-3 border rounded-xl outline-none focus:border-muh-blue bg-slate-50">
+                                    <option value="admin">Admin Utama</option>
+                                    <option value="operator">Operator Pendaftaran</option>
+                                    <option value="juri">Dewan Juri</option>
+                                </select>
+                            </div>
                             <button type="submit" class="bg-muh-blue text-white font-bold px-6 py-3 rounded-xl">Tambah Akun</button>
                         </form>
                         <table class="w-full text-left bg-white rounded-2xl shadow-sm border text-sm"><thead class="bg-slate-50 border-b"><tr><th class="p-4">Username</th><th class="p-4 text-right">Role Akses</th></tr></thead><tbody id="admin-users-body" class="divide-y"></tbody></table>
+                    </div>
+
+                    <!-- 6. ADMIN REKAP PENILAIAN -->
+                    <div id="admin-sec-rekap_nilai" class="admin-section hidden">
+                        <div class="print-only"><h1 style="font-size: 24px; font-weight: bold;">Laporan Rekapitulasi Penilaian Juri MEA 2026</h1></div>
+                        <div class="flex justify-between items-center mb-6 no-print">
+                            <div><h2 class="text-2xl font-bold">Rekap Penilaian Juri</h2><p class="text-sm text-slate-500">Peringkat dan hasil akhir penjurian.</p></div>
+                            <div class="flex gap-3">
+                                <select id="rekap-nilai-kategori" onchange="app.renderAdminRekapNilai()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[250px]"><option value="all">Semua Kategori Lomba...</option></select>
+                                <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 border-b"><tr><th class="p-4 text-center">Peringkat</th><th class="p-4">Reg ID</th><th class="p-4">Nama Peserta</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori Lomba</th><th class="p-4 text-center">Skor Akhir</th></tr></thead>
+                                <tbody id="rekap-nilai-table-body" class="divide-y"></tbody>
+                            </table>
+                        </div>
                     </div>
 
                 </div>
@@ -483,7 +509,7 @@
         </div>
     </div>
 
-    <!-- MODAL LOGIN -->
+    <!-- MODAL LOGIN (DIJAMIN 1 KOLOM USERNAME, 1 KOLOM PASSWORD, BISA ENTER) -->
     <div id="login-modal" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center px-4 opacity-0 transition-opacity duration-300 no-print">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300" id="login-modal-content">
             <div class="flex justify-between items-center mb-6">
@@ -573,7 +599,7 @@
                 this.runViewLogic(viewId);
             },
             runViewLogic: function(v) {
-                this.updateNavState(); // Sync edit buttons
+                this.updateNavState(); 
                 if(v === 'kategori') this.renderCategories(); else if(v === 'detail') this.renderDetail(); else if(v === 'form') this.renderForm();
                 else if(v === 'review') this.renderReview(); else if(v === 'dashboard') this.renderDashboard();
                 else if(v === 'pengumuman') this.renderPengumumanView(); else if(v === 'admin') this.switchAdminTab('dashboard');
@@ -675,7 +701,6 @@
                 
                 let addHtml = '';
                 
-                // Fetch skor juri if exists
                 try {
                     const juriData = await db.get('penjurian', `?reg_id=eq.${d.reg_id}`);
                     if(juriData.length && juriData[0].skor_akhir > 0) {
@@ -720,7 +745,7 @@
                 setTimeout(() => document.getElementById('edit-kat-judul').focus(), 300);
             },
             switchAdminTab: async function(tab) {
-                if(!this.state.user || !['admin','operator'].includes(this.state.user.role)) return this.navigate('home');
+                if(!this.state.user || !['admin','operator','juri'].includes(this.state.user.role)) return this.navigate('home');
                 document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
                 document.getElementById(`admin-sec-${tab}`).classList.remove('hidden');
                 document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('bg-blue-800/50', 'text-white'));
@@ -731,9 +756,10 @@
                     if(tab === 'dashboard') await this.renderAdminDashboard();
                     if(tab === 'rekap') await this.renderAdminRekap();
                     if(tab === 'juri') await this.renderAdminJuri();
+                    if(tab === 'rekap_nilai') await this.renderAdminRekapNilai();
                     if(tab === 'akses') await this.renderAdminAkses();
                     if(tab === 'konten') await this.renderAdminKonten();
-                } catch(e) { this.showToast('Gagal memuat data admin. Cek RLS SQL.', 'error'); } finally { this.hideLoader(); }
+                } catch(e) { this.showToast('Gagal memuat data admin.', 'error'); } finally { this.hideLoader(); }
             },
             renderAdminDashboard: async function() {
                 const data = await db.get('pendaftaran', '?select=kategori_id,asal_instansi');
@@ -879,35 +905,23 @@
                 const sel = document.getElementById('juri-filter-kategori');
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
 
-                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
+                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan,penjurian(skor_akhir,skor_detail)&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
                 if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
 
                 const data = await db.get('pendaftaran', query);
-                
-                let penjurianData = [];
-                try {
-                    penjurianData = await db.get('penjurian', '');
-                } catch(e) {
-                    console.warn('Tabel penjurian belum dibuat di database.');
-                }
-
-                // Gabungkan data
-                this.state.pendaftaran = data.map(p => {
-                    p.penjurian = penjurianData.find(j => j.reg_id === p.reg_id) || null;
-                    return p;
-                });
-
+                this.state.pendaftaran = data; 
                 const tbody = document.getElementById('juri-table-body');
-                if(!this.state.pendaftaran.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
 
-                tbody.innerHTML = this.state.pendaftaran.map(p => {
+                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
+
+                tbody.innerHTML = data.map(p => {
                     let berkas = '-';
                     if(p.data_tambahan) {
                         const links = Object.entries(p.data_tambahan).filter(([k,v]) => typeof v === 'string' && v.startsWith('http'));
                         if(links.length > 0) berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded border hover:bg-blue-100 inline-block mb-1"><i class="ph-bold ph-link"></i> ${k.replace('_',' ')}</a>`).join('<br>');
                     }
                     
-                    const dataJuri = p.penjurian;
+                    const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
                     const skorSaatIni = dataJuri ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${dataJuri.skor_akhir}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
 
                     return `<tr>
@@ -915,7 +929,7 @@
                         <td class="p-4"><span class="font-bold block">${p.nama_lengkap}</span><span class="text-xs text-slate-500">${p.asal_instansi}</span></td>
                         <td class="p-4">${berkas}</td>
                         <td class="p-4 text-center">${skorSaatIni}</td>
-                        <td class="p-4 text-right"><button onclick="app.bukaModalJuri('${p.reg_id}')" class="bg-muh-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-muh-dark text-xs shadow-sm">Beri Nilai</button></td>
+                        <td class="p-4 text-right"><button onclick="app.bukaModalJuri('${p.reg_id}')" class="bg-muh-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-muh-dark text-xs shadow-sm">Beri / Edit Nilai</button></td>
                     </tr>`;
                 }).join('');
             },
@@ -924,14 +938,15 @@
                 if(!p) return;
                 this.state.juriTarget = p;
                 
-                const skor = p.penjurian ? p.penjurian.skor_detail : {};
+                const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
+                const skor = dataJuri ? dataJuri.skor_detail : {};
+                
                 let html = '';
-
                 if(p.kategori_id === 'tilawah-pa-pi') {
                     html = `
                         <div class="space-y-4">
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid</h4>
+                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid (0-100)</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Makharijul Huruf</label><input type="number" id="juri-t1" value="${skor.t1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Sifatul Huruf</label><input type="number" id="juri-t2" value="${skor.t2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -940,7 +955,7 @@
                                 </div>
                             </div>
                             <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-                                <h4 class="font-bold text-green-700 mb-3 border-b border-green-200 pb-2">2. Aspek Suara</h4>
+                                <h4 class="font-bold text-green-700 mb-3 border-b border-green-200 pb-2">2. Aspek Suara (0-100)</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Kejernihan</label><input type="number" id="juri-s1" value="${skor.s1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Kehalusan</label><input type="number" id="juri-s2" value="${skor.s2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -950,7 +965,7 @@
                                 </div>
                             </div>
                             <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                                <h4 class="font-bold text-yellow-700 mb-3 border-b border-yellow-200 pb-2">3. Aspek Lagu</h4>
+                                <h4 class="font-bold text-yellow-700 mb-3 border-b border-yellow-200 pb-2">3. Aspek Lagu (0-100)</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Lagu pertama & penutup</label><input type="number" id="juri-l1" value="${skor.l1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Jumlah lagu</label><input type="number" id="juri-l2" value="${skor.l2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -960,7 +975,7 @@
                                 </div>
                             </div>
                             <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                <h4 class="font-bold text-purple-700 mb-3 border-b border-purple-200 pb-2">4. Fasahah dan Adab</h4>
+                                <h4 class="font-bold text-purple-700 mb-3 border-b border-purple-200 pb-2">4. Fasahah dan Adab (0-100)</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Ahkāmul waqf wal ibtida’</label><input type="number" id="juri-f1" value="${skor.f1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Mura’atul huruf wal harakat</label><input type="number" id="juri-f2" value="${skor.f2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -1040,14 +1055,51 @@
 
                 this.showLoader('Menyimpan Skor ke Tabel Penjurian...');
                 try {
-                    if(p.penjurian) {
+                    const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
+                    if(dataJuri) {
                         await db.patch('penjurian', `?reg_id=eq.${p.reg_id}`, payload);
                     } else {
                         await db.post('penjurian', payload);
                     }
                     this.showToast(`Skor berhasil disimpan! Total: ${finalSkor}`, 'success');
-                    this.tutupModalJuri(); this.renderAdminJuri();
+                    this.tutupModalJuri();
+                    this.renderAdminJuri();
                 } catch(e) { this.showToast('Gagal menyimpan skor. Pastikan tabel penjurian sudah dieksekusi di SQL.', 'error'); } finally { this.hideLoader(); }
+            },
+
+            // ADMIN REKAP PENILAIAN
+            renderAdminRekapNilai: async function() {
+                const sel = document.getElementById('rekap-nilai-kategori');
+                if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+
+                this.showLoader('Memuat Rekap Penilaian...');
+                try {
+                    let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,penjurian(skor_akhir)&status_verifikasi=eq.Terverifikasi';
+                    if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
+                    
+                    const data = await db.get('pendaftaran', query);
+                    
+                    let dataNilai = data.map(p => {
+                        return { ...p, skor_akhir: p.penjurian && p.penjurian.length > 0 ? p.penjurian[0].skor_akhir : 0 };
+                    }).filter(p => p.skor_akhir > 0);
+
+                    dataNilai.sort((a, b) => b.skor_akhir - a.skor_akhir);
+
+                    const tbody = document.getElementById('rekap-nilai-table-body');
+                    if(!dataNilai.length) return tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Belum ada data nilai.</td></tr>`;
+
+                    tbody.innerHTML = dataNilai.map((p, index) => {
+                        return `<tr>
+                            <td class="p-4 font-bold text-muh-blue text-center">${index + 1}</td>
+                            <td class="p-4 font-mono text-xs">${p.reg_id}</td>
+                            <td class="p-4 font-bold">${p.nama_lengkap}</td>
+                            <td class="p-4 text-xs">${p.asal_instansi}</td>
+                            <td class="p-4 text-xs">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</td>
+                            <td class="p-4 font-bold text-center text-lg">${p.skor_akhir}</td>
+                        </tr>`;
+                    }).join('');
+
+                } catch (e) { this.showToast('Gagal memuat rekap nilai', 'error'); } finally { this.hideLoader(); }
             },
             
             // ADMIN CMS (KELOLA KONTEN)
@@ -1166,12 +1218,13 @@
                 if(this.state.user) {
                     authBtns.classList.add('hidden'); userMenu.classList.remove('hidden'); userMenu.classList.add('flex');
                     mobAuthBtns.classList.add('hidden'); mobUserMenu.classList.remove('hidden'); mobUserMenu.classList.add('flex');
-                    if (['admin', 'operator'].includes(this.state.user.role)) { 
+                    
+                    if (['admin', 'operator', 'juri'].includes(this.state.user.role)) { 
                         navDashBtn.setAttribute('onclick', "app.navigate('admin')"); document.getElementById('nav-username').textContent = 'Panel Admin'; navUserIcon.className = 'ph-fill ph-shield-check text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('admin'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Panel Admin'; 
-                        if(homeEditBtn) homeEditBtn.classList.remove('hidden');
+                        if(homeEditBtn && this.state.user.role === 'admin') homeEditBtn.classList.remove('hidden'); else if(homeEditBtn) homeEditBtn.classList.add('hidden');
                         if(navPengaturan) navPengaturan.classList.remove('hidden');
                     } else { 
-                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dashboard Saya'; 
+                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dasbor Saya'; 
                         if(homeEditBtn) homeEditBtn.classList.add('hidden');
                         if(navPengaturan) navPengaturan.classList.add('hidden');
                     }
