@@ -73,7 +73,6 @@
                 <div class="hidden md:flex items-center space-x-8">
                     <button onclick="app.navigate('home')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="home">Beranda</button>
                     <button onclick="app.navigate('kategori')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="kategori">Kategori</button>
-                    <!-- Navigasi Pengaturan Khusus Admin -->
                     <button id="nav-pengaturan" onclick="app.navigate('admin')" class="hidden text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="admin">Pengaturan</button>
                     <button onclick="app.navigate('pengumuman')" class="text-slate-600 hover:text-muh-blue font-semibold text-sm nav-link" data-target="pengumuman">Pengumuman</button>
                     <div class="h-6 w-px bg-slate-300"></div>
@@ -115,7 +114,6 @@
         
         <!-- =================== VIEW: BERANDA =================== -->
         <section id="view-home" class="view-section active">
-            <!-- Tombol Edit Cepat Khusus Admin -->
             <div id="admin-home-edit-btn" class="hidden absolute top-24 right-8 z-20">
                 <button onclick="app.editBerandaInline()" class="bg-yellow-400 text-yellow-900 font-bold px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 border border-yellow-500 hover:bg-yellow-500 transition-colors">
                     <i class="ph-bold ph-pencil-simple"></i> Edit Beranda
@@ -260,7 +258,7 @@
                         <div class="md:col-span-2"><p class="text-sm text-slate-500 mb-1">Asal Instansi</p><p id="dash-instansi" class="text-lg font-bold text-slate-800"></p></div>
                     </div>
                     <div class="mt-8 pt-6 border-t">
-                        <h4 class="font-bold mb-4">Berkas & Data Tambahan</h4>
+                        <h4 class="font-bold mb-4">Berkas, Detail, dan Skor Juri</h4>
                         <div id="dash-tambahan" class="text-sm text-slate-600 space-y-3"></div>
                     </div>
                 </div>
@@ -297,6 +295,7 @@
                     <div class="p-4 space-y-2">
                         <button onclick="app.switchAdminTab('dashboard')" id="btn-tab-dashboard" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Dasbor Utama</button>
                         <button onclick="app.switchAdminTab('rekap')" id="btn-tab-rekap" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Rekap Peserta</button>
+                        <button onclick="app.switchAdminTab('juri')" id="btn-tab-juri" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-blue-200 hover:bg-blue-900/50 hover:text-white transition-colors">Penilaian Juri</button>
                         <button onclick="app.switchAdminTab('konten')" id="btn-tab-konten" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Konten (CMS)</button>
                         <button onclick="app.switchAdminTab('akses')" id="btn-tab-akses" class="admin-tab-btn w-full text-left px-4 py-3 rounded-xl font-bold">Kelola Akses</button>
                     </div>
@@ -338,7 +337,6 @@
                             </div>
                         </div>
 
-                        <!-- Baris Aksi Massal (Checkbox Edit) -->
                         <div id="bulk-action-container" class="hidden items-center gap-3 mb-4 p-3 bg-blue-50 border border-blue-100 rounded-xl no-print">
                             <span class="text-sm font-bold text-muh-blue">Aksi Massal:</span>
                             <select id="bulk-action-select" class="px-3 py-2 rounded-lg border text-sm outline-none">
@@ -350,7 +348,6 @@
                             <button onclick="app.applyBulkAction()" class="bg-muh-blue text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-muh-dark transition-colors">Terapkan</button>
                         </div>
                         
-                        <!-- Tabel Rekap -->
                         <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                             <table class="w-full text-left text-sm">
                                 <thead class="bg-slate-50 border-b">
@@ -359,6 +356,7 @@
                                         <th class="p-4">Reg ID / Waktu</th>
                                         <th class="p-4">Nama Peserta</th>
                                         <th class="p-4">Asal Instansi</th>
+                                        <th class="p-4">Mapel / Detail Khusus</th>
                                         <th class="p-4">Kategori & Berkas</th>
                                         <th class="p-4 no-print">Status & Aksi</th>
                                     </tr>
@@ -368,7 +366,23 @@
                         </div>
                     </div>
 
-                    <!-- 3. ADMIN KONTEN (CMS: Beranda, Kategori, Pengumuman) -->
+                    <!-- 3. ADMIN JURI -->
+                    <div id="admin-sec-juri" class="admin-section hidden no-print">
+                        <div class="flex justify-between items-center mb-6">
+                            <div><h2 class="text-2xl font-bold">Penilaian Juri</h2><p class="text-sm text-slate-500">Hanya menampilkan peserta berstatus Terverifikasi.</p></div>
+                        </div>
+                        <div class="flex gap-3 mb-6">
+                            <select id="juri-filter-kategori" onchange="app.renderAdminJuri()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[250px]"><option value="all">Pilih Kategori Lomba...</option></select>
+                        </div>
+                        <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Berkas / Detail</th><th class="p-4 text-center">Skor Juri</th><th class="p-4 text-right">Aksi</th></tr></thead>
+                                <tbody id="juri-table-body" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 4. ADMIN KONTEN (CMS) -->
                     <div id="admin-sec-konten" class="admin-section hidden no-print">
                         <h2 class="text-2xl font-bold mb-6">Manajemen Konten (CMS)</h2>
                         
@@ -387,36 +401,25 @@
                                 </div>
 
                                 <!-- Edit Kategori -->
-                                <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                                <div class="bg-white p-6 rounded-2xl shadow-sm border" id="form-edit-kategori-section">
                                     <h3 class="font-bold mb-4 border-b pb-2 text-muh-blue">2. Ubah Kategori Lomba</h3>
                                     <div class="mb-4">
                                         <label class="text-sm font-bold block mb-1">Pilih Kategori:</label>
                                         <select id="edit-kat-select" onchange="app.loadEditKategori(this.value)" class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"></select>
                                     </div>
                                     <form onsubmit="app.updateKategori(event)" id="form-edit-kategori" class="space-y-4 hidden mt-4 border-t pt-4">
-    <input type="hidden" name="id" id="edit-kat-id">
-    
-    <div class="grid grid-cols-2 gap-4">
-        <div><label class="text-xs font-bold text-slate-600 block mb-1">Judul Kategori</label><input type="text" name="judul" id="edit-kat-judul" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
-        <div><label class="text-xs font-bold text-slate-600 block mb-1">Urutan Tampil (Angka)</label><input type="number" name="urutan" id="edit-kat-urutan" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm" placeholder="Contoh: 1"></div>
-        <div><label class="text-xs font-bold text-slate-600 block mb-1">Grup (Misal: Siswa Berprestasi)</label><input type="text" name="grup" id="edit-kat-grup" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
-        <div><label class="text-xs font-bold text-slate-600 block mb-1">Ikon (Class Phosphor)</label><input type="text" name="ikon" id="edit-kat-ikon" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
-    </div>
-
-    <div><label class="text-xs font-bold text-slate-600 block mb-1">Deskripsi Singkat</label><textarea name="deskripsi" id="edit-kat-desc" rows="2" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></textarea></div>
-    
-    <div>
-        <label class="text-xs font-bold text-slate-600 block mb-1">Persyaratan (Pisahkan dengan menekan Enter)</label>
-        <textarea name="persyaratan" id="edit-kat-reqs" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm leading-relaxed" placeholder="Syarat 1&#10;Syarat 2"></textarea>
-    </div>
-    
-    <div>
-        <label class="text-xs font-bold text-slate-600 block mb-1">Ketentuan Khusus (Pisahkan dengan menekan Enter)</label>
-        <textarea name="ketentuan" id="edit-kat-rules" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm leading-relaxed" placeholder="Ketentuan 1&#10;Ketentuan 2"></textarea>
-    </div>
-
-    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Simpan Perubahan & Urutan</button>
-</form>
+                                        <input type="hidden" name="id" id="edit-kat-id">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Judul Kategori</label><input type="text" name="judul" id="edit-kat-judul" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
+                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Urutan Tampil (Angka)</label><input type="number" name="urutan" id="edit-kat-urutan" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm" placeholder="Contoh: 1"></div>
+                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Grup (Misal: Siswa Berprestasi)</label><input type="text" name="grup" id="edit-kat-grup" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
+                                            <div><label class="text-xs font-bold text-slate-600 block mb-1">Ikon (Class Phosphor)</label><input type="text" name="ikon" id="edit-kat-ikon" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></div>
+                                        </div>
+                                        <div><label class="text-xs font-bold text-slate-600 block mb-1">Deskripsi Singkat</label><textarea name="deskripsi" id="edit-kat-desc" rows="2" required class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm"></textarea></div>
+                                        <div><label class="text-xs font-bold text-slate-600 block mb-1">Persyaratan (Pisahkan dengan Enter)</label><textarea name="persyaratan" id="edit-kat-reqs" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm leading-relaxed" placeholder="Syarat 1&#10;Syarat 2"></textarea></div>
+                                        <div><label class="text-xs font-bold text-slate-600 block mb-1">Ketentuan Khusus (Pisahkan dengan Enter)</label><textarea name="ketentuan" id="edit-kat-rules" rows="3" class="w-full p-2 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue text-sm leading-relaxed" placeholder="Ketentuan 1&#10;Ketentuan 2"></textarea></div>
+                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Simpan Perubahan & Urutan</button>
+                                    </form>
                                 </div>
                             </div>
 
@@ -445,7 +448,7 @@
                         </div>
                     </div>
 
-                    <!-- 4. ADMIN AKSES -->
+                    <!-- 5. ADMIN AKSES -->
                     <div id="admin-sec-akses" class="admin-section hidden no-print">
                         <h2 class="text-2xl font-bold mb-6">Kelola Akses Login</h2>
                         <form onsubmit="app.addAdminUser(event)" class="bg-white p-6 rounded-2xl shadow-sm border mb-8 flex gap-4 items-end">
@@ -561,7 +564,6 @@
             // PUBLIK UI
             renderCategories: function() {
                 const isAdmin = this.state.user && this.state.user.role === 'admin';
-                // Urutkan kategori berdasarkan properti 'urutan' dari database
                 const sortedCategories = [...this.state.categories].sort((a, b) => (a.urutan || 99) - (b.urutan || 99));
 
                 document.getElementById('kategori-grid').innerHTML = sortedCategories.map(c => `
@@ -703,6 +705,7 @@
                 try {
                     if(tab === 'dashboard') await this.renderAdminDashboard();
                     if(tab === 'rekap') await this.renderAdminRekap();
+                    if(tab === 'juri') await this.renderAdminJuri();
                     if(tab === 'akses') await this.renderAdminAkses();
                     if(tab === 'konten') await this.renderAdminKonten();
                 } catch(e) { this.showToast('Gagal memuat data admin. Cek RLS SQL.', 'error'); } finally { this.hideLoader(); }
@@ -721,7 +724,7 @@
                 } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
             },
             
-            // ADMIN REKAP PESERTA (DENGAN CHECKBOX EDIT MASSAL & EXCEL)
+            // ADMIN REKAP PESERTA (DENGAN MAPEL DINAMIS, CHECKBOX & EXCEL)
             renderAdminRekap: async function() {
                 const selKat = document.getElementById('admin-filter-kategori');
                 const selMapel = document.getElementById('admin-filter-mapel');
@@ -731,7 +734,6 @@
                 
                 if(selKat.value !== 'all') {
                     query += `&kategori_id=eq.${selKat.value}`;
-                    // Tampilkan filter mapel HANYA jika kategori depannya olimpiade
                     if(selKat.value.startsWith('olimpiade')) {
                         selMapel.classList.remove('hidden');
                         if(selMapel.value !== 'all') query += `&data_tambahan->>mapel=eq.${selMapel.value}`;
@@ -745,18 +747,23 @@
                 const data = await db.get('pendaftaran', query);
                 const tbody = document.getElementById('admin-table-body');
                 document.getElementById('checkAll').checked = false;
-                this.toggleBulkAction(); // Sembunyikan panel aksi massal
+                this.toggleBulkAction(); 
                 
-                if(!data.length) return tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Belum ada pendaftar.</td></tr>`;
+                if(!data.length) return tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada pendaftar.</td></tr>`;
                 
                 tbody.innerHTML = data.map(p => {
                     let infoTambahan = `<span class="block font-bold text-xs">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</span>`;
+                    let mapelInfo = '-';
+
                     if(p.data_tambahan) {
+                        // Ekstraksi Detail Khusus / Mapel
+                        if(p.data_tambahan.mapel) mapelInfo = p.data_tambahan.mapel;
+                        else if(p.data_tambahan.jenjang) mapelInfo = p.data_tambahan.jenjang;
+                        else if(p.data_tambahan.nama_tim) mapelInfo = p.data_tambahan.nama_tim;
+
                         for(let key in p.data_tambahan) {
                             if(typeof p.data_tambahan[key] === 'string' && p.data_tambahan[key].startsWith('http')) {
-                                infoTambahan += `<a href="${p.data_tambahan[key]}" target="_blank" class="block text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded mt-1 border hover:bg-blue-100 max-w-[150px] truncate"><i class="ph-bold ph-link"></i> Lihat Berkas ${key.replace('_',' ')}</a>`;
-                            } else if (key === 'mapel' || key === 'jenjang') {
-                                infoTambahan += `<span class="block text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded mt-1 font-bold w-max">${p.data_tambahan[key]}</span>`;
+                                infoTambahan += `<a href="${p.data_tambahan[key]}" target="_blank" class="block text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded mt-1 border hover:bg-blue-100 max-w-[150px] truncate"><i class="ph-bold ph-link"></i> ${key.replace('_',' ')}</a>`;
                             }
                         }
                     }
@@ -766,6 +773,7 @@
                         <td class="p-4 font-mono text-xs">${p.reg_id}<br><span class="text-slate-400">${new Date(p.waktu_daftar).toLocaleDateString('id-ID')}</span></td>
                         <td class="p-4 font-bold text-slate-800">${p.nama_lengkap}</td>
                         <td class="p-4 text-xs">${p.asal_instansi}</td>
+                        <td class="p-4 font-bold text-xs text-muh-blue">${mapelInfo}</td>
                         <td class="p-4">${infoTambahan}</td>
                         <td class="p-4 no-print">
                             <select onchange="app.updateStatusPeserta('${p.reg_id}', this.value)" class="p-1 text-xs border rounded ${p.status_verifikasi === 'Terverifikasi' ? 'bg-green-100 text-green-700' : p.status_verifikasi === 'Ditolak' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'} outline-none cursor-pointer">
@@ -849,6 +857,55 @@
                     this.showToast('Berhasil mengunduh Excel (CSV)', 'success');
                 } catch(e) { this.showToast('Gagal mengunduh Excel', 'error'); } finally { this.hideLoader(); }
             },
+
+            // ADMIN JURI (Penilaian Terpadu)
+            renderAdminJuri: async function() {
+                const sel = document.getElementById('juri-filter-kategori');
+                if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+
+                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
+                if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
+
+                const data = await db.get('pendaftaran', query);
+                const tbody = document.getElementById('juri-table-body');
+
+                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta yang "Terverifikasi" di kategori ini.</td></tr>`;
+
+                tbody.innerHTML = data.map(p => {
+                    let berkas = '-';
+                    if(p.data_tambahan) {
+                        const links = Object.entries(p.data_tambahan).filter(([k,v]) => typeof v === 'string' && v.startsWith('http'));
+                        if(links.length > 0) {
+                            berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded border hover:bg-blue-100 inline-block mb-1"><i class="ph-bold ph-link"></i> ${k.replace('_',' ')}</a>`).join('<br>');
+                        }
+                    }
+                    const skorSaatIni = p.data_tambahan?.skor_juri || '';
+                    const encodedData = encodeURIComponent(JSON.stringify(p.data_tambahan || {}));
+
+                    return `<tr>
+                        <td class="p-4 font-mono text-xs">${p.reg_id}</td>
+                        <td class="p-4"><span class="font-bold block">${p.nama_lengkap}</span><span class="text-xs text-slate-500">${p.asal_instansi}</span></td>
+                        <td class="p-4">${berkas}</td>
+                        <td class="p-4 text-center"><input type="number" id="skor-${p.reg_id}" value="${skorSaatIni}" step="0.01" class="w-20 p-2 border rounded-xl text-center outline-none focus:border-muh-blue" placeholder="0.00"></td>
+                        <td class="p-4 text-right"><button onclick="app.simpanSkorJuri('${p.reg_id}', '${encodedData}')" class="bg-green-600 text-white font-bold px-3 py-1.5 rounded-lg hover:bg-green-700 text-xs shadow-sm">Simpan Nilai</button></td>
+                    </tr>`;
+                }).join('');
+            },
+            simpanSkorJuri: async function(regId, dataTambahanString) {
+                const inputEl = document.getElementById(`skor-${regId}`);
+                const skor = parseFloat(inputEl.value);
+                if(isNaN(skor)) return this.showToast('Masukkan angka skor yang valid', 'error');
+
+                this.showLoader('Menyimpan Skor Juri...');
+                try {
+                    const currentData = JSON.parse(decodeURIComponent(dataTambahanString));
+                    currentData.skor_juri = skor;
+
+                    await db.patch('pendaftaran', `?reg_id=eq.${regId}`, { data_tambahan: currentData });
+                    this.showToast(`Skor peserta ${regId} tersimpan!`, 'success');
+                    this.renderAdminJuri(); // Refresh UI to update encoded string
+                } catch(e) { this.showToast('Gagal menyimpan skor', 'error'); } finally { this.hideLoader(); }
+            },
             
             // ADMIN CMS (KELOLA KONTEN)
             renderAdminKonten: async function() {
@@ -885,7 +942,6 @@
                 document.getElementById('edit-kat-grup').value = cat.grup || '';
                 document.getElementById('edit-kat-ikon').value = cat.ikon || '';
                 
-                // Konversi Array dari JSONB Database menjadi baris teks biasa (newline)
                 document.getElementById('edit-kat-reqs').value = Array.isArray(cat.persyaratan) ? cat.persyaratan.join('\n') : '';
                 document.getElementById('edit-kat-rules').value = Array.isArray(cat.ketentuan) ? cat.ketentuan.join('\n') : '';
                 
@@ -895,40 +951,23 @@
                 e.preventDefault(); 
                 const d = Object.fromEntries(new FormData(e.target).entries());
                 
-                // Konversi kembali baris teks menjadi Array JSON untuk database
                 const reqsArray = d.persyaratan.split('\n').map(s => s.trim()).filter(s => s !== '');
                 const rulesArray = d.ketentuan.split('\n').map(s => s.trim()).filter(s => s !== '');
 
-                const payload = {
-                    judul: d.judul,
-                    deskripsi: d.deskripsi,
-                    urutan: parseInt(d.urutan) || 99,
-                    grup: d.grup,
-                    ikon: d.ikon,
-                    persyaratan: reqsArray,
-                    ketentuan: rulesArray
-                };
+                const payload = { judul: d.judul, deskripsi: d.deskripsi, urutan: parseInt(d.urutan) || 99, grup: d.grup, ikon: d.ikon, persyaratan: reqsArray, ketentuan: rulesArray };
 
                 this.showLoader('Menyimpan Pengaturan Kategori...');
                 try {
                     await db.patch('kategori_lomba', `?id=eq.${d.id}`, payload);
-                    
-                    // Update state lokal agar tidak perlu refresh
                     const idx = this.state.categories.findIndex(c => c.id === d.id);
-                    if(idx > -1) { 
-                        this.state.categories[idx] = { ...this.state.categories[idx], ...payload };
-                    }
+                    if(idx > -1) { this.state.categories[idx] = { ...this.state.categories[idx], ...payload }; }
                     
                     this.showToast('Kategori berhasil diperbarui!', 'success');
                     this.renderCategories(); 
                     e.target.reset();
                     document.getElementById('form-edit-kategori').classList.add('hidden');
                     document.getElementById('edit-kat-select').value = '';
-                } catch(err) { 
-                    this.showToast('Gagal mengupdate kategori. Cek kolom database.', 'error'); 
-                } finally { 
-                    this.hideLoader(); 
-                }
+                } catch(err) { this.showToast('Gagal mengupdate kategori. Pastikan kolom urutan sudah ada di SQL.', 'error'); } finally { this.hideLoader(); }
             },
             addPengumuman: async function(e) {
                 e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
@@ -993,7 +1032,7 @@
                         if(homeEditBtn) homeEditBtn.classList.remove('hidden');
                         if(navPengaturan) navPengaturan.classList.remove('hidden');
                     } else { 
-                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dasbor Saya'; 
+                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dashboard Saya'; 
                         if(homeEditBtn) homeEditBtn.classList.add('hidden');
                         if(navPengaturan) navPengaturan.classList.add('hidden');
                     }
