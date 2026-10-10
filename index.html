@@ -57,7 +57,17 @@
         <div class="loader mb-4"></div>
         <p id="loader-text" class="text-sm font-bold text-muh-blue animate-pulse">Sinkronisasi Database...</p>
     </div>
+    <!-- GLOBAL LOADER -->
+    <div id="global-loader" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[999] flex flex-col items-center justify-center transition-opacity duration-300">
+        <div class="loader mb-4"></div>
+        <p id="loader-text" class="text-sm font-bold text-muh-blue animate-pulse">Sinkronisasi Database...</p>
+    </div>
 
+    <!-- TOMBOL REFRESH GLOBAL -->
+    <button id="global-refresh-btn" onclick="app.refreshCurrentView()" class="fixed bottom-6 left-6 z-[90] bg-white text-muh-blue p-4 rounded-full shadow-floating border border-blue-100 hover:bg-blue-50 hover:scale-110 transition-all no-print group flex items-center justify-center" title="Segarkan Data Halaman Ini">
+        <i class="ph-bold ph-arrows-clockwise text-2xl group-active:animate-spin"></i>
+    </button>
+  
     <!-- NAVBAR -->
     <nav id="main-nav" class="fixed top-0 w-full z-50 glass-nav transition-all duration-300 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -609,12 +619,41 @@
                 document.querySelectorAll('.nav-link').forEach(el => { el.classList[el.dataset.target === viewId ? 'add' : 'remove']('text-muh-blue'); });
                 this.runViewLogic(viewId);
             },
-            runViewLogic: function(v) {
-                this.updateNavState(); 
-                if(v === 'kategori') this.renderCategories(); else if(v === 'detail') this.renderDetail(); else if(v === 'form') this.renderForm();
-                else if(v === 'review') this.renderReview(); else if(v === 'dashboard') this.renderDashboard();
-                else if(v === 'pengumuman') this.renderPengumumanView(); else if(v === 'admin') this.switchAdminTab('dashboard');
+
+            // TEMPEL KODE REFRESH DI SINI
+            refreshCurrentView: async function() {
+                this.showLoader('Menyegarkan data...');
+                try {
+                    const [cats, setts] = await Promise.all([ db.get('kategori_lomba', '?order=id.asc'), db.get('pengaturan_web', '?id=eq.1') ]);
+                    this.state.categories = cats;
+                    this.state.settings = setts[0] || this.state.settings;
+                    
+                    document.getElementById('teks-beranda').textContent = this.state.settings.teks_beranda;
+                    document.getElementById('teks-jadwal').textContent = this.state.settings.tanggal_pelaksanaan;
+                    
+                    if (this.state.view === 'admin') {
+                        const activeTab = document.querySelector('.admin-section.active');
+                        if(activeTab) {
+                            const tabId = activeTab.id.replace('admin-sec-', '');
+                            await this.switchAdminTab(tabId);
+                        } else {
+                            await this.switchAdminTab('dashboard');
+                        }
+                    } else {
+                        this.runViewLogic(this.state.view);
+                    }
+                    
+                    this.showToast('Data terbaru berhasil dimuat!', 'success');
+                } catch (err) {
+                    this.showToast('Gagal menyegarkan data.', 'error');
+                } finally {
+                    this.hideLoader();
+                }
             },
+            // AKHIR KODE REFRESH
+
+            runViewLogic: function(v) {
+                this.updateNavState();
 
             // PUBLIK UI
             renderCategories: function() {
