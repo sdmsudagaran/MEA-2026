@@ -114,7 +114,6 @@
         
         <!-- =================== VIEW: BERANDA =================== -->
         <section id="view-home" class="view-section active">
-            <!-- Tombol Edit Cepat Khusus Admin -->
             <div id="admin-home-edit-btn" class="hidden absolute top-24 right-8 z-20">
                 <button onclick="app.editBerandaInline()" class="bg-yellow-400 text-yellow-900 font-bold px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 border border-yellow-500 hover:bg-yellow-500 transition-colors">
                     <i class="ph-bold ph-pencil-simple"></i> Edit Beranda
@@ -517,7 +516,7 @@
         </div>
     </div>
 
-    <!-- MODAL LOGIN (DIJAMIN 1 KOLOM USERNAME, 1 KOLOM PASSWORD, BISA ENTER) -->
+    <!-- MODAL LOGIN -->
     <div id="login-modal" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center px-4 opacity-0 transition-opacity duration-300 no-print">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300" id="login-modal-content">
             <div class="flex justify-between items-center mb-6">
@@ -643,40 +642,36 @@
                 document.getElementById('form-category-subtitle').textContent = `Kategori: ${cat.judul}`;
                 document.getElementById('dynamic-fields').innerHTML = (cat.form_fields||[]).map(f => {
                     let input = f.type === 'select' ? `<select name="${f.name}" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"><option value="">Pilih...</option>${f.options.map(o=>`<option>${o}</option>`).join('')}</select>` 
-                    : f.type === 'file' ? `<input type="file" name="${f.name}" required accept=".pdf" class="w-full text-sm">` 
+                    : f.type === 'file' ? `<input type="file" name="${f.name}" required accept=".pdf" onchange="app.checkFileSize(this)" class="w-full p-2 border rounded-xl bg-slate-50 text-sm cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-muh-blue hover:file:bg-blue-100">` 
                     : `<input type="text" name="${f.name}" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue">`;
                     return `<div><label class="block text-sm font-bold mb-2">${f.label}</label>${input}</div>`;
                 }).join('');
             },
-            submitForm: function(e) {
-                e.preventDefault(); 
-                const formData = new FormData(e.target);
-                const data = {};
-                checkFileSize: function(input) {
+            checkFileSize: function(input) {
                 if (input.files && input.files[0]) {
                     const file = input.files[0];
                     if (file.type !== 'application/pdf') {
                         this.showToast('Gagal! Berkas harus berformat PDF.', 'error');
-                        input.value = ''; // Kosongkan input
+                        input.value = ''; 
                         return;
                     }
-                    if (file.size > 10 * 1024 * 1024) { // 10 MB
+                    if (file.size > 10 * 1024 * 1024) { 
                         this.showToast(`Gagal! Ukuran file ${file.name} melebihi 10 MB.`, 'error');
-                        input.value = ''; // Kosongkan input
+                        input.value = ''; 
                     }
                 }
             },
-                
-                // Batasan ukuran file: 10MB (dalam bytes)
+            submitForm: function(e) {
+                e.preventDefault(); 
+                const formData = new FormData(e.target);
+                const data = {}; 
                 const MAX_FILE_SIZE = 10 * 1024 * 1024; 
 
                 for (let [key, value] of formData.entries()) { 
-                    // Validasi jika input adalah file
                     if (value instanceof File && value.name !== '') {
                         if (value.size > MAX_FILE_SIZE) {
                             return this.showToast(`Gagal! Ukuran file "${value.name}" terlalu besar. Maksimal 10MB.`, 'error');
                         }
-                        // Validasi ekstensi khusus PDF
                         if (value.type !== 'application/pdf') {
                             return this.showToast(`Gagal! File "${value.name}" harus berformat PDF.`, 'error');
                         }
@@ -686,6 +681,39 @@
                 
                 this.state.formDraft = data; 
                 this.navigate('review');
+            },
+            renderReview: function() {
+                if(!this.state.formDraft) return this.navigate('form');
+                
+                let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">'; 
+                for(let key in this.state.formDraft) {
+                    let val = this.state.formDraft[key];
+                    let label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    
+                    if(val instanceof File) {
+                        if(val.name) {
+                            const sizeMB = (val.size / (1024 * 1024)).toFixed(2);
+                            val = `<span class="text-muh-blue font-bold flex items-center gap-1"><i class="ph-bold ph-file-pdf"></i> ${val.name} (${sizeMB} MB)</span>`;
+                        } else {
+                            val = '<span class="text-red-500 font-semibold">Belum dilampirkan</span>';
+                        }
+                    } else {
+                        val = `<span class="font-semibold text-slate-800">${val || '-'}</span>`;
+                    }
+                    
+                    let colSpan = (this.state.formDraft[key] instanceof File || val.length > 30) ? 'md:col-span-2' : '';
+                    
+                    html += `
+                        <div class="bg-slate-50 p-3 rounded-xl border ${colSpan}">
+                            <p class="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wide">${label}</p>
+                            <p class="text-sm break-words">${val}</p>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                
+                document.getElementById('review-content').innerHTML = html; 
+                document.getElementById('agree-cb').checked = false;
             },
             finalSubmit: async function() {
                 if(!document.getElementById('agree-cb').checked) return this.showToast('Centang persetujuan form!', 'error');
@@ -764,7 +792,7 @@
                 } catch(e) { this.showToast('Gagal memuat pengumuman', 'error'); } finally { this.hideLoader(); }
             },
 
-            // ADMIN LOGIC (SMART INLINE EDITING)
+            // ADMIN LOGIC
             editBerandaInline: function() {
                 this.navigate('admin'); this.switchAdminTab('konten');
                 setTimeout(() => document.getElementById('edit-teks-beranda').focus(), 300);
@@ -791,7 +819,7 @@
                     if(tab === 'rekap_nilai') await this.renderAdminRekapNilai();
                     if(tab === 'akses') await this.renderAdminAkses();
                     if(tab === 'konten') await this.renderAdminKonten();
-                } catch(e) { this.showToast('Gagal memuat data.', 'error'); } finally { this.hideLoader(); }
+                } catch(e) { this.showToast('Gagal memuat data admin.', 'error'); } finally { this.hideLoader(); }
             },
             renderAdminDashboard: async function() {
                 const data = await db.get('pendaftaran', '?select=kategori_id,asal_instansi');
@@ -807,7 +835,7 @@
                 } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
             },
             
-            // ADMIN REKAP PESERTA (DENGAN MAPEL DINAMIS, CHECKBOX & EXCEL)
+            // ADMIN REKAP PESERTA
             renderAdminRekap: async function() {
                 const selKat = document.getElementById('admin-filter-kategori');
                 const selMapel = document.getElementById('admin-filter-mapel');
@@ -937,34 +965,23 @@
                 const sel = document.getElementById('juri-filter-kategori');
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
 
-                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
+                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan,penjurian(skor_akhir,skor_detail)&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
                 if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
 
                 const data = await db.get('pendaftaran', query);
-                
-                let penjurianData = [];
-                try {
-                    penjurianData = await db.get('penjurian', '');
-                } catch(e) {
-                    console.warn('Tabel penjurian belum terhubung secara optimal.');
-                }
-
-                this.state.pendaftaran = data.map(p => {
-                    p.penjurian = penjurianData.find(j => j.reg_id === p.reg_id) || null;
-                    return p;
-                });
-
+                this.state.pendaftaran = data; 
                 const tbody = document.getElementById('juri-table-body');
-                if(!this.state.pendaftaran.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
 
-                tbody.innerHTML = this.state.pendaftaran.map(p => {
+                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
+
+                tbody.innerHTML = data.map(p => {
                     let berkas = '-';
                     if(p.data_tambahan) {
                         const links = Object.entries(p.data_tambahan).filter(([k,v]) => typeof v === 'string' && v.startsWith('http'));
                         if(links.length > 0) berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded border hover:bg-blue-100 inline-block mb-1"><i class="ph-bold ph-link"></i> ${k.replace('_',' ')}</a>`).join('<br>');
                     }
                     
-                    const dataJuri = p.penjurian;
+                    const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
                     const skorSaatIni = dataJuri ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${dataJuri.skor_akhir}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
 
                     return `<tr>
@@ -981,14 +998,15 @@
                 if(!p) return;
                 this.state.juriTarget = p;
                 
-                const skor = p.penjurian ? p.penjurian.skor_detail : {};
+                const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
+                const skor = dataJuri ? dataJuri.skor_detail : {};
+                
                 let html = '';
-
                 if(p.kategori_id === 'tilawah-pa-pi') {
                     html = `
                         <div class="space-y-4">
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid</h4>
+                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid (0-100)</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Makharijul Huruf</label><input type="number" id="juri-t1" value="${skor.t1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Sifatul Huruf</label><input type="number" id="juri-t2" value="${skor.t2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -997,7 +1015,7 @@
                                 </div>
                             </div>
                             <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-                                <h4 class="font-bold text-green-700 mb-3 border-b border-green-200 pb-2">2. Aspek Suara</h4>
+                                <h4 class="font-bold text-green-700 mb-3 border-b border-green-200 pb-2">2. Aspek Suara (0-100)</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Kejernihan</label><input type="number" id="juri-s1" value="${skor.s1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Kehalusan</label><input type="number" id="juri-s2" value="${skor.s2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -1007,7 +1025,7 @@
                                 </div>
                             </div>
                             <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                                <h4 class="font-bold text-yellow-700 mb-3 border-b border-yellow-200 pb-2">3. Aspek Lagu</h4>
+                                <h4 class="font-bold text-yellow-700 mb-3 border-b border-yellow-200 pb-2">3. Aspek Lagu (0-100)</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Lagu pertama & penutup</label><input type="number" id="juri-l1" value="${skor.l1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Jumlah lagu</label><input type="number" id="juri-l2" value="${skor.l2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -1017,7 +1035,7 @@
                                 </div>
                             </div>
                             <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                <h4 class="font-bold text-purple-700 mb-3 border-b border-purple-200 pb-2">4. Fasahah dan Adab</h4>
+                                <h4 class="font-bold text-purple-700 mb-3 border-b border-purple-200 pb-2">4. Fasahah dan Adab (0-100)</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Ahkāmul waqf wal ibtida’</label><input type="number" id="juri-f1" value="${skor.f1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Mura’atul huruf wal harakat</label><input type="number" id="juri-f2" value="${skor.f2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
@@ -1097,7 +1115,6 @@
 
                 this.showLoader('Menyimpan Skor ke Tabel Penjurian...');
                 try {
-                    // Check directly using GET from database to avoid caching issues during consecutive edits
                     const cek = await db.get('penjurian', `?reg_id=eq.${p.reg_id}&select=reg_id`);
                     if(cek.length > 0) {
                         await db.patch('penjurian', `?reg_id=eq.${p.reg_id}`, payload);
@@ -1119,16 +1136,13 @@
 
                 this.showLoader('Memuat Rekap Penilaian...');
                 try {
-                    let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id&status_verifikasi=eq.Terverifikasi';
+                    let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,penjurian(skor_akhir)&status_verifikasi=eq.Terverifikasi';
                     if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
                     
                     const data = await db.get('pendaftaran', query);
-                    let penjurianData = [];
-                    try { penjurianData = await db.get('penjurian', ''); } catch(e) {}
                     
                     let dataNilai = data.map(p => {
-                        const juri = penjurianData.find(j => j.reg_id === p.reg_id);
-                        return { ...p, skor_akhir: juri ? juri.skor_akhir : 0 };
+                        return { ...p, skor_akhir: p.penjurian && p.penjurian.length > 0 ? p.penjurian[0].skor_akhir : 0 };
                     }).filter(p => p.skor_akhir > 0);
 
                     dataNilai.sort((a, b) => b.skor_akhir - a.skor_akhir);
@@ -1224,7 +1238,6 @@
             },
 
             // ADMIN AKSES
-            // ADMIN AKSES
             renderAdminAkses: async function() {
                 this.showLoader('Memuat data akun...');
                 try {
@@ -1247,13 +1260,10 @@
             },
             addAdminUser: async function(e) {
                 e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
-                
-                // Mencegah spasi pada username agar login tidak error
                 d.username = d.username.replace(/\s+/g, '').toLowerCase();
 
                 this.showLoader('Menambahkan akun...');
                 try { 
-                    // Cek apakah username sudah ada
                     const cek = await db.get('akun_pengguna', `?username=eq.${d.username}`);
                     if (cek.length > 0) return this.showToast('Gagal: Username sudah digunakan!', 'error');
 
@@ -1312,7 +1322,7 @@
                         if(homeEditBtn && this.state.user.role === 'admin') homeEditBtn.classList.remove('hidden'); else if(homeEditBtn) homeEditBtn.classList.add('hidden');
                         if(navPengaturan) navPengaturan.classList.remove('hidden');
                     } else { 
-                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dashboard Saya'; 
+                        navDashBtn.setAttribute('onclick', "app.navigate('dashboard')"); document.getElementById('nav-username').textContent = this.state.user.name.split(' ')[0]; navUserIcon.className = 'ph-fill ph-user-circle text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('dashboard'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Dasbor Saya'; 
                         if(homeEditBtn) homeEditBtn.classList.add('hidden');
                         if(navPengaturan) navPengaturan.classList.add('hidden');
                     }
