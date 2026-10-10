@@ -651,7 +651,21 @@
             submitForm: function(e) {
                 e.preventDefault(); 
                 const formData = new FormData(e.target);
-                const data = {}; 
+                const data = {};
+                checkFileSize: function(input) {
+                if (input.files && input.files[0]) {
+                    const file = input.files[0];
+                    if (file.type !== 'application/pdf') {
+                        this.showToast('Gagal! Berkas harus berformat PDF.', 'error');
+                        input.value = ''; // Kosongkan input
+                        return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) { // 10 MB
+                        this.showToast(`Gagal! Ukuran file ${file.name} melebihi 10 MB.`, 'error');
+                        input.value = ''; // Kosongkan input
+                    }
+                }
+            },
                 
                 // Batasan ukuran file: 10MB (dalam bytes)
                 const MAX_FILE_SIZE = 10 * 1024 * 1024; 
