@@ -185,9 +185,13 @@
                 <form id="registration-form" onsubmit="app.submitForm(event)" class="bg-white rounded-3xl p-6 md:p-10 shadow-soft border">
                     <h3 class="text-lg font-bold border-b pb-3 mb-6">Data Umum</h3>
                     <div class="grid md:grid-cols-2 gap-6 mb-8">
-                        <div><label class="block text-sm font-bold mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
+                        <!-- Tambahan ID label-nama -->
+                        <div><label id="label-nama" class="block text-sm font-bold mb-2">Nama Lengkap</label><input type="text" name="nama_lengkap" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
                         <div><label class="block text-sm font-bold mb-2">NISN/NBM/NIP</label><input type="text" name="nomor_induk" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
-                        <div class="md:col-span-2"><label class="block text-sm font-bold mb-2">Asal Instansi / Sekolah</label><input type="text" name="asal_instansi" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
+                        
+                        <!-- Tambahan ID label-instansi -->
+                        <div class="md:col-span-2"><label id="label-instansi" class="block text-sm font-bold mb-2">Asal Instansi / Sekolah</label><input type="text" name="asal_instansi" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
+                        
                         <div><label class="block text-sm font-bold mb-2">Nomor WA</label><input type="tel" name="nomor_wa" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
                         <div><label class="block text-sm font-bold mb-2">Email</label><input type="email" name="email" required class="w-full px-4 py-3 rounded-xl border bg-slate-50 outline-none focus:border-muh-blue"></div>
                     </div>
@@ -654,10 +658,27 @@
             renderForm: function() {
                 const cat = this.state.categories.find(c => c.id === this.state.category);
                 document.getElementById('form-category-subtitle').textContent = `Kategori: ${cat.judul}`;
+                
+                // 1. Logika Pengubahan Label Dinamis (Sekolah Unggul & Voli)
+                let lblNama = "Nama Lengkap";
+                let lblInstansi = "Asal Instansi / Sekolah";
+                
+                if (cat.id === 'sekolah-unggul') {
+                    lblNama = "Nama Kepala Sekolah";
+                    lblInstansi = "Nama Sekolah";
+                } else if (cat.id === 'voli-pcm') {
+                    lblNama = "Nama Official";
+                    lblInstansi = "Nama Majelis PCM";
+                }
+                
+                document.getElementById('label-nama').textContent = lblNama;
+                document.getElementById('label-instansi').textContent = lblInstansi;
+
+                // 2. Render Form Dinamis (Mendukung type="number" untuk Masa Kerja)
                 document.getElementById('dynamic-fields').innerHTML = (cat.form_fields||[]).map(f => {
                     let input = f.type === 'select' ? `<select name="${f.name}" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue"><option value="">Pilih...</option>${f.options.map(o=>`<option>${o}</option>`).join('')}</select>` 
                     : f.type === 'file' ? `<input type="file" name="${f.name}" required accept=".pdf" onchange="app.checkFileSize(this)" class="w-full p-2 border rounded-xl bg-slate-50 text-sm cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-muh-blue hover:file:bg-blue-100">` 
-                    : `<input type="text" name="${f.name}" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue">`;
+                    : `<input type="${f.type || 'text'}" name="${f.name}" required class="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:border-muh-blue">`;
                     return `<div><label class="block text-sm font-bold mb-2">${f.label}</label>${input}</div>`;
                 }).join('');
             },
