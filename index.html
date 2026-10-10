@@ -516,7 +516,7 @@
         </div>
     </div>
 
-    <!-- MODAL LOGIN -->
+    <!-- MODAL LOGIN (DIJAMIN 1 KOLOM USERNAME, 1 KOLOM PASSWORD, BISA ENTER) -->
     <div id="login-modal" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center px-4 opacity-0 transition-opacity duration-300 no-print">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300" id="login-modal-content">
             <div class="flex justify-between items-center mb-6">
@@ -637,6 +637,20 @@
                 if(!this.state.settings.pendaftaran_buka) return this.showToast('Pendaftaran ditutup oleh admin.', 'error');
                 this.navigate('form');
             },
+            checkFileSize: function(input) {
+                if (input.files && input.files[0]) {
+                    const file = input.files[0];
+                    if (file.type !== 'application/pdf') {
+                        app.showToast('Gagal! Berkas harus berformat PDF.', 'error');
+                        input.value = ''; 
+                        return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) { 
+                        app.showToast(`Gagal! Ukuran file ${file.name} melebihi 10 MB.`, 'error');
+                        input.value = ''; 
+                    }
+                }
+            },
             renderForm: function() {
                 const cat = this.state.categories.find(c => c.id === this.state.category);
                 document.getElementById('form-category-subtitle').textContent = `Kategori: ${cat.judul}`;
@@ -647,20 +661,6 @@
                     return `<div><label class="block text-sm font-bold mb-2">${f.label}</label>${input}</div>`;
                 }).join('');
             },
-            checkFileSize: function(input) {
-                if (input.files && input.files[0]) {
-                    const file = input.files[0];
-                    if (file.type !== 'application/pdf') {
-                        this.showToast('Gagal! Berkas harus berformat PDF.', 'error');
-                        input.value = ''; 
-                        return;
-                    }
-                    if (file.size > 10 * 1024 * 1024) { 
-                        this.showToast(`Gagal! Ukuran file ${file.name} melebihi 10 MB.`, 'error');
-                        input.value = ''; 
-                    }
-                }
-            },
             submitForm: function(e) {
                 e.preventDefault(); 
                 const formData = new FormData(e.target);
@@ -670,10 +670,12 @@
                 for (let [key, value] of formData.entries()) { 
                     if (value instanceof File && value.name !== '') {
                         if (value.size > MAX_FILE_SIZE) {
-                            return this.showToast(`Gagal! Ukuran file "${value.name}" terlalu besar. Maksimal 10MB.`, 'error');
+                            app.showToast(`Gagal! Ukuran file "${value.name}" terlalu besar. Maksimal 10MB.`, 'error');
+                            return; 
                         }
                         if (value.type !== 'application/pdf') {
-                            return this.showToast(`Gagal! File "${value.name}" harus berformat PDF.`, 'error');
+                            app.showToast(`Gagal! File "${value.name}" harus berformat PDF.`, 'error');
+                            return; 
                         }
                     }
                     data[key] = value; 
