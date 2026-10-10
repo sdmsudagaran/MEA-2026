@@ -641,19 +641,29 @@
                 }).join('');
             },
             submitForm: function(e) {
-                e.preventDefault(); const formData = new FormData(e.target);
-                const data = {}; for (let [key, value] of formData.entries()) { data[key] = value; }
-                this.state.formDraft = data; this.navigate('review');
-            },
-            renderReview: function() {
-                if(!this.state.formDraft) return this.navigate('form');
-                let html = ''; 
-                for(let key in this.state.formDraft) {
-                    let val = this.state.formDraft[key];
-                    if(val instanceof File) val = val.name ? `📄 ${val.name}` : '-';
-                    html += `<p class="mb-2"><b class="capitalize text-slate-500">${key.replace('_',' ')}:</b> <br/>${val}</p>`;
+                e.preventDefault(); 
+                const formData = new FormData(e.target);
+                const data = {}; 
+                
+                // Batasan ukuran file: 10MB (dalam bytes)
+                const MAX_FILE_SIZE = 10 * 1024 * 1024; 
+
+                for (let [key, value] of formData.entries()) { 
+                    // Validasi jika input adalah file
+                    if (value instanceof File && value.name !== '') {
+                        if (value.size > MAX_FILE_SIZE) {
+                            return this.showToast(`Gagal! Ukuran file "${value.name}" terlalu besar. Maksimal 10MB.`, 'error');
+                        }
+                        // Validasi ekstensi khusus PDF
+                        if (value.type !== 'application/pdf') {
+                            return this.showToast(`Gagal! File "${value.name}" harus berformat PDF.`, 'error');
+                        }
+                    }
+                    data[key] = value; 
                 }
-                document.getElementById('review-content').innerHTML = html; document.getElementById('agree-cb').checked = false;
+                
+                this.state.formDraft = data; 
+                this.navigate('review');
             },
             finalSubmit: async function() {
                 if(!document.getElementById('agree-cb').checked) return this.showToast('Centang persetujuan form!', 'error');
