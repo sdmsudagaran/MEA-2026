@@ -622,22 +622,16 @@
                 t.className = 'toast'; t.innerHTML = `${icon} <span class="text-sm font-medium">${msg}</span>`; c.appendChild(t);
                 setTimeout(() => t.classList.add('show'), 10); setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
             },
+            
             navigate: function(viewId, params = null) {
                 this.state.view = viewId; if(params) this.state.category = params;
                 document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-                
                 const target = document.getElementById(`view-${viewId}`);
-                if(target) { 
-                    target.classList.add('active'); 
-                    window.scrollTo({ top: 0, behavior: 'smooth' }); 
-                }
-                
+                if(target) { target.classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
                 document.querySelectorAll('.nav-link').forEach(el => { el.classList[el.dataset.target === viewId ? 'add' : 'remove']('text-muh-blue'); });
                 
-                // Mencegah Freeze: Biarkan CSS merender halaman dulu, baru eksekusi logika berat
-                setTimeout(() => {
-                    this.runViewLogic(viewId);
-                }, 50);
+                // Anti-Lag: Melepas UI Thread
+                setTimeout(() => { this.runViewLogic(viewId); }, 50);
             },
             refreshCurrentView: async function() {
                 this.showLoader('Menyegarkan data...');
@@ -660,13 +654,8 @@
                     } else {
                         this.runViewLogic(this.state.view);
                     }
-                    
                     this.showToast('Data terbaru berhasil dimuat!', 'success');
-                } catch (err) {
-                    this.showToast('Gagal menyegarkan data.', 'error');
-                } finally {
-                    this.hideLoader();
-                }
+                } catch (err) { this.showToast('Gagal menyegarkan data.', 'error'); } finally { this.hideLoader(); }
             },
             runViewLogic: function(v) {
                 this.updateNavState(); 
@@ -884,6 +873,7 @@
                 this.loadEditKategori(id);
                 setTimeout(() => document.getElementById('edit-kat-judul').focus(), 300);
             },
+            
             switchAdminTab: async function(tab) {
                 if(!this.state.user || !['admin','operator','juri','koordinator'].includes(this.state.user.role)) return this.navigate('home');
                 
@@ -895,17 +885,7 @@
                 const targetBtn = document.getElementById(`btn-tab-${tab}`);
                 if(targetBtn) targetBtn.classList.add('bg-blue-800/50', 'text-white');
                 
-                // Jangan paksa render ulang jika data tidak perlu ditarik (kecuali dashboard & konten yang ringan)
-                if (['rekap', 'juri', 'rekap_nilai'].includes(tab) && this.state.pendaftaran.length > 0) {
-                    // Gunakan data cache yang sudah ada agar tab pindah instan dalam 0 detik
-                    if(tab === 'rekap') setTimeout(() => this.renderAdminRekap(true), 10);
-                    if(tab === 'juri') setTimeout(() => this.renderAdminJuri(true), 10);
-                    if(tab === 'rekap_nilai') setTimeout(() => this.renderAdminRekapNilai(true), 10);
-                    return; 
-                }
-
                 this.showLoader();
-                // Lepaskan UI thread dengan setTimeout
                 setTimeout(async () => {
                     try {
                         if(tab === 'dashboard') await this.renderAdminDashboard();
@@ -915,11 +895,33 @@
                         if(tab === 'akses') await this.renderAdminAkses();
                         if(tab === 'konten') await this.renderAdminKonten();
                     } catch(e) { 
-                        this.showToast('Gagal memuat data.', 'error'); 
+                        this.showToast('Gagal memuat data admin.', 'error'); 
                     } finally { 
                         this.hideLoader(); 
                     }
                 }, 50);
+            },
+            renderAdminDashboard: async function() {
+                this.showLoader('Memuat Dasbor...');
+                try {
+                    const data = await db.get('pendaftaran', '?select=kategori_id,asal_instansi');
+                    document.getElementById('stat-total').textContent = data.length;
+                    
+                    const instansiUnik = new Set(data.map(p => p.asal_instansi));
+                    document.getElementById('stat-sekolah').textContent = instansiUnik.size;
+                    document.getElementById('toggle-form').checked = this.state.settings.pendaftaran_buka;
+                } catch (e) {
+                    this.showToast('Gagal memuat statistik dasbor', 'error');
+                } finally {
+                    this.hideLoader();
+                }
+            },
+            toggleFormStatus: async function(el) {
+                try {
+                    await db.patch('pengaturan_web', '?id=eq.1', { pendaftaran_buka: el.checked });
+                    this.state.settings.pendaftaran_buka = el.checked;
+                    this.showToast(el.checked ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup', 'success');
+                } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
             },
             
             // ADMIN REKAP PESERTA
@@ -1047,14 +1049,13 @@
                 } catch(e) { this.showToast('Gagal mengunduh Excel', 'error'); } finally { this.hideLoader(); }
             },
 
-            // ADMIN JURI (RBAC Filter Kategori Terpasang)
+            // ADMIN JURI
             renderAdminJuri: async function() {
                 const sel = document.getElementById('juri-filter-kategori');
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
 
                 let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan,penjurian(skor_akhir,skor_detail)&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
                 
-                // MENGUNCI AKSES JURI KE KATEGORI SPESIFIK SAJA
                 if(this.state.user.role === 'juri' && this.state.user.kategori_id) {
                     sel.value = this.state.user.kategori_id;
                     sel.disabled = true; 
@@ -1333,7 +1334,7 @@
                 catch(err) { this.showToast('Gagal menghapus', 'error'); } finally { this.hideLoader(); }
             },
 
-            // ADMIN AKSES DENGAN RBAC SPESIFIK
+            // ADMIN AKSES
             toggleKategoriJuri: function(val) {
                 const div = document.getElementById('div-kategori-juri');
                 if(val === 'juri') div.classList.remove('hidden');
@@ -1375,7 +1376,7 @@
                 e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
                 d.username = d.username.replace(/\s+/g, '').toLowerCase();
                 
-                if (d.role !== 'juri') d.kategori_id = null; // Kosongkan kategori jika bukan juri
+                if (d.role !== 'juri') d.kategori_id = null; 
 
                 this.showLoader('Menambahkan akun...');
                 try { 
@@ -1418,7 +1419,6 @@
                     } else {
                         const res = await db.get('akun_pengguna', `?username=eq.${id}&select=*`);
                         if(res.length && res[0].password === pwd) { 
-                            // Simpan detail kategori penugasan juri
                             this.state.user = { role: res[0].role, name: res[0].role.toUpperCase(), kategori_id: res[0].kategori_id }; 
                             this.hideLoginModal(); this.updateNavState(); this.navigate('admin'); this.showToast(`Login ${res[0].role} Berhasil`, 'success'); 
                         } 
@@ -1431,7 +1431,6 @@
             // KONTROL VISIBILITAS TAB BERDASARKAN ROLE
             updateNavState: function() {
                 const authBtns = document.getElementById('auth-buttons'), userMenu = document.getElementById('user-menu'), mobAuthBtns = document.getElementById('mobile-auth-buttons'), mobUserMenu = document.getElementById('mobile-user-menu'), navDashBtn = document.getElementById('nav-dash-btn'), mobDashBtn = document.getElementById('mob-dash-btn'), navUserIcon = document.getElementById('nav-user-icon');
-                
                 const homeEditBtn = document.getElementById('admin-home-edit-btn');
                 const navPengaturan = document.getElementById('nav-pengaturan');
                 const globalRefreshBtn = document.getElementById('global-refresh-btn');
@@ -1439,17 +1438,15 @@
                 if(this.state.user) {
                     authBtns.classList.add('hidden'); userMenu.classList.remove('hidden'); userMenu.classList.add('flex');
                     mobAuthBtns.classList.add('hidden'); mobUserMenu.classList.remove('hidden'); mobUserMenu.classList.add('flex');
-                    globalRefreshBtn.classList.remove('hidden');
+                    if (globalRefreshBtn) globalRefreshBtn.classList.remove('hidden');
                     
                     const r = this.state.user.role;
-                    
                     if (['admin', 'operator', 'juri', 'koordinator'].includes(r)) { 
                         navDashBtn.setAttribute('onclick', "app.navigate('admin')"); document.getElementById('nav-username').textContent = 'Panel Admin'; navUserIcon.className = 'ph-fill ph-shield-check text-xl'; mobDashBtn.setAttribute('onclick', "app.navigate('admin'); app.toggleMobileMenu()"); mobDashBtn.textContent = 'Panel Admin'; 
                         
                         if(homeEditBtn && ['admin','koordinator'].includes(r)) homeEditBtn.classList.remove('hidden'); else if(homeEditBtn) homeEditBtn.classList.add('hidden');
                         if(navPengaturan) navPengaturan.classList.remove('hidden');
 
-                        // RBAC TAB ADMIN
                         if(document.getElementById('btn-tab-dashboard')) {
                             document.getElementById('btn-tab-dashboard').style.display = 'block';
                             document.getElementById('btn-tab-rekap').style.display = ['admin', 'operator'].includes(r) ? 'block' : 'none';
@@ -1467,9 +1464,8 @@
                     authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); userMenu.classList.remove('flex'); mobAuthBtns.classList.remove('hidden'); mobUserMenu.classList.add('hidden'); mobUserMenu.classList.remove('flex'); 
                     if(homeEditBtn) homeEditBtn.classList.add('hidden');
                     if(navPengaturan) navPengaturan.classList.add('hidden');
-                    globalRefreshBtn.classList.add('hidden');
+                    if(globalRefreshBtn) globalRefreshBtn.classList.add('hidden');
                 }
-                
                 if(this.state.view === 'kategori') this.renderCategories();
             },
             toggleMobileMenu: function() { const menu = document.getElementById('mobile-menu'); if(menu.classList.contains('hidden')) { menu.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } else { menu.classList.add('hidden'); document.body.style.overflow = ''; } },
