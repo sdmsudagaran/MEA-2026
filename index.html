@@ -48,6 +48,20 @@
             .bg-slate-50, .bg-slate-100 { background-color: transparent !important; }
             #view-admin .flex.h-\\[calc\\(100vh-80px\\)\\] { display: block; height: auto; } #view-admin .flex-1 { overflow: visible; padding: 0 !important; }
         }
+    /* OPTIMASI TRANSISI HARDWARE ACCELERATED */
+        .view-section { display: none; min-height: calc(100vh - 80px); opacity: 0; }
+        .view-section.active { display: block; animation: slideUpFade 0.35s ease-out forwards; }
+        .admin-section { display: none; opacity: 0; }
+        .admin-section:not(.hidden) { display: block; animation: fadeIn 0.3s ease-out forwards; }
+        
+        @keyframes slideUpFade { 
+            from { opacity: 0; transform: translateY(15px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        @keyframes fadeIn { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+        }
     </style>
 </head>
 <body class="text-slate-800 antialiased selection:bg-muh-blue selection:text-white">
@@ -611,10 +625,19 @@
             navigate: function(viewId, params = null) {
                 this.state.view = viewId; if(params) this.state.category = params;
                 document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                
                 const target = document.getElementById(`view-${viewId}`);
-                if(target) { target.classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+                if(target) { 
+                    target.classList.add('active'); 
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                }
+                
                 document.querySelectorAll('.nav-link').forEach(el => { el.classList[el.dataset.target === viewId ? 'add' : 'remove']('text-muh-blue'); });
-                this.runViewLogic(viewId);
+                
+                // Mencegah Freeze: Biarkan CSS merender halaman dulu, baru eksekusi logika berat
+                setTimeout(() => {
+                    this.runViewLogic(viewId);
+                }, 50);
             },
             refreshCurrentView: async function() {
                 this.showLoader('Menyegarkan data...');
@@ -863,33 +886,40 @@
             },
             switchAdminTab: async function(tab) {
                 if(!this.state.user || !['admin','operator','juri','koordinator'].includes(this.state.user.role)) return this.navigate('home');
-                document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
-                document.getElementById(`admin-sec-${tab}`).classList.remove('hidden');
-                document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('bg-blue-800/50', 'text-white'));
-                document.getElementById(`btn-tab-${tab}`).classList.add('bg-blue-800/50', 'text-white');
                 
+                document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
+                const targetTab = document.getElementById(`admin-sec-${tab}`);
+                if(targetTab) targetTab.classList.remove('hidden');
+                
+                document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('bg-blue-800/50', 'text-white'));
+                const targetBtn = document.getElementById(`btn-tab-${tab}`);
+                if(targetBtn) targetBtn.classList.add('bg-blue-800/50', 'text-white');
+                
+                // Jangan paksa render ulang jika data tidak perlu ditarik (kecuali dashboard & konten yang ringan)
+                if (['rekap', 'juri', 'rekap_nilai'].includes(tab) && this.state.pendaftaran.length > 0) {
+                    // Gunakan data cache yang sudah ada agar tab pindah instan dalam 0 detik
+                    if(tab === 'rekap') setTimeout(() => this.renderAdminRekap(true), 10);
+                    if(tab === 'juri') setTimeout(() => this.renderAdminJuri(true), 10);
+                    if(tab === 'rekap_nilai') setTimeout(() => this.renderAdminRekapNilai(true), 10);
+                    return; 
+                }
+
                 this.showLoader();
-                try {
-                    if(tab === 'dashboard') await this.renderAdminDashboard();
-                    if(tab === 'rekap') await this.renderAdminRekap();
-                    if(tab === 'juri') await this.renderAdminJuri();
-                    if(tab === 'rekap_nilai') await this.renderAdminRekapNilai();
-                    if(tab === 'akses') await this.renderAdminAkses();
-                    if(tab === 'konten') await this.renderAdminKonten();
-                } catch(e) { this.showToast('Gagal memuat data admin.', 'error'); } finally { this.hideLoader(); }
-            },
-            renderAdminDashboard: async function() {
-                const data = await db.get('pendaftaran', '?select=kategori_id,asal_instansi');
-                document.getElementById('stat-total').textContent = data.length;
-                document.getElementById('stat-sekolah').textContent = new Set(data.map(p => p.asal_instansi)).size;
-                document.getElementById('toggle-form').checked = this.state.settings.pendaftaran_buka;
-            },
-            toggleFormStatus: async function(el) {
-                try {
-                    await db.patch('pengaturan_web', '?id=eq.1', { pendaftaran_buka: el.checked });
-                    this.state.settings.pendaftaran_buka = el.checked;
-                    this.showToast(el.checked ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup', 'success');
-                } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
+                // Lepaskan UI thread dengan setTimeout
+                setTimeout(async () => {
+                    try {
+                        if(tab === 'dashboard') await this.renderAdminDashboard();
+                        if(tab === 'rekap') await this.renderAdminRekap();
+                        if(tab === 'juri') await this.renderAdminJuri();
+                        if(tab === 'rekap_nilai') await this.renderAdminRekapNilai();
+                        if(tab === 'akses') await this.renderAdminAkses();
+                        if(tab === 'konten') await this.renderAdminKonten();
+                    } catch(e) { 
+                        this.showToast('Gagal memuat data.', 'error'); 
+                    } finally { 
+                        this.hideLoader(); 
+                    }
+                }, 50);
             },
             
             // ADMIN REKAP PESERTA
