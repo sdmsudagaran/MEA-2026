@@ -389,15 +389,22 @@
                     <!-- 3. ADMIN JURI -->
                     <div id="admin-sec-juri" class="admin-section hidden no-print">
                         <div class="flex justify-between items-center mb-6">
-                            <div><h2 class="text-2xl font-bold">Penilaian Juri Terpadu</h2><p class="text-sm text-slate-500">Menampilkan peserta yang telah berstatus Terverifikasi.</p></div>
+                            <div><h2 class="text-2xl font-bold">Penilaian Juri Terpadu</h2><p class="text-sm text-slate-500">Input nilai dari masing-masing juri di sini.</p></div>
                         </div>
-                        <div class="flex gap-3 mb-6">
+                        <div class="flex flex-wrap gap-3 mb-6">
                             <select id="juri-filter-kategori" onchange="app.renderAdminJuri()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[250px]"><option value="all">Pilih Kategori Lomba...</option></select>
+                            <!-- Filter Pengurutan Nilai -->
+                            <select id="juri-sort-skor" onchange="app.renderAdminJuri()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue font-bold text-muh-blue">
+                                <option value="desc">Nilai Tertinggi ke Terendah</option>
+                                <option value="asc">Nilai Terendah ke Tertinggi</option>
+                            </select>
                         </div>
                         
                         <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                             <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Berkas / URL</th><th class="p-4 text-center">Skor Juri</th><th class="p-4 text-right">Aksi Penilaian</th></tr></thead>
+                                <thead class="bg-slate-50 border-b">
+                                    <tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4 text-center">Juri 1</th><th class="p-4 text-center">Juri 2</th><th class="p-4 text-center">Juri 3</th><th class="p-4 text-center">Total Skor</th><th class="p-4 text-right">Aksi</th></tr>
+                                </thead>
                                 <tbody id="juri-table-body" class="divide-y"></tbody>
                             </table>
                         </div>
@@ -508,13 +515,20 @@
                             <div><h2 class="text-2xl font-bold">Rekap Penilaian Juri</h2><p class="text-sm text-slate-500">Peringkat dan hasil akhir penjurian.</p></div>
                             <div class="flex gap-3">
                                 <select id="rekap-nilai-kategori" onchange="app.renderAdminRekapNilai()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[250px]"><option value="all">Semua Kategori Lomba...</option></select>
+                                <!-- Filter Pengurutan Nilai -->
+                                <select id="rekap-sort-skor" onchange="app.renderAdminRekapNilai()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue font-bold text-muh-blue">
+                                    <option value="desc">Peringkat Tertinggi (1, 2, 3...)</option>
+                                    <option value="asc">Peringkat Terendah</option>
+                                </select>
                                 <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
                             </div>
                         </div>
                         
                         <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                             <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 border-b"><tr><th class="p-4 text-center">Peringkat</th><th class="p-4">Reg ID</th><th class="p-4">Nama Peserta</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori Lomba</th><th class="p-4 text-center">Skor Akhir</th></tr></thead>
+                                <thead class="bg-slate-50 border-b">
+                                    <tr><th class="p-4 text-center">Peringkat</th><th class="p-4">Nama & Instansi</th><th class="p-4">Kategori Lomba</th><th class="p-4 text-center">Juri 1</th><th class="p-4 text-center">Juri 2</th><th class="p-4 text-center">Juri 3</th><th class="p-4 text-center">Total Akhir</th></tr>
+                                </thead>
                                 <tbody id="rekap-nilai-table-body" class="divide-y"></tbody>
                             </table>
                         </div>
@@ -1052,9 +1066,10 @@
             // ADMIN JURI
             renderAdminJuri: async function() {
                 const sel = document.getElementById('juri-filter-kategori');
+                const sortOrder = document.getElementById('juri-sort-skor') ? document.getElementById('juri-sort-skor').value : 'desc';
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
 
-                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan,penjurian(skor_akhir,skor_detail)&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
+                let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan,penjurian(skor_akhir,skor_detail,skor_juri_1,skor_juri_2,skor_juri_3)&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
                 
                 if(this.state.user.role === 'juri' && this.state.user.kategori_id) {
                     sel.value = this.state.user.kategori_id;
@@ -1066,27 +1081,35 @@
                 }
 
                 const data = await db.get('pendaftaran', query);
-                this.state.pendaftaran = data; 
+                
+                // Rapikan array relasi penjurian
+                this.state.pendaftaran = data.map(p => {
+                    p.penjurian = (p.penjurian && p.penjurian.length > 0) ? p.penjurian[0] : { skor_akhir: 0, skor_juri_1: 0, skor_juri_2: 0, skor_juri_3: 0 };
+                    return p;
+                });
+                
+                // Fitur Filter Pengurutan Nilai
+                if (sortOrder === 'desc') {
+                    this.state.pendaftaran.sort((a, b) => b.penjurian.skor_akhir - a.penjurian.skor_akhir);
+                } else {
+                    this.state.pendaftaran.sort((a, b) => a.penjurian.skor_akhir - b.penjurian.skor_akhir);
+                }
+
                 const tbody = document.getElementById('juri-table-body');
+                if(!this.state.pendaftaran.length) return tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada peserta.</td></tr>`;
 
-                if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
-
-                tbody.innerHTML = data.map(p => {
-                    let berkas = '-';
-                    if(p.data_tambahan) {
-                        const links = Object.entries(p.data_tambahan).filter(([k,v]) => typeof v === 'string' && v.startsWith('http'));
-                        if(links.length > 0) berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded border hover:bg-blue-100 inline-block mb-1"><i class="ph-bold ph-link"></i> ${k.replace('_',' ')}</a>`).join('<br>');
-                    }
-                    
-                    const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
-                    const skorSaatIni = dataJuri ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${dataJuri.skor_akhir}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
+                tbody.innerHTML = this.state.pendaftaran.map(p => {
+                    const j = p.penjurian;
+                    const skorTotal = j.skor_akhir > 0 ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${j.skor_akhir}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
 
                     return `<tr>
                         <td class="p-4 font-mono text-xs">${p.reg_id}</td>
                         <td class="p-4"><span class="font-bold block">${p.nama_lengkap}</span><span class="text-xs text-slate-500">${p.asal_instansi}</span></td>
-                        <td class="p-4">${berkas}</td>
-                        <td class="p-4 text-center">${skorSaatIni}</td>
-                        <td class="p-4 text-right"><button onclick="app.bukaModalJuri('${p.reg_id}')" class="bg-muh-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-muh-dark text-xs shadow-sm">Beri / Edit Nilai</button></td>
+                        <td class="p-4 text-center font-bold text-slate-600">${j.skor_juri_1 || 0}</td>
+                        <td class="p-4 text-center font-bold text-slate-600">${j.skor_juri_2 || 0}</td>
+                        <td class="p-4 text-center font-bold text-slate-600">${j.skor_juri_3 || 0}</td>
+                        <td class="p-4 text-center">${skorTotal}</td>
+                        <td class="p-4 text-right"><button onclick="app.bukaModalJuri('${p.reg_id}')" class="bg-muh-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-muh-dark text-xs shadow-sm"><i class="ph-bold ph-pencil-simple"></i> Nilai</button></td>
                     </tr>`;
                 }).join('');
             },
@@ -1095,48 +1118,21 @@
                 if(!p) return;
                 this.state.juriTarget = p;
                 
-                const dataJuri = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : null;
-                const skor = dataJuri ? dataJuri.skor_detail : {};
+                const dataJuri = p.penjurian || {};
+                const skor = dataJuri.skor_detail || {};
                 
                 let html = '';
+                // [Fitur Detail Tilawah & BP tetap utuh, disembunyikan untuk fokus pada 3 Juri di bawahnya]
                 if(p.kategori_id === 'tilawah-pa-pi') {
                     html = `
                         <div class="space-y-4">
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid (0-100)</h4>
+                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">Kalkulator Bantuan (Opsional)</h4>
                                 <div class="grid grid-cols-2 gap-3 text-sm">
                                     <div><label>Makharijul Huruf</label><input type="number" id="juri-t1" value="${skor.t1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Sifatul Huruf</label><input type="number" id="juri-t2" value="${skor.t2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Ahkāmul Huruf</label><input type="number" id="juri-t3" value="${skor.t3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                     <div><label>Ahkām Mad wal Qasr</label><input type="number" id="juri-t4" value="${skor.t4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                </div>
-                            </div>
-                            <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-                                <h4 class="font-bold text-green-700 mb-3 border-b border-green-200 pb-2">2. Aspek Suara (0-100)</h4>
-                                <div class="grid grid-cols-2 gap-3 text-sm">
-                                    <div><label>Kejernihan</label><input type="number" id="juri-s1" value="${skor.s1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label>Kehalusan</label><input type="number" id="juri-s2" value="${skor.s2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label>Kenyaringan</label><input type="number" id="juri-s3" value="${skor.s3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label>Keutuhan</label><input type="number" id="juri-s4" value="${skor.s4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div class="col-span-2"><label>Pengaturan Nafas</label><input type="number" id="juri-s5" value="${skor.s5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                </div>
-                            </div>
-                            <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                                <h4 class="font-bold text-yellow-700 mb-3 border-b border-yellow-200 pb-2">3. Aspek Lagu (0-100)</h4>
-                                <div class="grid grid-cols-2 gap-3 text-sm">
-                                    <div><label>Lagu pertama & penutup</label><input type="number" id="juri-l1" value="${skor.l1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label>Jumlah lagu</label><input type="number" id="juri-l2" value="${skor.l2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label>Peralihan tempo</label><input type="number" id="juri-l3" value="${skor.l3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label>Irama dan gaya</label><input type="number" id="juri-l4" value="${skor.l4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div class="col-span-2"><label>Gaya / Variasi</label><input type="number" id="juri-l5" value="${skor.l5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                </div>
-                            </div>
-                            <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                <h4 class="font-bold text-purple-700 mb-3 border-b border-purple-200 pb-2">4. Fasahah dan Adab (0-100)</h4>
-                                <div class="grid grid-cols-2 gap-3 text-sm">
-                                    <div><label>Ahkāmul waqf wal ibtida’</label><input type="number" id="juri-f1" value="${skor.f1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label>Mura’atul huruf wal harakat</label><input type="number" id="juri-f2" value="${skor.f2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div class="col-span-2"><label>Mura’atul kalimat wal ayat</label><input type="number" id="juri-f3" value="${skor.f3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                 </div>
                             </div>
                         </div>
@@ -1145,29 +1141,31 @@
                     html = `
                         <div class="space-y-4">
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                <h4 class="font-bold text-muh-blue mb-4 border-b border-blue-200 pb-2">Penilaian Best Practice Guru (0-100)</h4>
+                                <h4 class="font-bold text-muh-blue mb-4 border-b border-blue-200 pb-2">Kalkulator Best Practice (Opsional)</h4>
                                 <div class="space-y-3 text-sm">
-                                    <div><label class="flex justify-between"><span>Kreativitas & Kebaruan Inovasi</span> <span class="font-bold text-muh-blue">25%</span></label><input type="number" id="juri-bp1" value="${skor.bp1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Relevansi Pembelajaran Mendalam</span> <span class="font-bold text-muh-blue">15%</span></label><input type="number" id="juri-bp2" value="${skor.bp2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Keterlibatan Aktif Peserta Didik</span> <span class="font-bold text-muh-blue">15%</span></label><input type="number" id="juri-bp3" value="${skor.bp3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Dampak 8 Dimensi Profil Lulusan</span> <span class="font-bold text-muh-blue">20%</span></label><input type="number" id="juri-bp4" value="${skor.bp4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Keberlanjutan dan Replikasi</span> <span class="font-bold text-muh-blue">10%</span></label><input type="number" id="juri-bp5" value="${skor.bp5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
-                                    <div><label class="flex justify-between"><span>Kualitas Presentasi & Dokumentasi</span> <span class="font-bold text-muh-blue">15%</span></label><input type="number" id="juri-bp6" value="${skor.bp6||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Kreativitas & Inovasi (25%)</span></label><input type="number" id="juri-bp1" value="${skor.bp1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label class="flex justify-between"><span>Relevansi Pembelajaran (15%)</span></label><input type="number" id="juri-bp2" value="${skor.bp2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
                                 </div>
                             </div>
                         </div>
                     `;
-                } else {
-                    html = `
-                        <div class="bg-gray-50 p-4 rounded-xl border">
-                            <label class="font-bold block mb-2">Skor Akhir (0-100)</label>
-                            <input type="number" id="juri-umum" value="${skor.umum||''}" class="w-full p-3 border rounded-xl outline-none focus:border-muh-blue">
-                        </div>
-                    `;
                 }
 
+                // INJEKSI INPUT 3 JURI UTAMA
+                let juriInputs = `
+                    <div class="mt-6 bg-blue-50 p-5 rounded-xl border-2 border-blue-200 shadow-inner">
+                        <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">Rekapitulasi Skor Juri Terpadu</h4>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div><label class="text-sm font-bold text-slate-700 block mb-1">Skor Juri 1</label><input type="number" step="0.01" id="input-juri-1" value="${dataJuri.skor_juri_1 || ''}" class="w-full p-3 text-lg font-bold border border-slate-300 rounded-lg outline-none focus:border-muh-blue text-center" placeholder="0"></div>
+                            <div><label class="text-sm font-bold text-slate-700 block mb-1">Skor Juri 2</label><input type="number" step="0.01" id="input-juri-2" value="${dataJuri.skor_juri_2 || ''}" class="w-full p-3 text-lg font-bold border border-slate-300 rounded-lg outline-none focus:border-muh-blue text-center" placeholder="0"></div>
+                            <div><label class="text-sm font-bold text-slate-700 block mb-1">Skor Juri 3</label><input type="number" step="0.01" id="input-juri-3" value="${dataJuri.skor_juri_3 || ''}" class="w-full p-3 text-lg font-bold border border-slate-300 rounded-lg outline-none focus:border-muh-blue text-center" placeholder="0"></div>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-3 text-center">* Total Skor Akhir akan dijumlahkan (Juri 1 + Juri 2 + Juri 3) secara otomatis.</p>
+                    </div>
+                `;
+
                 document.getElementById('juri-modal-title').textContent = `Nilai: ${p.nama_lengkap}`;
-                document.getElementById('juri-modal-body').innerHTML = html;
+                document.getElementById('juri-modal-body').innerHTML = html + juriInputs;
                 const m = document.getElementById('juri-modal');
                 m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10);
             },
@@ -1180,35 +1178,35 @@
                 if(!p) return;
                 
                 let detail = {};
-                let finalSkor = 0;
-                
+                // Penangkapan Kalkulator Opsional jika digunakan
                 if(p.kategori_id === 'tilawah-pa-pi') {
                     detail = {
-                        t1: Number(document.getElementById('juri-t1').value)||0, t2: Number(document.getElementById('juri-t2').value)||0,
-                        t3: Number(document.getElementById('juri-t3').value)||0, t4: Number(document.getElementById('juri-t4').value)||0,
-                        s1: Number(document.getElementById('juri-s1').value)||0, s2: Number(document.getElementById('juri-s2').value)||0,
-                        s3: Number(document.getElementById('juri-s3').value)||0, s4: Number(document.getElementById('juri-s4').value)||0,
-                        s5: Number(document.getElementById('juri-s5').value)||0, l1: Number(document.getElementById('juri-l1').value)||0,
-                        l2: Number(document.getElementById('juri-l2').value)||0, l3: Number(document.getElementById('juri-l3').value)||0,
-                        l4: Number(document.getElementById('juri-l4').value)||0, l5: Number(document.getElementById('juri-l5').value)||0,
-                        f1: Number(document.getElementById('juri-f1').value)||0, f2: Number(document.getElementById('juri-f2').value)||0,
-                        f3: Number(document.getElementById('juri-f3').value)||0
+                        t1: Number(document.getElementById('juri-t1')?.value)||0, t2: Number(document.getElementById('juri-t2')?.value)||0,
+                        t3: Number(document.getElementById('juri-t3')?.value)||0, t4: Number(document.getElementById('juri-t4')?.value)||0
                     };
-                    const sum = Object.values(detail).reduce((a,b)=>a+b, 0);
-                    finalSkor = (sum / 17).toFixed(2);
                 } else if(p.kategori_id === 'guru-bp') {
                     detail = {
-                        bp1: Number(document.getElementById('juri-bp1').value)||0, bp2: Number(document.getElementById('juri-bp2').value)||0,
-                        bp3: Number(document.getElementById('juri-bp3').value)||0, bp4: Number(document.getElementById('juri-bp4').value)||0,
-                        bp5: Number(document.getElementById('juri-bp5').value)||0, bp6: Number(document.getElementById('juri-bp6').value)||0
+                        bp1: Number(document.getElementById('juri-bp1')?.value)||0, bp2: Number(document.getElementById('juri-bp2')?.value)||0
                     };
-                    finalSkor = ((detail.bp1 * 0.25) + (detail.bp2 * 0.15) + (detail.bp3 * 0.15) + (detail.bp4 * 0.20) + (detail.bp5 * 0.10) + (detail.bp6 * 0.15)).toFixed(2);
-                } else {
-                    detail = { umum: Number(document.getElementById('juri-umum').value)||0 };
-                    finalSkor = detail.umum.toFixed(2);
                 }
+                
+                // Menarik Nilai Juri Utama
+                let j1 = parseFloat(document.getElementById('input-juri-1').value) || 0;
+                let j2 = parseFloat(document.getElementById('input-juri-2').value) || 0;
+                let j3 = parseFloat(document.getElementById('input-juri-3').value) || 0;
+                
+                // Akumulasi Total Otomatis
+                let totalSemua = parseFloat((j1 + j2 + j3).toFixed(2));
 
-                const payload = { reg_id: p.reg_id, kategori_id: p.kategori_id, skor_detail: detail, skor_akhir: parseFloat(finalSkor) };
+                const payload = { 
+                    reg_id: p.reg_id, 
+                    kategori_id: p.kategori_id, 
+                    skor_detail: detail, 
+                    skor_juri_1: j1,
+                    skor_juri_2: j2,
+                    skor_juri_3: j3,
+                    skor_akhir: totalSemua 
+                };
 
                 this.showLoader('Menyimpan Skor ke Tabel Penjurian...');
                 try {
@@ -1218,7 +1216,7 @@
                     } else {
                         await db.post('penjurian', payload);
                     }
-                    this.showToast(`Skor berhasil disimpan! Total: ${finalSkor}`, 'success');
+                    this.showToast(`Skor tersimpan! Total Akhir: ${totalSemua}`, 'success');
                     this.tutupModalJuri();
                     this.renderAdminJuri();
                 } catch(e) { 
@@ -1229,32 +1227,40 @@
             // ADMIN REKAP PENILAIAN
             renderAdminRekapNilai: async function() {
                 const sel = document.getElementById('rekap-nilai-kategori');
+                const sortOrder = document.getElementById('rekap-sort-skor') ? document.getElementById('rekap-sort-skor').value : 'desc';
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
 
                 this.showLoader('Memuat Rekap Penilaian...');
                 try {
-                    let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,penjurian(skor_akhir)&status_verifikasi=eq.Terverifikasi';
+                    let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,penjurian(skor_akhir,skor_juri_1,skor_juri_2,skor_juri_3)&status_verifikasi=eq.Terverifikasi';
                     if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
                     
                     const data = await db.get('pendaftaran', query);
                     
                     let dataNilai = data.map(p => {
-                        return { ...p, skor_akhir: p.penjurian && p.penjurian.length > 0 ? p.penjurian[0].skor_akhir : 0 };
+                        const j = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : {skor_akhir:0, skor_juri_1:0, skor_juri_2:0, skor_juri_3:0};
+                        return { ...p, ...j };
                     }).filter(p => p.skor_akhir > 0);
 
-                    dataNilai.sort((a, b) => b.skor_akhir - a.skor_akhir);
+                    // Pengurutan Peringkat Berdasarkan Filter
+                    if (sortOrder === 'desc') {
+                        dataNilai.sort((a, b) => b.skor_akhir - a.skor_akhir);
+                    } else {
+                        dataNilai.sort((a, b) => a.skor_akhir - b.skor_akhir);
+                    }
 
                     const tbody = document.getElementById('rekap-nilai-table-body');
-                    if(!dataNilai.length) return tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Belum ada data nilai.</td></tr>`;
+                    if(!dataNilai.length) return tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada data nilai.</td></tr>`;
 
                     tbody.innerHTML = dataNilai.map((p, index) => {
                         return `<tr>
-                            <td class="p-4 font-bold text-muh-blue text-center">${index + 1}</td>
-                            <td class="p-4 font-mono text-xs">${p.reg_id}</td>
-                            <td class="p-4 font-bold">${p.nama_lengkap}</td>
-                            <td class="p-4 text-xs">${p.asal_instansi}</td>
-                            <td class="p-4 text-xs">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</td>
-                            <td class="p-4 font-bold text-center text-lg">${p.skor_akhir}</td>
+                            <td class="p-4 font-bold text-muh-blue text-center text-lg">${index + 1}</td>
+                            <td class="p-4 font-bold text-slate-800">${p.nama_lengkap}<br><span class="text-xs font-normal text-slate-500">${p.asal_instansi}</span></td>
+                            <td class="p-4 text-xs font-semibold">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</td>
+                            <td class="p-4 text-center font-bold text-slate-600">${p.skor_juri_1}</td>
+                            <td class="p-4 text-center font-bold text-slate-600">${p.skor_juri_2}</td>
+                            <td class="p-4 text-center font-bold text-slate-600">${p.skor_juri_3}</td>
+                            <td class="p-4 font-bold text-center text-lg text-muh-dark">${p.skor_akhir}</td>
                         </tr>`;
                     }).join('');
 
