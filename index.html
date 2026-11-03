@@ -613,7 +613,7 @@
         };
 
         const app = {
-            state: { view: 'home', category: null, formDraft: null, user: null, categories: [], settings: null, pengumuman: [], pendaftaran: [], juriTarget: null },
+            state: { view: 'home', category: null, formDraft: null, user: null, categories: [], settings: null, pengumuman: [], pendaftaran: [], juriTarget: null, adminJuriSlot: 1 },
 
             init: async function() {
                 this.showLoader('Menghubungkan ke Server...');
@@ -644,7 +644,6 @@
                 if(target) { target.classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
                 document.querySelectorAll('.nav-link').forEach(el => { el.classList[el.dataset.target === viewId ? 'add' : 'remove']('text-muh-blue'); });
                 
-                // Anti-Lag: Melepas UI Thread
                 setTimeout(() => { this.runViewLogic(viewId); }, 50);
             },
             refreshCurrentView: async function() {
@@ -843,7 +842,6 @@
                 statEl.className = `px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${d.status_verifikasi==='Terverifikasi'?'bg-green-100 text-green-700':d.status_verifikasi==='Ditolak'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700'}`;
                 
                 let addHtml = '';
-                
                 try {
                     const juriData = await db.get('penjurian', `?reg_id=eq.${d.reg_id}`);
                     if(juriData.length && juriData[0].skor_akhir > 0) {
@@ -875,7 +873,7 @@
                 } catch(e) { this.showToast('Gagal memuat pengumuman', 'error'); } finally { this.hideLoader(); }
             },
 
-            // ADMIN LOGIC
+            // ADMIN LOGIC (ROUTING)
             editBerandaInline: function() {
                 this.navigate('admin'); this.switchAdminTab('konten');
                 setTimeout(() => document.getElementById('edit-teks-beranda').focus(), 300);
@@ -1063,15 +1061,21 @@
                 } catch(e) { this.showToast('Gagal mengunduh Excel', 'error'); } finally { this.hideLoader(); }
             },
 
-            // ADMIN JURI (Logika Penilaian Terisolasi Per Juri)
+            // ADMIN JURI (Logika Penilaian Terisolasi Per Juri & Akses Admin)
             renderAdminJuri: async function() {
                 const sel = document.getElementById('juri-filter-kategori');
-                if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+                const sortOrder = document.getElementById('juri-sort-skor') ? document.getElementById('juri-sort-skor').value : 'desc';
+                
+                if(sel.options.length <= 1) {
+                    this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+                }
 
                 let query = '?select=reg_id,nama_lengkap,asal_instansi,kategori_id,data_tambahan,penjurian(skor_akhir,skor_detail,skor_juri_1,skor_juri_2,skor_juri_3)&status_verifikasi=eq.Terverifikasi&order=waktu_daftar.desc';
                 
-                // Kunci dropdown jika yang login adalah Juri
-                if(this.state.user.role === 'juri' && this.state.user.kategori_id) {
+                const r = this.state.user.role;
+                let jk = parseInt(this.state.user.juri_ke) || 1;
+                
+                if(r === 'juri' && this.state.user.kategori_id) {
                     sel.value = this.state.user.kategori_id;
                     sel.disabled = true; 
                     query += `&kategori_id=eq.${this.state.user.kategori_id}`;
@@ -1080,48 +1084,71 @@
                     if(sel.value !== 'all') query += `&kategori_id=eq.${sel.value}`;
                 }
 
-                // Ambil data terbaru dari server
                 this.showLoader('Memuat data Juri...');
                 try {
                     const data = await db.get('pendaftaran', query);
+                    
                     this.state.pendaftaran = data.map(p => {
-                        p.penjurian = (p.penjurian && p.penjurian.length > 0) ? p.penjurian[0] : { skor_akhir: 0, skor_detail: {}, skor_juri_1: 0, skor_juri_2: 0, skor_juri_3: 0 };
+                        let jData = { skor_akhir: 0, skor_detail: {}, skor_juri_1: 0, skor_juri_2: 0, skor_juri_3: 0 };
+                        if (p.penjurian && Array.isArray(p.penjurian) && p.penjurian.length > 0) {
+                            jData = p.penjurian[0];
+                        } else if (p.penjurian && typeof p.penjurian === 'object' && !Array.isArray(p.penjurian)) {
+                            jData = p.penjurian;
+                        }
+                        p.penjurian = jData;
                         return p;
                     });
+                    
+                    if (sortOrder === 'desc') {
+                        this.state.pendaftaran.sort((a, b) => (b.penjurian.skor_akhir || 0) - (a.penjurian.skor_akhir || 0));
+                    } else if (sortOrder === 'asc') {
+                        this.state.pendaftaran.sort((a, b) => (a.penjurian.skor_akhir || 0) - (b.penjurian.skor_akhir || 0));
+                    }
 
                     const tbody = document.getElementById('juri-table-body');
-                    if(!this.state.pendaftaran.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
+                    
+                    if(!this.state.pendaftaran.length) {
+                        tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
+                        return;
+                    }
 
-                    // Tampilkan tabel spesifik untuk Juri
-                    document.querySelector('#admin-sec-juri thead').innerHTML = `<tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Link Karya</th><th class="p-4 text-center">Skor Anda</th><th class="p-4 text-right">Aksi Penilaian</th></tr>`;
-
-                    const jk = parseInt(this.state.user.juri_ke) || 1;
+                    if (['admin', 'koordinator'].includes(r)) {
+                        document.querySelector('#admin-sec-juri thead').innerHTML = `<tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Link Karya</th><th class="p-4 text-center">Juri 1</th><th class="p-4 text-center">Juri 2</th><th class="p-4 text-center">Juri 3</th><th class="p-4 text-center">Total Skor</th><th class="p-4 text-right">Aksi</th></tr>`;
+                    } else {
+                        document.querySelector('#admin-sec-juri thead').innerHTML = `<tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Link Karya</th><th class="p-4 text-center">Skor Anda (Juri ${jk})</th><th class="p-4 text-right">Aksi Penilaian</th></tr>`;
+                    }
 
                     tbody.innerHTML = this.state.pendaftaran.map(p => {
                         let berkas = '-';
                         if(p.data_tambahan) {
                             const links = Object.entries(p.data_tambahan).filter(([k,v]) => typeof v === 'string' && v.startsWith('http'));
-                            if(links.length > 0) berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-3 py-1.5 rounded-lg border hover:bg-blue-100 inline-flex items-center gap-1 mb-1 shadow-sm font-bold"><i class="ph-bold ph-link"></i> Buka ${k.replace('_',' ')}</a>`).join('<br>');
+                            if(links.length > 0) berkas = links.map(([k,v]) => `<a href="${v}" target="_blank" class="text-[10px] bg-blue-50 text-muh-blue px-3 py-1.5 rounded-lg border hover:bg-blue-100 inline-flex items-center gap-1 mb-1 shadow-sm font-bold"><i class="ph-bold ph-link"></i> Buka File</a>`).join('<br>');
                         }
                         
                         const j = p.penjurian;
-                        const skorSpesifik = jk === 1 ? j.skor_juri_1 : jk === 2 ? j.skor_juri_2 : jk === 3 ? j.skor_juri_3 : 0;
-                        const skorSaatIni = skorSpesifik > 0 ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${skorSpesifik}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
+                        let skorHtml = '';
+
+                        if (['admin', 'koordinator'].includes(r)) {
+                            skorHtml = `
+                                <td class="p-4 text-center font-bold text-slate-600">${j.skor_juri_1 > 0 ? j.skor_juri_1 : '-'}</td>
+                                <td class="p-4 text-center font-bold text-slate-600">${j.skor_juri_2 > 0 ? j.skor_juri_2 : '-'}</td>
+                                <td class="p-4 text-center font-bold text-slate-600">${j.skor_juri_3 > 0 ? j.skor_juri_3 : '-'}</td>
+                                <td class="p-4 text-center">${j.skor_akhir > 0 ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${j.skor_akhir}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">0</span>`}</td>
+                            `;
+                        } else {
+                            const skorSpesifik = jk === 1 ? j.skor_juri_1 : jk === 2 ? j.skor_juri_2 : jk === 3 ? j.skor_juri_3 : 0;
+                            skorHtml = `<td class="p-4 text-center">${skorSpesifik > 0 ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${skorSpesifik}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`}</td>`;
+                        }
 
                         return `<tr>
                             <td class="p-4 font-mono text-xs">${p.reg_id}</td>
                             <td class="p-4"><span class="font-bold block">${p.nama_lengkap}</span><span class="text-xs text-slate-500">${p.asal_instansi}</span></td>
                             <td class="p-4">${berkas}</td>
-                            <td class="p-4 text-center">${skorSaatIni}</td>
+                            ${skorHtml}
                             <td class="p-4 text-right"><button onclick="app.bukaModalJuri('${p.reg_id}')" class="bg-muh-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-muh-dark text-xs shadow-sm"><i class="ph-bold ph-pencil-simple"></i> Nilai</button></td>
                         </tr>`;
                     }).join('');
-                } catch(e) {
-                    console.error(e);
-                    this.showToast('Gagal memuat daftar juri', 'error');
-                } finally {
-                    this.hideLoader();
-                }
+                } catch(e) { console.error(e); this.showToast('Gagal memuat Juri', 'error'); } finally { this.hideLoader(); }
             },
             
             bukaModalJuri: function(regId) {
@@ -1129,14 +1156,73 @@
                 if(!p) return;
                 this.state.juriTarget = p;
                 
-                const jk = parseInt(this.state.user.juri_ke) || 1; 
+                const r = this.state.user.role;
+                let jk = parseInt(this.state.user.juri_ke) || 1; 
+                let adminSelector = '';
+
+                if (['admin', 'koordinator'].includes(r)) {
+                    jk = this.state.adminJuriSlot || 1; 
+                    adminSelector = `
+                        <div class="mb-4 bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                            <label class="font-bold text-yellow-800 block mb-2">Akses Manajerial: Pilih Form Juri yang ingin diedit:</label>
+                            <select onchange="app.state.adminJuriSlot = parseInt(this.value); app.bukaModalJuri('${regId}')" class="w-full p-2 rounded-lg border outline-none font-bold text-muh-blue bg-white">
+                                <option value="1" ${jk === 1 ? 'selected' : ''}>Edit Form Juri 1</option>
+                                <option value="2" ${jk === 2 ? 'selected' : ''}>Edit Form Juri 2</option>
+                                <option value="3" ${jk === 3 ? 'selected' : ''}>Edit Form Juri 3</option>
+                            </select>
+                        </div>
+                    `;
+                }
+
                 const dataJuri = p.penjurian || {};
                 const detailSemuaJuri = dataJuri.skor_detail || {};
                 const skor = detailSemuaJuri['juri_' + jk] || {}; 
                 
-                let html = '';
-                if(p.kategori_id === 'guru-bp') {
-                    html = `
+                let html = adminSelector;
+                if(p.kategori_id === 'tilawah-pa-pi') {
+                    html += `
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid (0-100)</h4>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div><label>Makharijul Huruf</label><input type="number" id="juri-t1" value="${skor.t1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Sifatul Huruf</label><input type="number" id="juri-t2" value="${skor.t2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Ahkāmul Huruf</label><input type="number" id="juri-t3" value="${skor.t3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Ahkām Mad wal Qasr</label><input type="number" id="juri-t4" value="${skor.t4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                                <h4 class="font-bold text-green-700 mb-3 border-b border-green-200 pb-2">2. Aspek Suara (0-100)</h4>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div><label>Kejernihan</label><input type="number" id="juri-s1" value="${skor.s1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Kehalusan</label><input type="number" id="juri-s2" value="${skor.s2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Kenyaringan</label><input type="number" id="juri-s3" value="${skor.s3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Keutuhan</label><input type="number" id="juri-s4" value="${skor.s4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div class="col-span-2"><label>Pengaturan Nafas</label><input type="number" id="juri-s5" value="${skor.s5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                </div>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                                <h4 class="font-bold text-yellow-700 mb-3 border-b border-yellow-200 pb-2">3. Aspek Lagu (0-100)</h4>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div><label>Lagu pertama & penutup</label><input type="number" id="juri-l1" value="${skor.l1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Jumlah lagu</label><input type="number" id="juri-l2" value="${skor.l2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Peralihan tempo</label><input type="number" id="juri-l3" value="${skor.l3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Irama dan gaya</label><input type="number" id="juri-l4" value="${skor.l4||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div class="col-span-2"><label>Gaya / Variasi</label><input type="number" id="juri-l5" value="${skor.l5||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                </div>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                <h4 class="font-bold text-purple-700 mb-3 border-b border-purple-200 pb-2">4. Fasahah dan Adab (0-100)</h4>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div><label>Ahkāmul waqf wal ibtida’</label><input type="number" id="juri-f1" value="${skor.f1||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div><label>Mura’atul huruf wal harakat</label><input type="number" id="juri-f2" value="${skor.f2||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                    <div class="col-span-2"><label>Mura’atul kalimat wal ayat</label><input type="number" id="juri-f3" value="${skor.f3||''}" class="w-full p-2 border rounded mt-1 outline-none"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if(p.kategori_id === 'guru-bp') {
+                    html += `
                         <div class="space-y-4">
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                                 <h4 class="font-bold text-muh-blue mb-4 border-b border-blue-200 pb-2">Penilaian Best Practice Guru (0-100)</h4>
@@ -1153,7 +1239,7 @@
                     `;
                 } else {
                     const umumValue = p.penjurian && jk === 1 ? p.penjurian.skor_juri_1 : jk === 2 ? p.penjurian.skor_juri_2 : p.penjurian.skor_juri_3;
-                    html = `
+                    html += `
                         <div class="bg-blue-50 p-6 rounded-xl border-2 border-blue-200 shadow-inner">
                             <h4 class="font-bold text-muh-blue mb-4 border-b border-blue-200 pb-2 text-center uppercase tracking-wide">Formulir Penilaian Juri ${jk}</h4>
                             <label class="font-bold block mb-2 text-slate-700 text-center">Skor Anda (0-100)</label>
@@ -1174,7 +1260,7 @@
                 const m = document.getElementById('juri-modal');
                 if (m) {
                     m.classList.add('opacity-0'); 
-                    m.classList.add('hidden'); // Dibuat instan: langsung menyembunyikan elemen tanpa jeda
+                    m.classList.add('hidden');
                 }
             },
             
@@ -1182,11 +1268,31 @@
                 const p = this.state.juriTarget;
                 if(!p) return;
                 
-                const jk = parseInt(this.state.user.juri_ke) || 1;
+                const r = this.state.user.role;
+                let jk = parseInt(this.state.user.juri_ke) || 1;
+                
+                if (['admin', 'koordinator'].includes(r)) {
+                    jk = this.state.adminJuriSlot || 1;
+                }
+                
                 let detailJuriIni = {};
                 let skorJuriIni = 0;
                 
-                if(p.kategori_id === 'guru-bp') {
+                if(p.kategori_id === 'tilawah-pa-pi') {
+                    detailJuriIni = {
+                        t1: Number(document.getElementById('juri-t1').value)||0, t2: Number(document.getElementById('juri-t2').value)||0,
+                        t3: Number(document.getElementById('juri-t3').value)||0, t4: Number(document.getElementById('juri-t4').value)||0,
+                        s1: Number(document.getElementById('juri-s1').value)||0, s2: Number(document.getElementById('juri-s2').value)||0,
+                        s3: Number(document.getElementById('juri-s3').value)||0, s4: Number(document.getElementById('juri-s4').value)||0,
+                        s5: Number(document.getElementById('juri-s5').value)||0, l1: Number(document.getElementById('juri-l1').value)||0,
+                        l2: Number(document.getElementById('juri-l2').value)||0, l3: Number(document.getElementById('juri-l3').value)||0,
+                        l4: Number(document.getElementById('juri-l4').value)||0, l5: Number(document.getElementById('juri-l5').value)||0,
+                        f1: Number(document.getElementById('juri-f1').value)||0, f2: Number(document.getElementById('juri-f2').value)||0,
+                        f3: Number(document.getElementById('juri-f3').value)||0
+                    };
+                    const sum = Object.values(detailJuriIni).reduce((a,b)=>a+b, 0);
+                    skorJuriIni = parseFloat((sum / 17).toFixed(2));
+                } else if(p.kategori_id === 'guru-bp') {
                     detailJuriIni = {
                         bp1: Number(document.getElementById('juri-bp1').value)||0, 
                         bp2: Number(document.getElementById('juri-bp2').value)||0,
@@ -1218,34 +1324,28 @@
                     if(cek.length > 0) {
                         payload = cek[0];
                         if(!payload.skor_detail) payload.skor_detail = {};
-                        // Pastikan nilai juri lain tidak menjadi null
                         payload.skor_juri_1 = parseFloat(payload.skor_juri_1) || 0;
                         payload.skor_juri_2 = parseFloat(payload.skor_juri_2) || 0;
                         payload.skor_juri_3 = parseFloat(payload.skor_juri_3) || 0;
                     }
 
-                    // TIMPA HANYA SLOT JURI YANG SEDANG LOGIN
                     payload.skor_detail[`juri_${jk}`] = detailJuriIni;
                     payload[`skor_juri_${jk}`] = skorJuriIni;
 
-                    // KALKULASI RATA-RATA TOTAL SKOR AKHIR
                     let totalMasuk = payload.skor_juri_1 + payload.skor_juri_2 + payload.skor_juri_3;
                     let jumlahJuriMenilai = (payload.skor_juri_1 > 0 ? 1 : 0) + (payload.skor_juri_2 > 0 ? 1 : 0) + (payload.skor_juri_3 > 0 ? 1 : 0);
                     
                     payload.skor_akhir = jumlahJuriMenilai > 0 ? parseFloat((totalMasuk / jumlahJuriMenilai).toFixed(2)) : 0;
 
-                    // SIMPAN KE SUPABASE
                     if(cek.length > 0) {
                         await db.patch('penjurian', `?reg_id=eq.${p.reg_id}`, payload);
                     } else {
                         await db.post('penjurian', payload);
                     }
                     
-                    // HILANGKAN JENDELA MODAL SEKETIKA SETELAH DATA TERSIMPAN
                     this.tutupModalJuri();
                     this.showToast(`Skor Juri ${jk} Tersimpan!`, 'success');
                     
-                    // RE-RENDER SECARA PAKSA AGAR DATA TERBARU MUNCUL DI LAYAR
                     await this.renderAdminJuri();
                     
                 } catch(e) { 
@@ -1273,19 +1373,22 @@
                     const data = await db.get('pendaftaran', query);
                     
                     let dataNilai = data.map(p => {
-                        const j = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : {skor_akhir:0, skor_juri_1:0, skor_juri_2:0, skor_juri_3:0};
-                        return { ...p, ...j };
+                        let jData = { skor_akhir: 0, skor_juri_1: 0, skor_juri_2: 0, skor_juri_3: 0 };
+                        if (p.penjurian && Array.isArray(p.penjurian) && p.penjurian.length > 0) {
+                            jData = p.penjurian[0];
+                        } else if (p.penjurian && typeof p.penjurian === 'object' && !Array.isArray(p.penjurian)) {
+                            jData = p.penjurian;
+                        }
+                        return { ...p, ...jData };
                     });
 
-                    // Pengurutan Peringkat
                     if (sortOrder === 'desc') {
-                        dataNilai.sort((a, b) => b.skor_akhir - a.skor_akhir);
+                        dataNilai.sort((a, b) => (b.skor_akhir || 0) - (a.skor_akhir || 0));
                     } else {
-                        dataNilai.sort((a, b) => a.skor_akhir - b.skor_akhir);
+                        dataNilai.sort((a, b) => (a.skor_akhir || 0) - (b.skor_akhir || 0));
                     }
 
                     const tbody = document.getElementById('rekap-nilai-table-body');
-                    
                     if(!dataNilai.length) {
                         tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada peserta di kategori ini.</td></tr>`;
                         return;
@@ -1314,8 +1417,81 @@
                     this.hideLoader(); 
                 }
             },
+            
+            // ADMIN CMS (KELOLA KONTEN)
+            renderAdminKonten: async function() {
+                document.getElementById('edit-teks-beranda').value = this.state.settings.teks_beranda;
+                document.getElementById('edit-teks-jadwal').value = this.state.settings.tanggal_pelaksanaan;
 
-            // ADMIN AKSES - LOGIKA RBAC DIPERBARUI
+                const opts = `<option value="">Pilih Kategori...</option>` + this.state.categories.map(c => `<option value="${c.id}">${c.judul}</option>`).join('');
+                document.getElementById('edit-kat-select').innerHTML = opts; document.getElementById('admin-select-kat').innerHTML = opts;
+
+                const pData = await db.get('pengumuman', '?select=*,kategori_lomba(judul)&order=created_at.desc');
+                const tb = document.getElementById('admin-list-pengumuman');
+                if(!pData.length) tb.innerHTML = `<tr><td class="p-3 text-center text-slate-500">Belum ada pengumuman terbit.</td></tr>`;
+                else tb.innerHTML = pData.map(p => `<tr><td class="p-3"><span class="font-bold">${p.nama_pemenang}</span> (Juara ${p.peringkat})<br><span class="text-xs text-slate-400">${p.kategori_lomba?.judul||''}</span></td><td class="p-3 text-right"><button onclick="app.hapusPengumuman('${p.id}')" class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Hapus</button></td></tr>`).join('');
+            },
+            updateBeranda: async function(e) {
+                e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+                this.showLoader();
+                try {
+                    await db.patch('pengaturan_web', '?id=eq.1', d);
+                    this.state.settings.teks_beranda = d.teks_beranda; this.state.settings.tanggal_pelaksanaan = d.tanggal_pelaksanaan;
+                    document.getElementById('teks-beranda').textContent = d.teks_beranda; document.getElementById('teks-jadwal').textContent = `Pelaksanaan: ${d.tanggal_pelaksanaan}`;
+                    this.showToast('Beranda berhasil diperbarui!', 'success');
+                } catch(err) { this.showToast('Gagal update Beranda', 'error'); } finally { this.hideLoader(); }
+            },
+            loadEditKategori: function(id) {
+                const form = document.getElementById('form-edit-kategori'); 
+                if(!id) { form.classList.add('hidden'); return; }
+                const cat = this.state.categories.find(c => c.id === id);
+                
+                document.getElementById('edit-kat-id').value = cat.id; 
+                document.getElementById('edit-kat-judul').value = cat.judul; 
+                document.getElementById('edit-kat-desc').value = cat.deskripsi;
+                document.getElementById('edit-kat-urutan').value = cat.urutan || 99;
+                document.getElementById('edit-kat-grup').value = cat.grup || '';
+                document.getElementById('edit-kat-ikon').value = cat.ikon || '';
+                
+                document.getElementById('edit-kat-reqs').value = Array.isArray(cat.persyaratan) ? cat.persyaratan.join('\n') : '';
+                document.getElementById('edit-kat-rules').value = Array.isArray(cat.ketentuan) ? cat.ketentuan.join('\n') : '';
+                
+                form.classList.remove('hidden');
+            },
+            updateKategori: async function(e) {
+                e.preventDefault(); 
+                const d = Object.fromEntries(new FormData(e.target).entries());
+                const reqsArray = d.persyaratan.split('\n').map(s => s.trim()).filter(s => s !== '');
+                const rulesArray = d.ketentuan.split('\n').map(s => s.trim()).filter(s => s !== '');
+
+                const payload = { judul: d.judul, deskripsi: d.deskripsi, urutan: parseInt(d.urutan) || 99, grup: d.grup, ikon: d.ikon, persyaratan: reqsArray, ketentuan: rulesArray };
+
+                this.showLoader();
+                try {
+                    await db.patch('kategori_lomba', `?id=eq.${d.id}`, payload);
+                    const idx = this.state.categories.findIndex(c => c.id === d.id);
+                    if(idx > -1) { this.state.categories[idx] = { ...this.state.categories[idx], ...payload }; }
+                    
+                    this.showToast('Kategori berhasil diperbarui!', 'success');
+                    e.target.reset(); document.getElementById('form-edit-kategori').classList.add('hidden'); document.getElementById('edit-kat-select').value = '';
+                } catch(err) { this.showToast('Gagal mengupdate kategori.', 'error'); } finally { this.hideLoader(); }
+            },
+            addPengumuman: async function(e) {
+                e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+                this.showLoader();
+                try {
+                    await db.post('pengumuman', { kategori_id: d.kategori_id, peringkat: parseInt(d.peringkat), nama_pemenang: d.nama_pemenang, asal_instansi: d.asal_instansi, skor: parseFloat(d.skor) });
+                    e.target.reset(); this.showToast('Pengumuman dirilis!', 'success'); this.renderAdminKonten();
+                } catch(err) { this.showToast('Gagal menerbitkan pengumuman', 'error'); } finally { this.hideLoader(); }
+            },
+            hapusPengumuman: async function(id) {
+                if(!confirm('Hapus pengumuman ini?')) return;
+                this.showLoader();
+                try { await db.delete('pengumuman', `?id=eq.${id}`); this.showToast('Terhapus', 'success'); this.renderAdminKonten(); } 
+                catch(err) { this.showToast('Gagal menghapus', 'error'); } finally { this.hideLoader(); }
+            },
+
+            // ADMIN AKSES
             toggleKategoriJuri: function(val) {
                 const div = document.getElementById('div-kategori-juri');
                 if(val === 'juri') {
@@ -1360,7 +1536,6 @@
                 e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
                 d.username = d.username.replace(/\s+/g, '').toLowerCase();
                 
-                // Pembersihan data non-juri
                 if (d.role !== 'juri') {
                     d.kategori_id = null; 
                     d.juri_ke = null;
@@ -1393,7 +1568,7 @@
                 } catch(err) { this.showToast('Gagal menghapus akun', 'error'); } finally { this.hideLoader(); }
             },
 
-            // LOGIN - Mengambil Identitas Juri
+            // LOGIN
             showLoginModal: function() { const m = document.getElementById('login-modal'); m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10); document.getElementById('login-id').focus(); },
             hideLoginModal: function() { const m = document.getElementById('login-modal'); m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300); },
             togglePassword: function() { const inp = document.getElementById('login-password'); const ico = document.getElementById('login-pwd-icon'); if(inp.type === 'password') { inp.type = 'text'; ico.className = 'ph-bold ph-eye-slash text-xl'; } else { inp.type = 'password'; ico.className = 'ph-bold ph-eye text-xl'; } },
@@ -1410,7 +1585,6 @@
                     } else {
                         const res = await db.get('akun_pengguna', `?username=eq.${id}&select=*`);
                         if(res.length && res[0].password === pwd) { 
-                            // SIMPAN DETAIL IDENTITAS JURI
                             this.state.user = { role: res[0].role, name: res[0].role.toUpperCase(), kategori_id: res[0].kategori_id, juri_ke: res[0].juri_ke }; 
                             this.hideLoginModal(); this.updateNavState(); this.navigate('admin'); this.showToast(`Login ${res[0].role} Berhasil`, 'success'); 
                         } 
@@ -1418,8 +1592,6 @@
                     }
                 } catch(e) { this.showToast('Terjadi kesalahan jaringan', 'error'); } finally { this.hideLoader(); }
             },
-            
-            // TOMBOL KELUAR SISTEM
             logout: function() { 
                 this.state.user = null; 
                 this.updateNavState(); 
@@ -1448,13 +1620,8 @@
 
                         if(document.getElementById('btn-tab-dashboard')) {
                             document.getElementById('btn-tab-dashboard').style.display = 'block';
-                            
-                            // Koordinator Punya Akses Rekap Peserta
                             document.getElementById('btn-tab-rekap').style.display = ['admin', 'operator', 'koordinator'].includes(r) ? 'block' : 'none';
-                            
-                            // Koordinator Tidak Boleh Akses Jendela Juri Input
                             document.getElementById('btn-tab-juri').style.display = ['admin', 'juri'].includes(r) ? 'block' : 'none'; 
-                            
                             document.getElementById('btn-tab-rekap_nilai').style.display = ['admin', 'koordinator'].includes(r) ? 'block' : 'none';
                             document.getElementById('btn-tab-konten').style.display = ['admin', 'koordinator'].includes(r) ? 'block' : 'none';
                             document.getElementById('btn-tab-akses').style.display = r === 'admin' ? 'block' : 'none';
