@@ -1172,8 +1172,10 @@
             
             tutupModalJuri: function() {
                 const m = document.getElementById('juri-modal');
-                m.classList.add('opacity-0'); 
-                setTimeout(()=>m.classList.add('hidden'), 300);
+                if (m) {
+                    m.classList.add('opacity-0'); 
+                    m.classList.add('hidden'); // Dibuat instan: langsung menyembunyikan elemen tanpa jeda
+                }
             },
             
             simpanSkorJuri: async function() {
@@ -1201,7 +1203,6 @@
 
                 this.showLoader('Mengirim Skor ke Database...');
                 try {
-                    // AMBIL DATA LAMA TERLEBIH DAHULU UNTUK MEMPERTAHANKAN NILAI JURI LAIN
                     const cek = await db.get('penjurian', `?reg_id=eq.${p.reg_id}`);
                     
                     let payload = {
@@ -1217,7 +1218,7 @@
                     if(cek.length > 0) {
                         payload = cek[0];
                         if(!payload.skor_detail) payload.skor_detail = {};
-                        // Pastikan nilai juri lain tidak menjadi null/undefined
+                        // Pastikan nilai juri lain tidak menjadi null
                         payload.skor_juri_1 = parseFloat(payload.skor_juri_1) || 0;
                         payload.skor_juri_2 = parseFloat(payload.skor_juri_2) || 0;
                         payload.skor_juri_3 = parseFloat(payload.skor_juri_3) || 0;
@@ -1233,15 +1234,16 @@
                     
                     payload.skor_akhir = jumlahJuriMenilai > 0 ? parseFloat((totalMasuk / jumlahJuriMenilai).toFixed(2)) : 0;
 
-                    // SIMPAN KE SUPABASE (PATCH untuk update, POST untuk insert)
+                    // SIMPAN KE SUPABASE
                     if(cek.length > 0) {
                         await db.patch('penjurian', `?reg_id=eq.${p.reg_id}`, payload);
                     } else {
                         await db.post('penjurian', payload);
                     }
                     
-                    this.showToast(`Skor Juri ${jk} Tersimpan!`, 'success');
+                    // HILANGKAN JENDELA MODAL SEKETIKA SETELAH DATA TERSIMPAN
                     this.tutupModalJuri();
+                    this.showToast(`Skor Juri ${jk} Tersimpan!`, 'success');
                     
                     // RE-RENDER SECARA PAKSA AGAR DATA TERBARU MUNCUL DI LAYAR
                     await this.renderAdminJuri();
