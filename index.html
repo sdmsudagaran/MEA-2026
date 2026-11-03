@@ -1092,7 +1092,8 @@
                 // Tampilkan tabel spesifik untuk Juri (Tidak Menampilkan Juri Lain)
                 document.querySelector('#admin-sec-juri thead').innerHTML = `<tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Link Karya</th><th class="p-4 text-center">Skor Anda</th><th class="p-4 text-right">Aksi Penilaian</th></tr>`;
 
-                const jk = this.state.user.juri_ke || 1; // Identitas Juri
+                // Parsing identitas juri menjadi angka mutlak
+                const jk = parseInt(this.state.user.juri_ke) || 1; 
 
                 tbody.innerHTML = this.state.pendaftaran.map(p => {
                     let berkas = '-';
@@ -1102,7 +1103,7 @@
                     }
                     
                     const j = p.penjurian;
-                    // Ambil skor khusus milik juri yang sedang login
+                    // Ambil skor khusus milik juri yang sedang login berdasarkan slot kolomnya
                     const skorSpesifik = jk === 1 ? j.skor_juri_1 : jk === 2 ? j.skor_juri_2 : jk === 3 ? j.skor_juri_3 : 0;
                     const skorSaatIni = skorSpesifik > 0 ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${skorSpesifik}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
 
@@ -1120,13 +1121,13 @@
                 if(!p) return;
                 this.state.juriTarget = p;
                 
-                // 1. AMBIL IDENTITAS JURI DARI SESI LOGIN
-                const jk = this.state.user.juri_ke || 1; 
+                // AMBIL IDENTITAS JURI DARI SESI LOGIN
+                const jk = parseInt(this.state.user.juri_ke) || 1; 
                 
                 const dataJuri = p.penjurian || {};
                 const detailSemuaJuri = dataJuri.skor_detail || {};
                 
-                // 2. ISOLASI DATA FORM HANYA MILIK JURI TERSEBUT
+                // ISOLASI DATA FORM HANYA MILIK JURI TERSEBUT
                 const skor = detailSemuaJuri['juri_' + jk] || {}; 
                 
                 let html = '';
@@ -1198,7 +1199,7 @@
                     `;
                 }
 
-                document.getElementById('juri-modal-title').innerHTML = `Form Nilai: <span class="text-muh-blue">${p.nama_lengkap}</span>`;
+                document.getElementById('juri-modal-title').innerHTML = `Form Nilai: <span class="text-muh-blue">${p.nama_lengkap}</span> (Juri ${jk})`;
                 document.getElementById('juri-modal-body').innerHTML = html;
                 const m = document.getElementById('juri-modal');
                 m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10);
@@ -1211,13 +1212,12 @@
                 const p = this.state.juriTarget;
                 if(!p) return;
                 
-                // AMBIL IDENTITAS JURI
-                const jk = this.state.user.juri_ke || 1;
+                const jk = parseInt(this.state.user.juri_ke) || 1;
                 
                 let detailJuriIni = {};
                 let skorJuriIni = 0;
                 
-                // 3. TARIK NILAI DARI FORM
+                // TARIK NILAI DARI FORM HTML
                 if(p.kategori_id === 'tilawah-pa-pi') {
                     detailJuriIni = {
                         t1: Number(document.getElementById('juri-t1').value)||0, t2: Number(document.getElementById('juri-t2').value)||0,
@@ -1246,7 +1246,7 @@
 
                 this.showLoader('Mengirim Skor ke Database...');
                 try {
-                    // 4. AMBIL DATA LAMA DARI SERVER AGAR TIDAK MENIMPA NILAI JURI LAIN
+                    // MENGAMBIL DATA LAMA DARI SERVER (Menghindari penimpaan nilai juri lain)
                     const cek = await db.get('penjurian', `?reg_id=eq.${p.reg_id}`);
                     let payload = cek.length > 0 ? cek[0] : { 
                         reg_id: p.reg_id, kategori_id: p.kategori_id, skor_detail: {}, skor_juri_1: 0, skor_juri_2: 0, skor_juri_3: 0 
@@ -1254,24 +1254,21 @@
                     
                     if(!payload.skor_detail) payload.skor_detail = {};
                     
-                    // 5. INJEKSI NILAI HANYA UNTUK KOLOM MILIK JURI INI
+                    // INJEKSI NILAI HANYA UNTUK SLOT MILIK JURI INI SAJA
                     payload.skor_detail['juri_' + jk] = detailJuriIni;
                     payload['skor_juri_' + jk] = skorJuriIni;
 
-                    // 6. KALKULASI RATA-RATA TOTAL SKOR AKHIR
+                    // KALKULASI RATA-RATA TOTAL SKOR AKHIR DARI JURI YANG SUDAH MENILAI
                     let j1 = parseFloat(payload.skor_juri_1) || 0;
                     let j2 = parseFloat(payload.skor_juri_2) || 0;
                     let j3 = parseFloat(payload.skor_juri_3) || 0;
                     
                     let totalMasuk = j1 + j2 + j3;
-                    
-                    // Menghitung berapa juri yang sudah mengisi nilai (lebih besar dari 0)
                     let jumlahJuriMenilai = (j1 > 0 ? 1 : 0) + (j2 > 0 ? 1 : 0) + (j3 > 0 ? 1 : 0);
                     
-                    // Rata-rata: Total dibagi jumlah juri yang sudah menilai
                     payload.skor_akhir = jumlahJuriMenilai > 0 ? parseFloat((totalMasuk / jumlahJuriMenilai).toFixed(2)) : 0;
 
-                    // 7. SIMPAN KEMBALI KE SUPABASE
+                    // SIMPAN KEMBALI KE SUPABASE
                     if(cek.length > 0) {
                         await db.patch('penjurian', `?reg_id=eq.${p.reg_id}`, payload);
                     } else {
@@ -1299,27 +1296,34 @@
                     
                     const data = await db.get('pendaftaran', query);
                     
+                    // Tarik peserta tanpa memfilter skor agar tabel tidak kosong
                     let dataNilai = data.map(p => {
                         const j = p.penjurian && p.penjurian.length > 0 ? p.penjurian[0] : {skor_akhir:0, skor_juri_1:0, skor_juri_2:0, skor_juri_3:0};
                         return { ...p, ...j };
-                    }).filter(p => p.skor_akhir > 0);
+                    });
 
-                    // Pengurutan Peringkat
+                    // Pengurutan Peringkat Berdasarkan Filter Dropdown
                     if (sortOrder === 'desc') dataNilai.sort((a, b) => b.skor_akhir - a.skor_akhir);
                     else dataNilai.sort((a, b) => a.skor_akhir - b.skor_akhir);
 
                     const tbody = document.getElementById('rekap-nilai-table-body');
-                    if(!dataNilai.length) return tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada data nilai.</td></tr>`;
+                    if(!dataNilai.length) return tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada peserta di kategori ini.</td></tr>`;
 
                     tbody.innerHTML = dataNilai.map((p, index) => {
+                        // Jika skor masih 0, tampilkan simbol strip '-'
+                        const s1 = p.skor_juri_1 > 0 ? p.skor_juri_1 : '-';
+                        const s2 = p.skor_juri_2 > 0 ? p.skor_juri_2 : '-';
+                        const s3 = p.skor_juri_3 > 0 ? p.skor_juri_3 : '-';
+                        const tAkhir = p.skor_akhir > 0 ? p.skor_akhir : '-';
+                        
                         return `<tr>
                             <td class="p-4 font-bold text-muh-blue text-center text-lg">${index + 1}</td>
                             <td class="p-4 font-bold text-slate-800">${p.nama_lengkap}<br><span class="text-xs font-normal text-slate-500">${p.asal_instansi}</span></td>
                             <td class="p-4 text-xs font-semibold">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</td>
-                            <td class="p-4 text-center font-bold text-slate-600">${p.skor_juri_1 || '-'}</td>
-                            <td class="p-4 text-center font-bold text-slate-600">${p.skor_juri_2 || '-'}</td>
-                            <td class="p-4 text-center font-bold text-slate-600">${p.skor_juri_3 || '-'}</td>
-                            <td class="p-4 font-bold text-center text-lg text-muh-dark">${p.skor_akhir}</td>
+                            <td class="p-4 text-center font-bold text-slate-600">${s1}</td>
+                            <td class="p-4 text-center font-bold text-slate-600">${s2}</td>
+                            <td class="p-4 text-center font-bold text-slate-600">${s3}</td>
+                            <td class="p-4 font-bold text-center text-lg text-muh-dark">${tAkhir}</td>
                         </tr>`;
                     }).join('');
                 } catch (e) { this.showToast('Gagal memuat rekap nilai', 'error'); } finally { this.hideLoader(); }
