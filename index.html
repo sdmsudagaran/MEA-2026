@@ -28,12 +28,19 @@
         .pattern-islami { background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #f1f1f1; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .glass-nav { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.3); }
-        .view-section { display: none; min-height: calc(100vh - 80px); } .view-section.active { display: block; }
         .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; transform: translateX(120%); transition: transform 0.3s; display: flex; align-items: center; gap: 12px; }
         .toast.show { transform: translateX(0); }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #005B9F; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* OPTIMASI TRANSISI HARDWARE ACCELERATED AGAR TIDAK BERAT */
+        .view-section { display: none; min-height: calc(100vh - 80px); opacity: 0; }
+        .view-section.active { display: block; animation: slideUpFade 0.35s ease-out forwards; }
+        .admin-section { display: none; opacity: 0; }
+        .admin-section:not(.hidden) { display: block; animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .print-only { display: none; }
         @media print {
@@ -48,20 +55,6 @@
             .bg-slate-50, .bg-slate-100 { background-color: transparent !important; }
             #view-admin .flex.h-\\[calc\\(100vh-80px\\)\\] { display: block; height: auto; } #view-admin .flex-1 { overflow: visible; padding: 0 !important; }
         }
-    /* OPTIMASI TRANSISI HARDWARE ACCELERATED */
-        .view-section { display: none; min-height: calc(100vh - 80px); opacity: 0; }
-        .view-section.active { display: block; animation: slideUpFade 0.35s ease-out forwards; }
-        .admin-section { display: none; opacity: 0; }
-        .admin-section:not(.hidden) { display: block; animation: fadeIn 0.3s ease-out forwards; }
-        
-        @keyframes slideUpFade { 
-            from { opacity: 0; transform: translateY(15px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-        @keyframes fadeIn { 
-            from { opacity: 0; } 
-            to { opacity: 1; } 
-        }
     </style>
 </head>
 <body class="text-slate-800 antialiased selection:bg-muh-blue selection:text-white">
@@ -73,10 +66,10 @@
     </div>
 
     <!-- TOMBOL REFRESH GLOBAL -->
-    <button id="global-refresh-btn" onclick="app.refreshCurrentView()" class="fixed bottom-6 left-6 z-[90] bg-white text-muh-blue p-4 rounded-full shadow-floating border border-blue-100 hover:bg-blue-50 hover:scale-110 transition-all no-print group flex items-center justify-center" title="Segarkan Data Halaman Ini">
+    <button id="global-refresh-btn" onclick="app.refreshCurrentView()" class="fixed bottom-6 left-6 z-[90] bg-white text-muh-blue p-4 rounded-full shadow-floating border border-blue-100 hover:bg-blue-50 hover:scale-110 transition-all no-print group flex items-center justify-center hidden" title="Segarkan Data Halaman Ini">
         <i class="ph-bold ph-arrows-clockwise text-2xl group-active:animate-spin"></i>
     </button>
-
+  
     <!-- NAVBAR -->
     <nav id="main-nav" class="fixed top-0 w-full z-50 glass-nav transition-all duration-300 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -393,7 +386,6 @@
                         </div>
                         <div class="flex flex-wrap gap-3 mb-6">
                             <select id="juri-filter-kategori" onchange="app.renderAdminJuri()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[250px]"><option value="all">Pilih Kategori Lomba...</option></select>
-                            <!-- Filter Pengurutan Nilai -->
                             <select id="juri-sort-skor" onchange="app.renderAdminJuri()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue font-bold text-muh-blue">
                                 <option value="desc">Nilai Tertinggi ke Terendah</option>
                                 <option value="asc">Nilai Terendah ke Tertinggi</option>
@@ -403,7 +395,7 @@
                         <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                             <table class="w-full text-left text-sm">
                                 <thead class="bg-slate-50 border-b">
-                                    <tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4 text-center">Juri 1</th><th class="p-4 text-center">Juri 2</th><th class="p-4 text-center">Juri 3</th><th class="p-4 text-center">Total Skor</th><th class="p-4 text-right">Aksi</th></tr>
+                                    <!-- Diisi Dinamis Lewat JS -->
                                 </thead>
                                 <tbody id="juri-table-body" class="divide-y"></tbody>
                             </table>
@@ -490,7 +482,6 @@
                                     <option value="juri">Dewan Juri</option>
                                 </select>
                             </div>
-                            
                             <!-- Dropdown Khusus Juri -->
                             <div class="w-full hidden gap-2" id="div-kategori-juri" style="flex: 1.5;">
                                 <div class="w-2/3">
@@ -527,9 +518,8 @@
                             <div><h2 class="text-2xl font-bold">Rekap Penilaian Juri</h2><p class="text-sm text-slate-500">Peringkat dan hasil akhir penjurian.</p></div>
                             <div class="flex gap-3">
                                 <select id="rekap-nilai-kategori" onchange="app.renderAdminRekapNilai()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[250px]"><option value="all">Semua Kategori Lomba...</option></select>
-                                <!-- Filter Pengurutan Nilai -->
                                 <select id="rekap-sort-skor" onchange="app.renderAdminRekapNilai()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue font-bold text-muh-blue">
-                                    <option value="desc">Peringkat Tertinggi (1, 2, 3...)</option>
+                                    <option value="desc">Peringkat Tertinggi</option>
                                     <option value="asc">Peringkat Terendah</option>
                                 </select>
                                 <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
@@ -538,9 +528,7 @@
                         
                         <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                             <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 border-b">
-                                    <tr><th class="p-4 text-center">Peringkat</th><th class="p-4">Nama & Instansi</th><th class="p-4">Kategori Lomba</th><th class="p-4 text-center">Juri 1</th><th class="p-4 text-center">Juri 2</th><th class="p-4 text-center">Juri 3</th><th class="p-4 text-center">Total Akhir</th></tr>
-                                </thead>
+                                <thead class="bg-slate-50 border-b"><tr><th class="p-4 text-center">Peringkat</th><th class="p-4">Nama & Instansi</th><th class="p-4">Kategori Lomba</th><th class="p-4 text-center">Juri 1</th><th class="p-4 text-center">Juri 2</th><th class="p-4 text-center">Juri 3</th><th class="p-4 text-center">Total Akhir</th></tr></thead>
                                 <tbody id="rekap-nilai-table-body" class="divide-y"></tbody>
                             </table>
                         </div>
@@ -1525,7 +1513,6 @@
             // KONTROL VISIBILITAS TAB BERDASARKAN ROLE
             updateNavState: function() {
                 const authBtns = document.getElementById('auth-buttons'), userMenu = document.getElementById('user-menu'), mobAuthBtns = document.getElementById('mobile-auth-buttons'), mobUserMenu = document.getElementById('mobile-user-menu'), navDashBtn = document.getElementById('nav-dash-btn'), mobDashBtn = document.getElementById('mob-dash-btn'), navUserIcon = document.getElementById('nav-user-icon');
-                
                 const homeEditBtn = document.getElementById('admin-home-edit-btn');
                 const navPengaturan = document.getElementById('nav-pengaturan');
                 const globalRefreshBtn = document.getElementById('global-refresh-btn');
@@ -1573,9 +1560,8 @@
                 const target = new Date('2026-11-28T00:00:00').getTime();
                 setInterval(() => { const diff = target - new Date().getTime(); if(diff > 0) { document.getElementById('cd-days').textContent = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0'); document.getElementById('cd-hours').textContent = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0'); document.getElementById('cd-mins').textContent = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0'); document.getElementById('cd-secs').textContent = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0'); } }, 1000);
             }
+        };
 
         window.addEventListener('scroll', () => { const nav = document.getElementById('main-nav'); if(window.scrollY > 20) nav.classList.add('shadow-sm'); else nav.classList.remove('shadow-sm'); });
         window.onload = () => { app.init(); };
     </script>
-</body>
-</html>
