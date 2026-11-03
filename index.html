@@ -1087,13 +1087,17 @@
                 });
 
                 const tbody = document.getElementById('juri-table-body');
-                if(!this.state.pendaftaran.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
+                if(!this.state.pendaftaran.length) return tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">Belum ada peserta berstatus Terverifikasi di kategori ini.</td></tr>`;
 
-                // Tampilkan tabel spesifik untuk Juri (Tidak Menampilkan Juri Lain)
-                document.querySelector('#admin-sec-juri thead').innerHTML = `<tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Link Karya</th><th class="p-4 text-center">Skor Anda</th><th class="p-4 text-right">Aksi Penilaian</th></tr>`;
-
-                // Parsing identitas juri menjadi angka mutlak
-                const jk = parseInt(this.state.user.juri_ke) || 1; 
+                const r = this.state.user.role;
+                let jk = parseInt(this.state.user.juri_ke);
+                
+                // Jika Admin yg buka, tampilkan semua 3 kolom. Jika juri, tampilkan 1 kolom miliknya.
+                if (['admin', 'koordinator'].includes(r)) {
+                    document.querySelector('#admin-sec-juri thead').innerHTML = `<tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Link Karya</th><th class="p-4 text-center">Juri 1</th><th class="p-4 text-center">Juri 2</th><th class="p-4 text-center">Juri 3</th><th class="p-4 text-center">Total Skor</th><th class="p-4 text-right">Aksi</th></tr>`;
+                } else {
+                    document.querySelector('#admin-sec-juri thead').innerHTML = `<tr><th class="p-4">Reg ID</th><th class="p-4">Peserta & Instansi</th><th class="p-4">Link Karya</th><th class="p-4 text-center">Skor Anda (Juri ${jk || '?'})</th><th class="p-4 text-right">Aksi Penilaian</th></tr>`;
+                }
 
                 tbody.innerHTML = this.state.pendaftaran.map(p => {
                     let berkas = '-';
@@ -1103,16 +1107,26 @@
                     }
                     
                     const j = p.penjurian;
-                    // Ambil skor khusus milik juri yang sedang login berdasarkan slot kolomnya
-                    const skorSpesifik = jk === 1 ? j.skor_juri_1 : jk === 2 ? j.skor_juri_2 : jk === 3 ? j.skor_juri_3 : 0;
-                    const skorSaatIni = skorSpesifik > 0 ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${skorSpesifik}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`;
+                    let skorHtml = '';
+
+                    if (['admin', 'koordinator'].includes(r)) {
+                        skorHtml = `
+                            <td class="p-4 text-center font-bold text-slate-600">${j.skor_juri_1 || '-'}</td>
+                            <td class="p-4 text-center font-bold text-slate-600">${j.skor_juri_2 || '-'}</td>
+                            <td class="p-4 text-center font-bold text-slate-600">${j.skor_juri_3 || '-'}</td>
+                            <td class="p-4 text-center">${j.skor_akhir > 0 ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${j.skor_akhir}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">0</span>`}</td>
+                        `;
+                    } else {
+                        const skorSpesifik = jk === 1 ? j.skor_juri_1 : jk === 2 ? j.skor_juri_2 : jk === 3 ? j.skor_juri_3 : 0;
+                        skorHtml = `<td class="p-4 text-center">${skorSpesifik > 0 ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">${skorSpesifik}</span>` : `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs">Belum dinilai</span>`}</td>`;
+                    }
 
                     return `<tr>
                         <td class="p-4 font-mono text-xs">${p.reg_id}</td>
                         <td class="p-4"><span class="font-bold block">${p.nama_lengkap}</span><span class="text-xs text-slate-500">${p.asal_instansi}</span></td>
                         <td class="p-4">${berkas}</td>
-                        <td class="p-4 text-center">${skorSaatIni}</td>
-                        <td class="p-4 text-right"><button onclick="app.bukaModalJuri('${p.reg_id}')" class="bg-muh-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-muh-dark text-xs shadow-sm">Beri / Edit Nilai</button></td>
+                        ${skorHtml}
+                        <td class="p-4 text-right"><button onclick="app.bukaModalJuri('${p.reg_id}')" class="bg-muh-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-muh-dark text-xs shadow-sm"><i class="ph-bold ph-pencil-simple"></i> Nilai</button></td>
                     </tr>`;
                 }).join('');
             },
@@ -1121,18 +1135,37 @@
                 if(!p) return;
                 this.state.juriTarget = p;
                 
-                // AMBIL IDENTITAS JURI DARI SESI LOGIN
-                const jk = parseInt(this.state.user.juri_ke) || 1; 
+                const r = this.state.user.role;
+                let jk = parseInt(this.state.user.juri_ke);
+                let adminSelector = '';
+
+                // PENANGANAN SPESIFIK JURI vs ADMIN (Isolasi Juri)
+                if (['admin', 'koordinator'].includes(r)) {
+                    jk = this.state.adminJuriSlot || 1;
+                    adminSelector = `
+                        <div class="mb-4 bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                            <label class="font-bold text-yellow-800 block mb-2">Login sebagai Admin. Pilih Slot Juri yang ingin diedit:</label>
+                            <select onchange="app.state.adminJuriSlot = parseInt(this.value); app.bukaModalJuri('${regId}')" class="w-full p-2 rounded-lg border outline-none font-bold text-muh-blue bg-white">
+                                <option value="1" ${jk === 1 ? 'selected' : ''}>Edit Form Juri 1</option>
+                                <option value="2" ${jk === 2 ? 'selected' : ''}>Edit Form Juri 2</option>
+                                <option value="3" ${jk === 3 ? 'selected' : ''}>Edit Form Juri 3</option>
+                            </select>
+                        </div>
+                    `;
+                } else if (isNaN(jk)) {
+                    // Mencegah error untuk Akun Juri lama yang rusak/belum punya nomor
+                    this.showToast("Gagal! Akun Anda tidak memiliki identitas Juri (1/2/3). Minta Admin hapus & buat ulang akun ini.", "error");
+                    return;
+                }
                 
                 const dataJuri = p.penjurian || {};
                 const detailSemuaJuri = dataJuri.skor_detail || {};
-                
-                // ISOLASI DATA FORM HANYA MILIK JURI TERSEBUT
                 const skor = detailSemuaJuri['juri_' + jk] || {}; 
                 
-                let html = '';
+                let html = adminSelector;
+
                 if(p.kategori_id === 'tilawah-pa-pi') {
-                    html = `
+                    html += `
                         <div class="space-y-4">
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                                 <h4 class="font-bold text-muh-blue mb-3 border-b border-blue-200 pb-2">1. Aspek Tajwid (0-100)</h4>
@@ -1174,7 +1207,7 @@
                         </div>
                     `;
                 } else if(p.kategori_id === 'guru-bp') {
-                    html = `
+                    html += `
                         <div class="space-y-4">
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                                 <h4 class="font-bold text-muh-blue mb-4 border-b border-blue-200 pb-2">Penilaian Best Practice Guru (0-100)</h4>
@@ -1190,9 +1223,9 @@
                         </div>
                     `;
                 } else {
-                    html = `
+                    html += `
                         <div class="bg-blue-50 p-6 rounded-xl border-2 border-blue-200 shadow-inner">
-                            <h4 class="font-bold text-muh-blue mb-4 border-b border-blue-200 pb-2 text-center uppercase tracking-wide">Formulir Penilaian Juri ${jk}</h4>
+                            <h4 class="font-bold text-muh-blue mb-4 border-b border-blue-200 pb-2 text-center uppercase tracking-wide">Formulir Penilaian Juri</h4>
                             <label class="font-bold block mb-2 text-slate-700 text-center">Skor Anda (0-100)</label>
                             <input type="number" step="0.01" id="juri-umum" value="${skor.umum||''}" class="w-full p-4 text-2xl font-bold border rounded-xl outline-none focus:border-muh-blue text-center text-muh-dark" placeholder="0">
                         </div>
@@ -1212,7 +1245,13 @@
                 const p = this.state.juriTarget;
                 if(!p) return;
                 
-                const jk = parseInt(this.state.user.juri_ke) || 1;
+                const r = this.state.user.role;
+                let jk = parseInt(this.state.user.juri_ke);
+                
+                // Menentukan letak payload bagi Admin vs Juri
+                if (['admin', 'koordinator'].includes(r)) {
+                    jk = this.state.adminJuriSlot || 1;
+                }
                 
                 let detailJuriIni = {};
                 let skorJuriIni = 0;
@@ -1266,6 +1305,7 @@
                     let totalMasuk = j1 + j2 + j3;
                     let jumlahJuriMenilai = (j1 > 0 ? 1 : 0) + (j2 > 0 ? 1 : 0) + (j3 > 0 ? 1 : 0);
                     
+                    // Rata-rata: Total dibagi jumlah juri yang sudah mengisi nilai di atas 0
                     payload.skor_akhir = jumlahJuriMenilai > 0 ? parseFloat((totalMasuk / jumlahJuriMenilai).toFixed(2)) : 0;
 
                     // SIMPAN KEMBALI KE SUPABASE
@@ -1275,7 +1315,7 @@
                         await db.post('penjurian', payload);
                     }
                     
-                    this.showToast(`Skor Juri ${jk} Tersimpan! (Rata-rata saat ini: ${payload.skor_akhir})`, 'success');
+                    this.showToast(`Skor Juri ${jk} Tersimpan! (Rata-rata Kelas: ${payload.skor_akhir})`, 'success');
                     this.tutupModalJuri();
                     this.renderAdminJuri();
                 } catch(e) { 
