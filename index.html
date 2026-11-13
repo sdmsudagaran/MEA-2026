@@ -1420,26 +1420,66 @@
             
             // ADMIN CMS (KELOLA KONTEN)
             renderAdminKonten: async function() {
+                // Pastikan hanya Admin atau Koordinator yang bisa memuat halaman ini
+                if (!['admin', 'koordinator'].includes(this.state.user?.role)) {
+                    this.showToast('Akses ditolak. Anda tidak memiliki izin Kelola Konten.', 'error');
+                    return this.switchAdminTab('dashboard');
+                }
+
                 document.getElementById('edit-teks-beranda').value = this.state.settings.teks_beranda;
                 document.getElementById('edit-teks-jadwal').value = this.state.settings.tanggal_pelaksanaan;
 
                 const opts = `<option value="">Pilih Kategori...</option>` + this.state.categories.map(c => `<option value="${c.id}">${c.judul}</option>`).join('');
-                document.getElementById('edit-kat-select').innerHTML = opts; document.getElementById('admin-select-kat').innerHTML = opts;
+                document.getElementById('edit-kat-select').innerHTML = opts; 
+                document.getElementById('admin-select-kat').innerHTML = opts;
 
-                const pData = await db.get('pengumuman', '?select=*,kategori_lomba(judul)&order=created_at.desc');
-                const tb = document.getElementById('admin-list-pengumuman');
-                if(!pData.length) tb.innerHTML = `<tr><td class="p-3 text-center text-slate-500">Belum ada pengumuman terbit.</td></tr>`;
-                else tb.innerHTML = pData.map(p => `<tr><td class="p-3"><span class="font-bold">${p.nama_pemenang}</span> (Juara ${p.peringkat})<br><span class="text-xs text-slate-400">${p.kategori_lomba?.judul||''}</span></td><td class="p-3 text-right"><button onclick="app.hapusPengumuman('${p.id}')" class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Hapus</button></td></tr>`).join('');
+                // Muat daftar pengumuman yang sudah terbit
+                this.showLoader('Memuat Konten...');
+                try {
+                    const pData = await db.get('pengumuman', '?select=*,kategori_lomba(judul)&order=created_at.desc');
+                    const tb = document.getElementById('admin-list-pengumuman');
+                    
+                    if(!pData.length) {
+                        tb.innerHTML = `<tr><td class="p-3 text-center text-slate-500">Belum ada pengumuman terbit.</td></tr>`;
+                    } else {
+                        tb.innerHTML = pData.map(p => `
+                            <tr>
+                                <td class="p-3">
+                                    <span class="font-bold">${p.nama_pemenang}</span> (Juara ${p.peringkat})<br>
+                                    <span class="text-xs text-slate-400">${p.kategori_lomba?.judul||''} - Skor: ${p.skor}</span>
+                                </td>
+                                <td class="p-3 text-right">
+                                    <button onclick="app.hapusPengumuman('${p.id}')" class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded font-bold hover:bg-red-100 transition-colors">Hapus</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                } catch(e) {
+                    console.error(e);
+                    this.showToast('Gagal memuat daftar pengumuman', 'error');
+                } finally {
+                    this.hideLoader();
+                }
             },
             updateBeranda: async function(e) {
-                e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
-                this.showLoader();
+                e.preventDefault(); 
+                if (!['admin', 'koordinator'].includes(this.state.user?.role)) return this.showToast('Akses Ditolak', 'error');
+                
+                const d = Object.fromEntries(new FormData(e.target).entries());
+                this.showLoader('Menyimpan Pengaturan Beranda...');
                 try {
                     await db.patch('pengaturan_web', '?id=eq.1', d);
-                    this.state.settings.teks_beranda = d.teks_beranda; this.state.settings.tanggal_pelaksanaan = d.tanggal_pelaksanaan;
-                    document.getElementById('teks-beranda').textContent = d.teks_beranda; document.getElementById('teks-jadwal').textContent = `Pelaksanaan: ${d.tanggal_pelaksanaan}`;
+                    this.state.settings.teks_beranda = d.teks_beranda; 
+                    this.state.settings.tanggal_pelaksanaan = d.tanggal_pelaksanaan;
+                    
+                    document.getElementById('teks-beranda').textContent = d.teks_beranda; 
+                    document.getElementById('teks-jadwal').textContent = `Pelaksanaan: ${d.tanggal_pelaksanaan}`;
                     this.showToast('Beranda berhasil diperbarui!', 'success');
-                } catch(err) { this.showToast('Gagal update Beranda', 'error'); } finally { this.hideLoader(); }
+                } catch(err) { 
+                    this.showToast('Gagal update Beranda', 'error'); 
+                } finally { 
+                    this.hideLoader(); 
+                }
             },
             loadEditKategori: function(id) {
                 const form = document.getElementById('form-edit-kategori'); 
@@ -1460,35 +1500,93 @@
             },
             updateKategori: async function(e) {
                 e.preventDefault(); 
+                if (!['admin', 'koordinator'].includes(this.state.user?.role)) return this.showToast('Akses Ditolak', 'error');
+
                 const d = Object.fromEntries(new FormData(e.target).entries());
                 const reqsArray = d.persyaratan.split('\n').map(s => s.trim()).filter(s => s !== '');
                 const rulesArray = d.ketentuan.split('\n').map(s => s.trim()).filter(s => s !== '');
 
-                const payload = { judul: d.judul, deskripsi: d.deskripsi, urutan: parseInt(d.urutan) || 99, grup: d.grup, ikon: d.ikon, persyaratan: reqsArray, ketentuan: rulesArray };
+                const payload = { 
+                    judul: d.judul, 
+                    deskripsi: d.deskripsi, 
+                    urutan: parseInt(d.urutan) || 99, 
+                    grup: d.grup, 
+                    ikon: d.ikon, 
+                    persyaratan: reqsArray, 
+                    ketentuan: rulesArray 
+                };
 
-                this.showLoader();
+                this.showLoader('Menyimpan Perubahan Kategori...');
                 try {
                     await db.patch('kategori_lomba', `?id=eq.${d.id}`, payload);
                     const idx = this.state.categories.findIndex(c => c.id === d.id);
-                    if(idx > -1) { this.state.categories[idx] = { ...this.state.categories[idx], ...payload }; }
+                    if(idx > -1) { 
+                        this.state.categories[idx] = { ...this.state.categories[idx], ...payload }; 
+                    }
                     
                     this.showToast('Kategori berhasil diperbarui!', 'success');
-                    e.target.reset(); document.getElementById('form-edit-kategori').classList.add('hidden'); document.getElementById('edit-kat-select').value = '';
-                } catch(err) { this.showToast('Gagal mengupdate kategori.', 'error'); } finally { this.hideLoader(); }
+                    e.target.reset(); 
+                    document.getElementById('form-edit-kategori').classList.add('hidden'); 
+                    document.getElementById('edit-kat-select').value = '';
+                } catch(err) { 
+                    this.showToast('Gagal mengupdate kategori.', 'error'); 
+                } finally { 
+                    this.hideLoader(); 
+                }
             },
+            
+            // FUNGSI UTAMA: MENERBITKAN PENGUMUMAN
             addPengumuman: async function(e) {
-                e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
-                this.showLoader();
+                e.preventDefault(); 
+                // Lapisan Keamanan Ekstra: Validasi Role
+                if (!['admin', 'koordinator'].includes(this.state.user?.role)) {
+                    return this.showToast('Akses Ditolak. Anda bukan Admin/Koordinator.', 'error');
+                }
+
+                const d = Object.fromEntries(new FormData(e.target).entries());
+                
+                this.showLoader('Menerbitkan Pengumuman Juara...');
                 try {
-                    await db.post('pengumuman', { kategori_id: d.kategori_id, peringkat: parseInt(d.peringkat), nama_pemenang: d.nama_pemenang, asal_instansi: d.asal_instansi, skor: parseFloat(d.skor) });
-                    e.target.reset(); this.showToast('Pengumuman dirilis!', 'success'); this.renderAdminKonten();
-                } catch(err) { this.showToast('Gagal menerbitkan pengumuman', 'error'); } finally { this.hideLoader(); }
+                    const payload = { 
+                        kategori_id: d.kategori_id, 
+                        peringkat: parseInt(d.peringkat), 
+                        nama_pemenang: d.nama_pemenang, 
+                        asal_instansi: d.asal_instansi, 
+                        skor: parseFloat(d.skor) 
+                    };
+
+                    await db.post('pengumuman', payload);
+                    e.target.reset(); 
+                    
+                    this.showToast('Pengumuman juara berhasil dirilis ke publik!', 'success'); 
+                    
+                    // Segarkan list pengumuman di layar
+                    await this.renderAdminKonten();
+                } catch(err) { 
+                    console.error(err);
+                    this.showToast('Gagal menerbitkan pengumuman ke database.', 'error'); 
+                } finally { 
+                    this.hideLoader(); 
+                }
             },
+            
             hapusPengumuman: async function(id) {
-                if(!confirm('Hapus pengumuman ini?')) return;
-                this.showLoader();
-                try { await db.delete('pengumuman', `?id=eq.${id}`); this.showToast('Terhapus', 'success'); this.renderAdminKonten(); } 
-                catch(err) { this.showToast('Gagal menghapus', 'error'); } finally { this.hideLoader(); }
+                if (!['admin', 'koordinator'].includes(this.state.user?.role)) return this.showToast('Akses Ditolak', 'error');
+                
+                if(!confirm('Anda yakin ingin menarik / menghapus pengumuman ini dari publik?')) return;
+                
+                this.showLoader('Menghapus Pengumuman...');
+                try { 
+                    await db.delete('pengumuman', `?id=eq.${id}`); 
+                    this.showToast('Pengumuman berhasil ditarik/dihapus.', 'success'); 
+                    
+                    // Segarkan list pengumuman di layar
+                    await this.renderAdminKonten(); 
+                } catch(err) { 
+                    this.showToast('Gagal menghapus pengumuman', 'error'); 
+                } finally { 
+                    this.hideLoader(); 
+                }
             },
 
             // ADMIN AKSES
