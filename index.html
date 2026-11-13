@@ -47,24 +47,46 @@
 
         .print-only { display: none; }
         @media print {
-            @page { size: 215mm 330mm portrait; margin: 10mm; } /* Ukuran Kertas F4 */
+            @page { size: 215mm 330mm portrait; margin: 10mm; } /* Kertas F4 */
             body { background-color: white; color: black; }
             
-            /* Sembunyikan semua UI aplikasi saat mencetak */
+            /* Sembunyikan UI aplikasi saat mencetak */
             body > *:not(#print-container) { display: none !important; }
-            
-            /* Tampilkan hanya wadah cetak */
             #print-container { display: block !important; width: 100%; }
             
-            /* Layout Kartu Peserta (Grid 2 Kolom, 4 Baris = 8 Kartu per halaman) */
-            .print-card-page { display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 73mm; gap: 6mm; page-break-after: always; padding-top: 5mm; }
-            .print-card { border: 2px dashed #64748b; padding: 15px; border-radius: 12px; display: flex; flex-col; justify-content: center; align-items: center; text-align: center; position: relative; overflow: hidden; }
-            .print-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 12px; background: #005B9F !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .print-card h3 { font-size: 16px; font-weight: bold; margin-bottom: 2px; margin-top: 10px; color: #000; }
-            .print-card p { font-size: 11px; margin-bottom: 2px; color: #333; line-height: 1.2; }
-            .print-card .reg-id { font-family: monospace; font-size: 18px; font-weight: bold; margin-top: 8px; padding: 4px 10px; border: 1px solid #000; display: inline-block; background: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            /* --- LAYOUT KARTU PESERTA (Mirip Gambar: 2 Kolom, Garis Putus-putus) --- */
+            .print-card-page { display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 75mm; gap: 8mm; page-break-after: always; padding-top: 5mm; }
+            .print-card { 
+                border: 1px dashed #64748b; 
+                padding: 12px 16px; 
+                border-radius: 8px; 
+                display: flex; 
+                flex-direction: column; 
+                background: white; 
+            }
+            .card-header { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #003B6F; padding-bottom: 8px; margin-bottom: 10px; }
+            .card-header img { height: 35px; width: auto; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .card-header-text h3 { font-size: 11px; font-weight: 800; color: #003B6F; margin: 0; line-height: 1.2; text-transform: uppercase; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .card-header-text p { font-size: 8px; font-weight: 600; color: #475569; margin: 0; }
             
-            /* Layout Daftar Peserta */
+            /* Grid untuk merapikan titik dua (:) */
+            .card-info { display: grid; grid-template-columns: 45px 10px 1fr; font-size: 9px; line-height: 1.6; color: #1e293b; margin-bottom: auto; }
+            .card-info div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            
+            .token-box {
+                margin-top: 10px;
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+                text-align: center;
+                padding: 8px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .token-box span { display: block; font-size: 7px; color: #64748b; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; }
+            .token-box strong { font-size: 16px; color: #005B9F; font-family: monospace; letter-spacing: 2px; }
+            
+            /* --- LAYOUT DAFTAR PESERTA PDF --- */
             .print-list-page { page-break-after: always; font-size: 11px; }
             .print-list-page h2 { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
             .print-table { width: 100%; border-collapse: collapse; }
@@ -954,68 +976,86 @@
                 } catch(e) { el.checked = !el.checked; this.showToast('Gagal update status', 'error'); }
             },
             
-            // ADMIN REKAP PESERTA
+            // ADMIN REKAP PESERTA (Ditambah Filter Jenjang)
             renderAdminRekap: async function() {
                 const selKat = document.getElementById('admin-filter-kategori');
                 const selMapel = document.getElementById('admin-filter-mapel');
-                if(selKat.options.length <= 1) this.state.categories.forEach(c => selKat.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+                const selJenjang = document.getElementById('admin-filter-jenjang'); // Ambil elemen jenjang
                 
+                if(selKat && selKat.options.length <= 1) {
+                    this.state.categories.forEach(c => selKat.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
+                }
+                
+                // Ambil value saat ini (fallback ke 'all' jika baru pertama dimuat)
+                let valKat = selKat ? selKat.value : 'all';
+                let valMapel = selMapel ? selMapel.value : 'all';
+                let valJenjang = selJenjang ? selJenjang.value : 'all';
+
                 let query = '?select=reg_id,nama_lengkap,nomor_induk,asal_instansi,nomor_wa,email,kategori_id,status_verifikasi,waktu_daftar,data_tambahan&order=waktu_daftar.desc';
                 
-                if(selKat.value !== 'all') {
-                    query += `&kategori_id=eq.${selKat.value}`;
-                    if(selKat.value.startsWith('olimpiade')) {
-                        selMapel.classList.remove('hidden');
-                        if(selMapel.value !== 'all') query += `&data_tambahan->>mapel=eq.${selMapel.value}`;
-                    } else {
-                        selMapel.classList.add('hidden'); selMapel.value = 'all';
-                    }
-                } else {
-                    selMapel.classList.add('hidden'); selMapel.value = 'all';
-                }
+                let isOlimpiade = valKat.startsWith('olimpiade');
+                
+                if(valKat !== 'all') query += `&kategori_id=eq.${valKat}`;
+                if(isOlimpiade && valMapel !== 'all') query += `&data_tambahan->>mapel=eq.${valMapel}`;
+                if(valJenjang !== 'all') query += `&data_tambahan->>jenjang=eq.${valJenjang}`;
                 
                 this.showLoader('Memuat data pendaftar...');
                 try {
                     const data = await db.get('pendaftaran', query);
-                    this.state.rekapPeserta = data; // SIMPAN STATE UNTUK DICETAK KARTU/DAFTAR
+                    this.state.rekapPeserta = data; // Simpan untuk dicetak
                     
                     const tbody = document.getElementById('admin-table-body');
                     document.getElementById('checkAll').checked = false;
                     this.toggleBulkAction(); 
                     
-                    // INJEKSI TOMBOL CETAK KARTU & DAFTAR PDF DI HEADER REKAP
+                    // INJEKSI UI FILTER DAN TOMBOL CETAK
                     const headerHTML = `
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 no-print">
-                            <div><h2 class="text-2xl font-bold">Dasbor Rekap Peserta</h2><p class="text-sm text-slate-500">Manajemen, verifikasi, dan unduh berkas.</p></div>
+                            <div><h2 class="text-2xl font-bold">Dasbor Rekap Peserta</h2><p class="text-sm text-slate-500">Manajemen, verifikasi, dan cetak kartu.</p></div>
                             <div class="flex flex-wrap gap-2">
-                                <select id="admin-filter-kategori" onchange="app.renderAdminRekap()" class="px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[200px]">${selKat.innerHTML}</select>
-                                <select id="admin-filter-mapel" onchange="app.renderAdminRekap()" class="hidden px-4 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue max-w-[150px]">${selMapel.innerHTML}</select>
-                                <button onclick="app.cetakDaftarPeserta()" class="bg-slate-800 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-slate-900 transition-colors shadow-sm"><i class="ph-bold ph-list-numbers"></i> Daftar PDF</button>
-                                <button onclick="app.cetakKartuPeserta()" class="bg-muh-accent text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-orange-600 transition-colors shadow-sm"><i class="ph-bold ph-identification-card"></i> Cetak Kartu</button>
-                                <button onclick="app.downloadExcel()" class="bg-green-600 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-green-700 transition-colors shadow-sm"><i class="ph-bold ph-microsoft-excel-logo"></i> Unduh Excel</button>
+                                <select id="admin-filter-kategori" onchange="app.renderAdminRekap()" class="px-3 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue text-sm">
+                                    ${selKat ? selKat.innerHTML : `<option value="all">Semua Kategori</option>`}
+                                </select>
+                                <select id="admin-filter-jenjang" onchange="app.renderAdminRekap()" class="${!isOlimpiade ? 'hidden' : ''} px-3 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue text-sm">
+                                    <option value="all">Semua Jenjang</option>
+                                    <option value="SD/MI" ${valJenjang === 'SD/MI' ? 'selected' : ''}>SD/MI</option>
+                                    <option value="SMP/MTs" ${valJenjang === 'SMP/MTs' ? 'selected' : ''}>SMP/MTs</option>
+                                    <option value="SMA/SMK/MA" ${valJenjang === 'SMA/SMK/MA' ? 'selected' : ''}>SMA/SMK/MA</option>
+                                </select>
+                                <select id="admin-filter-mapel" onchange="app.renderAdminRekap()" class="${!isOlimpiade ? 'hidden' : ''} px-3 py-2 rounded-xl border bg-white outline-none focus:border-muh-blue text-sm">
+                                    <option value="all">Semua Mapel</option>
+                                    <option value="IPA" ${valMapel === 'IPA' ? 'selected' : ''}>IPA</option>
+                                    <option value="Matematika" ${valMapel === 'Matematika' ? 'selected' : ''}>Matematika</option>
+                                    <option value="Bahasa Inggris" ${valMapel === 'Bahasa Inggris' ? 'selected' : ''}>Bahasa Inggris</option>
+                                    <option value="Ismuba" ${valMapel === 'Ismuba' ? 'selected' : ''}>Ismuba</option>
+                                </select>
+                                <button onclick="app.cetakDaftarPeserta()" class="bg-slate-800 text-white font-bold px-3 py-2 rounded-xl text-sm flex items-center gap-1 hover:bg-slate-900 shadow-sm"><i class="ph-bold ph-list-numbers"></i> PDF Daftar</button>
+                                <button onclick="app.cetakKartuPeserta()" class="bg-muh-accent text-white font-bold px-3 py-2 rounded-xl text-sm flex items-center gap-1 hover:bg-orange-600 shadow-sm"><i class="ph-bold ph-identification-card"></i> Cetak Kartu</button>
+                                <button onclick="app.downloadExcel()" class="bg-green-600 text-white font-bold px-3 py-2 rounded-xl text-sm flex items-center gap-1 hover:bg-green-700 shadow-sm"><i class="ph-bold ph-microsoft-excel-logo"></i> Excel</button>
                             </div>
                         </div>
                     `;
+                    
+                    // Ganti Header HTML agar Filter Jenjang Muncul
                     document.getElementById('admin-sec-rekap').firstElementChild.nextElementSibling.outerHTML = headerHTML;
-                    // Sinkronisasi value dropdown setelah dirender ulang
-                    document.getElementById('admin-filter-kategori').value = selKat.value;
-                    document.getElementById('admin-filter-mapel').value = selMapel.value;
-                    if(selKat.value.startsWith('olimpiade')) document.getElementById('admin-filter-mapel').classList.remove('hidden');
+                    
+                    // Pertahankan state pilihan (Value Binding)
+                    if(document.getElementById('admin-filter-kategori')) document.getElementById('admin-filter-kategori').value = valKat;
 
                     if(!data.length) return tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada pendaftar sesuai filter.</td></tr>`;
                     
                     tbody.innerHTML = data.map(p => {
                         let infoTambahan = `<span class="block font-bold text-xs">${this.state.categories.find(c=>c.id===p.kategori_id)?.judul||'-'}</span>`;
-                        let mapelInfo = '-';
-
+                        let mapelInfo = p.data_tambahan?.jenjang ? `<span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded font-bold">${p.data_tambahan.jenjang}</span><br>` : '';
+                        
                         if(p.data_tambahan) {
-                            if(p.data_tambahan.mapel) mapelInfo = p.data_tambahan.mapel;
-                            else if(p.data_tambahan.jenjang) mapelInfo = p.data_tambahan.jenjang;
-                            else if(p.data_tambahan.nama_tim) mapelInfo = p.data_tambahan.nama_tim;
+                            if(p.data_tambahan.mapel) mapelInfo += p.data_tambahan.mapel;
+                            else if(p.data_tambahan.nama_tim) mapelInfo += p.data_tambahan.nama_tim;
+                            else mapelInfo += '-';
 
                             for(let key in p.data_tambahan) {
                                 if(typeof p.data_tambahan[key] === 'string' && p.data_tambahan[key].startsWith('http')) {
-                                    infoTambahan += `<a href="${p.data_tambahan[key]}" target="_blank" class="block text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded mt-1 border hover:bg-blue-100 max-w-[150px] truncate"><i class="ph-bold ph-link"></i> Buka ${key.replace('_',' ')}</a>`;
+                                    infoTambahan += `<a href="${p.data_tambahan[key]}" target="_blank" class="block text-[10px] bg-blue-50 text-muh-blue px-2 py-1 rounded mt-1 border hover:bg-blue-100 max-w-[150px] truncate"><i class="ph-bold ph-link"></i> Buka File</a>`;
                                 }
                             }
                         }
@@ -1039,16 +1079,14 @@
                 } catch(e) { this.showToast('Gagal memuat rekap', 'error'); } finally { this.hideLoader(); }
             },
             
-            // FUNGSI CETAK KARTU PESERTA (8 Kartu Per Halaman F4)
+            // FUNGSI CETAK KARTU PESERTA (Desain Baru Sesuai Gambar)
             cetakKartuPeserta: function() {
                 let targetData = this.state.rekapPeserta || [];
                 const cbs = document.querySelectorAll('.cb-peserta:checked');
-                // Jika ada checkbox yang dicentang, cetak hanya yang dicentang
                 if(cbs.length > 0) {
                     const checkedIds = Array.from(cbs).map(cb => cb.value);
                     targetData = targetData.filter(p => checkedIds.includes(p.reg_id));
                 }
-                
                 if(targetData.length === 0) return this.showToast('Tidak ada data peserta untuk dicetak!', 'error');
 
                 const container = document.getElementById('print-container');
@@ -1060,26 +1098,84 @@
                     html += `<div class="print-card-page">`;
                     chunk.forEach(p => {
                         const kat = this.state.categories.find(c => c.id === p.kategori_id)?.judul || '-';
-                        let mapel = '';
-                        if (p.data_tambahan?.mapel) mapel = `<p style="font-weight:bold; color:#005B9F; font-size:12px;">Mapel: ${p.data_tambahan.mapel}</p>`;
+                        const jenjang = p.data_tambahan?.jenjang || '-';
+                        const mapel = p.data_tambahan?.mapel || kat;
                         
                         html += `
                         <div class="print-card">
-                            <p style="font-weight:bold; font-size:12px; margin-bottom:10px;">MEA KAB. WONOSOBO 2026</p>
-                            <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" style="height:35px; margin:0 auto 5px auto;">
-                            <h3>${p.nama_lengkap}</h3>
-                            <p style="font-style:italic;">${p.asal_instansi}</p>
-                            <div class="reg-id">${p.reg_id}</div>
-                            <p style="margin-top:8px; font-weight:bold;">${kat}</p>
-                            ${mapel}
+                            <div class="card-header">
+                                <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" alt="Logo">
+                                <div class="card-header-text">
+                                    <h3>KARTU OLIMPIADE MEA</h3>
+                                    <p>FGM KAB. WONOSOBO</p>
+                                </div>
+                            </div>
+                            <div class="card-info">
+                                <div>Nama</div><div>:</div><div style="font-weight:bold;">${p.nama_lengkap}</div>
+                                <div>Sekolah</div><div>:</div><div>${p.asal_instansi}</div>
+                                <div>Jenjang</div><div>:</div><div>${jenjang}</div>
+                                <div>Mapel</div><div>:</div><div>${mapel}</div>
+                            </div>
+                            <div class="token-box">
+                                <span>TOKEN LOGIN:</span>
+                                <strong>${p.reg_id}</strong>
+                            </div>
                         </div>`;
                     });
                     html += `</div>`;
                 }
-                
                 container.innerHTML = html;
                 window.print();
-                setTimeout(() => container.innerHTML = '', 1000); // Bersihkan DOM
+                setTimeout(() => container.innerHTML = '', 1000); 
+            },
+            
+            // FUNGSI CETAK DAFTAR PESERTA PDF (Tabel)
+            cetakDaftarPeserta: function() {
+                let targetData = this.state.rekapPeserta || [];
+                const katFilter = document.getElementById('admin-filter-kategori');
+                let judulFilter = katFilter.value === 'all' ? 'Semua Kategori' : katFilter.options[katFilter.selectedIndex].text;
+
+                if(targetData.length === 0) return this.showToast('Tidak ada data untuk dicetak!', 'error');
+
+                const container = document.getElementById('print-container');
+                let html = `
+                <div class="print-list-page">
+                    <h2>Daftar Peserta MEA 2026<br><span style="font-size:12px; font-weight:normal;">Kategori: ${judulFilter} | Total: ${targetData.length} Peserta</span></h2>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th style="width:5%; text-align:center;">No</th>
+                                <th style="width:15%;">ID Reg</th>
+                                <th style="width:25%;">Nama Lengkap</th>
+                                <th style="width:25%;">Asal Instansi</th>
+                                <th style="width:20%;">Kategori / Jenjang</th>
+                                <th style="width:10%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                targetData.forEach((p, index) => {
+                    const kat = this.state.categories.find(c => c.id === p.kategori_id)?.judul || '-';
+                    const jenjang = p.data_tambahan?.jenjang ? ` (${p.data_tambahan.jenjang})` : '';
+                    const mapel = p.data_tambahan?.mapel ? `<br><small>${p.data_tambahan.mapel}</small>` : '';
+                    
+                    html += `
+                        <tr>
+                            <td style="text-align:center;">${index + 1}</td>
+                            <td style="font-family:monospace;">${p.reg_id}</td>
+                            <td style="font-weight:bold;">${p.nama_lengkap}</td>
+                            <td>${p.asal_instansi}</td>
+                            <td>${kat}${jenjang}${mapel}</td>
+                            <td>${p.status_verifikasi}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div>`;
+                container.innerHTML = html;
+                window.print();
+                setTimeout(() => container.innerHTML = '', 1000); 
             },
             
             // FUNGSI CETAK DAFTAR PESERTA PDF (Tabel A4/F4)
