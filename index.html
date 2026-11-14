@@ -489,14 +489,19 @@
                                         <div><label class="text-xs font-bold text-slate-600">Nama Pemenang</label><input type="text" name="nama_pemenang" required class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></div>
                                         <div><label class="text-xs font-bold text-slate-600">Asal Instansi</label><input type="text" name="asal_instansi" required class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></div>
                                         <div class="grid grid-cols-2 gap-4">
-                                            <div><label class="text-xs font-bold text-slate-600">Kategori Lomba</label><select id="admin-select-kat" name="kategori_id" required class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></select></div>
-                                            <!-- Peringkat Maksimal diubah menjadi 6 -->
+                                            <!-- Ditambahkan onchange untuk mendeteksi pilihan kategori -->
+                                            <div><label class="text-xs font-bold text-slate-600">Kategori Lomba</label><select id="admin-select-kat" name="kategori_id" required onchange="app.aturOpsiPengumuman()" class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></select></div>
                                             <div><label class="text-xs font-bold text-slate-600">Peringkat (Maks 6)</label><input type="number" name="peringkat" min="1" max="6" required class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></div>
                                         </div>
-                                        <!-- Field Skor Akhir Telah Dihapus dari UI -->
+                                        <!-- KOTAK DINAMIS: Akan muncul otomatis jika pilih Olimpiade/Tilawah -->
+                                        <div id="div-opsi-pengumuman" class="hidden">
+                                            <label id="label-opsi-pengumuman" class="text-xs font-bold text-slate-600">Spesifikasi Lomba</label>
+                                            <select id="select-opsi-pengumuman" name="opsi_tambahan" class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue">
+                                                <option value="">Pilih Spesifikasi...</option>
+                                            </select>
+                                        </div>
                                         <button type="submit" class="w-full bg-muh-blue text-white font-bold py-3 rounded-lg hover:bg-muh-dark mt-2">Simpan Pengumuman</button>
                                     </form>
-
                                     <!-- Tabel Daftar Pengumuman -->
                                     <h4 class="font-bold text-sm mb-2">Daftar Pengumuman Aktif</h4>
                                     <div class="border rounded-xl overflow-hidden max-h-48 overflow-y-auto">
@@ -1771,6 +1776,8 @@
                 const opts = `<option value="">Pilih Kategori...</option>` + this.state.categories.map(c => `<option value="${c.id}">${c.judul}</option>`).join('');
                 document.getElementById('edit-kat-select').innerHTML = opts; 
                 document.getElementById('admin-select-kat').innerHTML = opts;
+                
+                if(this.aturOpsiPengumuman) this.aturOpsiPengumuman(); // Reset form dinamis
 
                 this.showLoader('Memuat Konten...');
                 try {
@@ -1780,7 +1787,6 @@
                     if(!pData.length) {
                         tb.innerHTML = `<tr><td class="p-3 text-center text-slate-500">Belum ada pengumuman terbit.</td></tr>`;
                     } else {
-                        // Tampilan skor: 0 telah dihilangkan dari daftar ini agar lebih rapi
                         tb.innerHTML = pData.map(p => `
                             <tr>
                                 <td class="p-3">
@@ -1794,81 +1800,49 @@
                         `).join('');
                     }
                 } catch(e) {
-                    console.error(e);
                     this.showToast('Gagal memuat daftar pengumuman', 'error');
                 } finally {
                     this.hideLoader();
                 }
             },
-            updateBeranda: async function(e) {
-                e.preventDefault(); 
-                if (!['admin', 'koordinator'].includes(this.state.user?.role)) return this.showToast('Akses Ditolak', 'error');
-                
-                const d = Object.fromEntries(new FormData(e.target).entries());
-                this.showLoader('Menyimpan Pengaturan Beranda...');
-                try {
-                    await db.patch('pengaturan_web', '?id=eq.1', d);
-                    this.state.settings.teks_beranda = d.teks_beranda; 
-                    this.state.settings.tanggal_pelaksanaan = d.tanggal_pelaksanaan;
-                    
-                    document.getElementById('teks-beranda').textContent = d.teks_beranda; 
-                    document.getElementById('teks-jadwal').textContent = `Pelaksanaan: ${d.tanggal_pelaksanaan}`;
-                    this.showToast('Beranda berhasil diperbarui!', 'success');
-                } catch(err) { 
-                    this.showToast('Gagal update Beranda', 'error'); 
-                } finally { 
-                    this.hideLoader(); 
-                }
-            },
-            loadEditKategori: function(id) {
-                const form = document.getElementById('form-edit-kategori'); 
-                if(!id) { form.classList.add('hidden'); return; }
-                const cat = this.state.categories.find(c => c.id === id);
-                
-                document.getElementById('edit-kat-id').value = cat.id; 
-                document.getElementById('edit-kat-judul').value = cat.judul; 
-                document.getElementById('edit-kat-desc').value = cat.deskripsi;
-                document.getElementById('edit-kat-urutan').value = cat.urutan || 99;
-                document.getElementById('edit-kat-grup').value = cat.grup || '';
-                document.getElementById('edit-kat-ikon').value = cat.ikon || '';
-                
-                document.getElementById('edit-kat-reqs').value = Array.isArray(cat.persyaratan) ? cat.persyaratan.join('\n') : '';
-                document.getElementById('edit-kat-rules').value = Array.isArray(cat.ketentuan) ? cat.ketentuan.join('\n') : '';
-                
-                form.classList.remove('hidden');
-            },
-            updateKategori: async function(e) {
-                e.preventDefault(); 
-                if (!['admin', 'koordinator'].includes(this.state.user?.role)) return this.showToast('Akses Ditolak', 'error');
-
-                const d = Object.fromEntries(new FormData(e.target).entries());
-                const reqsArray = d.persyaratan.split('\n').map(s => s.trim()).filter(s => s !== '');
-                const rulesArray = d.ketentuan.split('\n').map(s => s.trim()).filter(s => s !== '');
-
-                const payload = { 
-                    judul: d.judul, deskripsi: d.deskripsi, urutan: parseInt(d.urutan) || 99, 
-                    grup: d.grup, ikon: d.ikon, persyaratan: reqsArray, ketentuan: rulesArray 
-                };
-
-                this.showLoader('Menyimpan Perubahan Kategori...');
-                try {
-                    await db.patch('kategori_lomba', `?id=eq.${d.id}`, payload);
-                    const idx = this.state.categories.findIndex(c => c.id === d.id);
-                    if(idx > -1) { 
-                        this.state.categories[idx] = { ...this.state.categories[idx], ...payload }; 
-                    }
-                    this.showToast('Kategori berhasil diperbarui!', 'success');
-                    e.target.reset(); 
-                    document.getElementById('form-edit-kategori').classList.add('hidden'); 
-                    document.getElementById('edit-kat-select').value = '';
-                } catch(err) { 
-                    this.showToast('Gagal mengupdate kategori.', 'error'); 
-                } finally { 
-                    this.hideLoader(); 
-                }
-            },
             
-            // FUNGSI UTAMA: MENERBITKAN PENGUMUMAN (Bebas Crash)
+            // LOGIKA FORM DINAMIS (Memunculkan Pilihan Mapel / Kategori A-B)
+            aturOpsiPengumuman: function() {
+                const katSelect = document.getElementById('admin-select-kat');
+                const divOpsi = document.getElementById('div-opsi-pengumuman');
+                const labelOpsi = document.getElementById('label-opsi-pengumuman');
+                const selOpsi = document.getElementById('select-opsi-pengumuman');
+                
+                if (!katSelect || katSelect.selectedIndex <= 0) {
+                    divOpsi.classList.add('hidden');
+                    selOpsi.removeAttribute('required');
+                    return;
+                }
+                
+                const textKat = katSelect.options[katSelect.selectedIndex].text.toLowerCase();
+                selOpsi.innerHTML = '<option value="">Pilih Spesifikasi...</option>';
+                divOpsi.classList.add('hidden');
+                selOpsi.removeAttribute('required');
+
+                if (textKat.includes('olimpiade') && (textKat.includes('sd') || textKat.includes('mi') || textKat.includes('smp') || textKat.includes('mts'))) {
+                    labelOpsi.textContent = 'Mata Pelajaran (Mapel)';
+                    selOpsi.innerHTML += `<option value="Matematika">Matematika</option><option value="IPA">IPA</option><option value="Bahasa Inggris">Bahasa Inggris</option>`;
+                    divOpsi.classList.remove('hidden');
+                    selOpsi.setAttribute('required', 'true');
+                } else if (textKat.includes('olimpiade') && (textKat.includes('sma') || textKat.includes('smk') || textKat.includes('ma'))) {
+                    labelOpsi.textContent = 'Mata Pelajaran (Mapel)';
+                    selOpsi.innerHTML += `<option value="Matematika">Matematika</option><option value="Bahasa Inggris">Bahasa Inggris</option>`;
+                    divOpsi.classList.remove('hidden');
+                    selOpsi.setAttribute('required', 'true');
+                } else if (textKat.includes('tilawah')) {
+                    labelOpsi.textContent = 'Kategori Tilawah';
+                    selOpsi.innerHTML += `<option value="Kategori A">Kategori A</option><option value="Kategori B">Kategori B</option>`;
+                    divOpsi.classList.remove('hidden');
+                    selOpsi.setAttribute('required', 'true');
+                }
+            },
+
+            // FUNGSI UTAMA: MENERBITKAN PENGUMUMAN
             addPengumuman: async function(e) {
                 e.preventDefault(); 
                 if (!['admin', 'koordinator'].includes(this.state.user?.role)) {
@@ -1877,12 +1851,18 @@
 
                 const d = Object.fromEntries(new FormData(e.target).entries());
                 
+                // Menyatukan Opsi Mapel / Kategori Tilawah ke dalam Nama Pemenang
+                let finalNamaPemenang = d.nama_pemenang;
+                if (d.opsi_tambahan) {
+                    finalNamaPemenang = `${d.nama_pemenang} - ${d.opsi_tambahan}`;
+                }
+                
                 this.showLoader('Menerbitkan Pengumuman Juara...');
                 try {
                     const payload = { 
                         kategori_id: d.kategori_id, 
                         peringkat: parseInt(d.peringkat), 
-                        nama_pemenang: d.nama_pemenang, 
+                        nama_pemenang: finalNamaPemenang, 
                         asal_instansi: d.asal_instansi, 
                         skor: 0 
                     };
@@ -1898,14 +1878,15 @@
                         throw new Error(errDB.message || 'Ditolak oleh Supabase (Cek Constraint Peringkat)');
                     }
 
-                    e.target.reset(); 
+                    e.target.reset();
+                    this.aturOpsiPengumuman(); // Sembunyikan kembali opsi
                     this.showToast('Pengumuman juara berhasil dirilis ke publik!', 'success'); 
                     await this.renderAdminKonten();
                 } catch(err) { 
                     console.error(err);
                     this.showToast(`Gagal: ${err.message}`, 'error'); 
                 } finally { 
-                    this.hideLoader(); // Dijamin akan mematikan layar loading apapun yang terjadi
+                    this.hideLoader(); 
                 }
             },
 
