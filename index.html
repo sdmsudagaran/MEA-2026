@@ -1001,33 +1001,53 @@
                     <td class="p-4 text-xs font-bold bg-slate-50">${p.kategori_lomba?.judul||'-'}</td>
                 </tr>`).join('');
             },
-            // CETAK DOKUMEN PENGUMUMAN JUARA (PRESISI PDF KERTAS F4)
+            // CETAK DOKUMEN PENGUMUMAN JUARA (PRESISI PDF KERTAS F4 DENGAN FILTER AKTIF)
             cetakPengumuman: function() {
-                const fVal = document.getElementById('filter-pengumuman').value;
+                // Tangkap nilai pasti dari elemen dropdown di HTML
+                const katFilter = document.getElementById('filter-pengumuman');
+                const opsiFilter = document.getElementById('filter-pengumuman-opsi');
+                
+                if (!katFilter || !opsiFilter) return this.showToast('Gagal memuat filter cetak', 'error');
+
+                const fVal = katFilter.value;
+                // Pastikan opsiVal tidak kosong, jika dropdown disembunyikan (hidden), paksa jadi 'all'
+                const opsiVal = opsiFilter.classList.contains('hidden') ? 'all' : opsiFilter.value;
+                
                 let targetData = this.state.pengumuman || [];
                 
-                // Filter data sesuai dropdown saat ini
-                if(fVal !== 'all') targetData = targetData.filter(p => p.kategori_id === fVal);
+                // 1. Terapkan Filter Kategori Utama (Contoh: Olimpiade SD/MI)
+                if (fVal !== 'all') {
+                    targetData = targetData.filter(p => p.kategori_id === fVal);
+                }
+                
+                // 2. Terapkan Filter Spesifikasi/Mapel (Contoh: Matematika)
+                if (opsiVal !== 'all') {
+                    targetData = targetData.filter(p => p.nama_pemenang.includes(opsiVal));
+                }
                 
                 if(targetData.length === 0) return this.showToast('Tidak ada data pengumuman untuk dicetak!', 'error');
 
-                const katFilter = document.getElementById('filter-pengumuman');
-                let judulFilter = katFilter.value === 'all' ? 'Semua Kategori' : katFilter.options[katFilter.selectedIndex].text;
+                // Susun Teks Judul
+                let judulFilter = fVal === 'all' ? 'Semua Kategori' : katFilter.options[katFilter.selectedIndex].text;
+                if (opsiVal !== 'all') {
+                    judulFilter += ` - ${opsiVal}`;
+                }
 
                 const container = document.getElementById('print-container');
+                
                 let html = `
                 <div class="print-list-page">
                     <div style="text-align:center; margin-bottom: 25px;">
                         <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" style="height:70px; margin-bottom:10px;">
-                        <h2 style="border:none; margin-bottom:5px; font-size:20px;">SURAT KEPUTUSAN DEWAN JURI MEA 2026<br>
-                        <span style="font-size:14px; font-weight:normal;">Daftar Pemenang Kategori: <strong>${judulFilter}</strong></span></h2>
+                        <h2 style="border:none; margin-bottom:5px; font-size:20px; font-family: sans-serif; font-weight: 800;">SURAT KEPUTUSAN DEWAN JURI MEA 2026<br>
+                        <span style="font-size:14px; font-weight:normal; font-family: sans-serif;">Daftar Pemenang Kategori: <strong>${judulFilter.toUpperCase()}</strong></span></h2>
                     </div>
-                    <table class="print-table" style="font-size:12px;">
+                    <table class="print-table" style="font-size:12px; font-family: sans-serif;">
                         <thead>
                             <tr>
                                 <th style="width:15%; text-align:center;">Peringkat</th>
-                                <th style="width:35%;">Nama Pemenang</th>
-                                <th style="width:30%;">Asal Instansi</th>
+                                <th style="width:40%;">Nama Pemenang</th>
+                                <th style="width:25%;">Asal Instansi</th>
                                 <th style="width:20%;">Kategori Lomba</th>
                             </tr>
                         </thead>
@@ -1038,7 +1058,7 @@
                     html += `
                         <tr>
                             <td style="text-align:center; font-weight:bold; color:#005B9F; font-size:14px;">Juara ${p.peringkat}</td>
-                            <td style="font-weight:bold;">${p.nama_pemenang}</td>
+                            <td style="font-weight:bold; text-transform: uppercase;">${p.nama_pemenang}</td>
                             <td>${p.asal_instansi}</td>
                             <td>${p.kategori_lomba?.judul || '-'}</td>
                         </tr>
@@ -1046,7 +1066,7 @@
                 });
 
                 html += `</tbody></table>
-                <div style="margin-top: 60px; display: flex; justify-content: flex-end; padding-right: 40px;">
+                <div style="margin-top: 60px; display: flex; justify-content: flex-end; padding-right: 40px; font-family: sans-serif;">
                     <div style="text-align: center;">
                         <p>Wonosobo, ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
                         <p style="margin-bottom: 70px;">Ketua Panitia MEA 2026</p>
@@ -1055,10 +1075,11 @@
                 </div>
                 </div>`;
                 
-                // Injeksi ke kontainer cetak dan eksekusi
                 container.innerHTML = html;
                 window.print();
-                setTimeout(() => container.innerHTML = '', 1000); // Bersihkan sisa cetakan agar tidak membebani memori
+                
+                // Bersihkan kontainer setelah jendela print ditutup
+                setTimeout(() => container.innerHTML = '', 1000); 
             },
 
             // ADMIN LOGIC (ROUTING)
