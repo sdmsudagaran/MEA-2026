@@ -330,7 +330,7 @@
                     </div>
                 </div>
                 <table class="w-full text-left bg-white rounded-3xl shadow-soft border">
-                    <thead class="bg-slate-50 border-b"><tr class="text-sm text-slate-500"><th class="p-4 pl-6">Peringkat</th><th class="p-4">Nama Pemenang</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori Lomba</th><th class="p-4 pr-6">Skor</th></tr></thead>
+                    <thead class="bg-slate-50 border-b"><tr class="text-sm text-slate-500"><th class="p-4 pl-6">Peringkat</th><th class="p-4">Nama Pemenang</th><th class="p-4">Asal Instansi</th><th class="p-4">Kategori Lomba</th></tr></thead>
                     <tbody id="table-pengumuman" class="divide-y text-sm"></tbody>
                 </table>
             </div>
@@ -490,10 +490,11 @@
                                         <div><label class="text-xs font-bold text-slate-600">Asal Instansi</label><input type="text" name="asal_instansi" required class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></div>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div><label class="text-xs font-bold text-slate-600">Kategori Lomba</label><select id="admin-select-kat" name="kategori_id" required class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></select></div>
-                                            <div><label class="text-xs font-bold text-slate-600">Peringkat (1, 2, 3)</label><input type="number" name="peringkat" min="1" max="3" required class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></div>
+                                            <!-- Peringkat Maksimal diubah menjadi 6 -->
+                                            <div><label class="text-xs font-bold text-slate-600">Peringkat (Maks 6)</label><input type="number" name="peringkat" min="1" max="6" required class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></div>
                                         </div>
-                                        <div><label class="text-xs font-bold text-slate-600">Skor Akhir</label><input type="number" step="0.01" name="skor" required class="w-full p-2 border rounded-lg bg-slate-50 outline-none focus:border-muh-blue"></div>
-                                        <button type="submit" class="w-full bg-muh-blue text-white font-bold py-3 rounded-lg hover:bg-muh-dark">Simpan Pengumuman</button>
+                                        <!-- Field Skor Akhir Telah Dihapus dari UI -->
+                                        <button type="submit" class="w-full bg-muh-blue text-white font-bold py-3 rounded-lg hover:bg-muh-dark mt-2">Simpan Pengumuman</button>
                                     </form>
 
                                     <!-- Tabel Daftar Pengumuman -->
@@ -908,9 +909,21 @@
                     const fVal = sel.value; const tbody = document.getElementById('table-pengumuman');
                     let data = res; if(fVal !== 'all') data = data.filter(p => p.kategori_id === fVal);
                     
-                    if(!data.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada pengumuman untuk kategori ini.</td></tr>`;
-                    tbody.innerHTML = data.map(p => `<tr><td class="p-4 pl-6 font-bold text-muh-blue">Juara ${p.peringkat}</td><td class="p-4 font-bold">${p.nama_pemenang}</td><td class="p-4">${p.asal_instansi}</td><td class="p-4 text-xs font-bold bg-slate-50">${p.kategori_lomba?.judul||'-'}</td><td class="p-4 pr-6 font-bold">${p.skor}</td></tr>`).join('');
-                } catch(e) { this.showToast('Gagal memuat pengumuman', 'error'); } finally { this.hideLoader(); }
+                    // Colspan diubah dari 5 menjadi 4 karena kolom skor dihapus
+                    if(!data.length) return tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada pengumuman untuk kategori ini.</td></tr>`;
+                    
+                    // Elemen <td> yang berisi p.skor telah dihilangkan
+                    tbody.innerHTML = data.map(p => `<tr>
+                        <td class="p-4 pl-6 font-bold text-muh-blue">Juara ${p.peringkat}</td>
+                        <td class="p-4 font-bold">${p.nama_pemenang}</td>
+                        <td class="p-4">${p.asal_instansi}</td>
+                        <td class="p-4 text-xs font-bold bg-slate-50">${p.kategori_lomba?.judul||'-'}</td>
+                    </tr>`).join('');
+                } catch(e) { 
+                    this.showToast('Gagal memuat pengumuman', 'error'); 
+                } finally { 
+                    this.hideLoader(); 
+                }
             },
 
             // ADMIN LOGIC (ROUTING)
@@ -1771,7 +1784,6 @@
             // FUNGSI UTAMA: MENERBITKAN PENGUMUMAN
             addPengumuman: async function(e) {
                 e.preventDefault(); 
-                // Lapisan Keamanan Ekstra: Validasi Role
                 if (!['admin', 'koordinator'].includes(this.state.user?.role)) {
                     return this.showToast('Akses Ditolak. Anda bukan Admin/Koordinator.', 'error');
                 }
@@ -1780,20 +1792,19 @@
                 
                 this.showLoader('Menerbitkan Pengumuman Juara...');
                 try {
+                    // Karena skor dihapus, kita set default 0 ke database agar tidak terjadi error SQL
                     const payload = { 
                         kategori_id: d.kategori_id, 
                         peringkat: parseInt(d.peringkat), 
                         nama_pemenang: d.nama_pemenang, 
                         asal_instansi: d.asal_instansi, 
-                        skor: parseFloat(d.skor) 
+                        skor: 0 
                     };
 
                     await db.post('pengumuman', payload);
                     e.target.reset(); 
                     
                     this.showToast('Pengumuman juara berhasil dirilis ke publik!', 'success'); 
-                    
-                    // Segarkan list pengumuman di layar
                     await this.renderAdminKonten();
                 } catch(err) { 
                     console.error(err);
