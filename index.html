@@ -672,10 +672,22 @@
             showLoader: function(txt = 'Memproses...') { document.getElementById('loader-text').textContent = txt; document.getElementById('global-loader').classList.remove('hidden'); },
             hideLoader: () => document.getElementById('global-loader').classList.add('hidden'),
             showToast: function(msg, type='info') {
-                const c = document.getElementById('toast-container'), t = document.createElement('div');
+                // Mencegah Crash: Buat otomatis kontainer jika tidak ada di HTML
+                let c = document.getElementById('toast-container');
+                if (!c) {
+                    c = document.createElement('div');
+                    c.id = 'toast-container';
+                    c.className = 'toast-container';
+                    document.body.appendChild(c);
+                }
+                
+                const t = document.createElement('div');
                 let icon = type === 'success' ? '<i class="ph-fill ph-check-circle text-green-400 text-xl"></i>' : type === 'error' ? '<i class="ph-fill ph-warning-circle text-red-400 text-xl"></i>' : '<i class="ph-fill ph-info text-blue-400 text-xl"></i>';
-                t.className = 'toast'; t.innerHTML = `${icon} <span class="text-sm font-medium">${msg}</span>`; c.appendChild(t);
-                setTimeout(() => t.classList.add('show'), 10); setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+                t.className = 'toast'; t.innerHTML = `${icon} <span class="text-sm font-medium">${msg}</span>`; 
+                c.appendChild(t);
+                
+                setTimeout(() => t.classList.add('show'), 10); 
+                setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
             },
             
             navigate: function(viewId, params = null) {
@@ -1856,7 +1868,7 @@
                 }
             },
             
-            // FUNGSI UTAMA: MENERBITKAN PENGUMUMAN (Dilengkapi Pelacak Error Database)
+            // FUNGSI UTAMA: MENERBITKAN PENGUMUMAN (Bebas Crash)
             addPengumuman: async function(e) {
                 e.preventDefault(); 
                 if (!['admin', 'koordinator'].includes(this.state.user?.role)) {
@@ -1875,7 +1887,6 @@
                         skor: 0 
                     };
 
-                    // Kita eksekusi fetch langsung agar bisa menangkap pesan error detail dari database
                     const res = await fetch(`${SUPABASE_REST}/pengumuman`, { 
                         method: 'POST', 
                         headers: { ...DB_HEADERS, 'Content-Type': 'application/json' }, 
@@ -1884,7 +1895,7 @@
 
                     if (!res.ok) {
                         const errDB = await res.json();
-                        throw new Error(errDB.message || errDB.details || 'Penolakan dari Database Supabase');
+                        throw new Error(errDB.message || 'Ditolak oleh Supabase (Cek Constraint Peringkat)');
                     }
 
                     e.target.reset(); 
@@ -1892,11 +1903,9 @@
                     await this.renderAdminKonten();
                 } catch(err) { 
                     console.error(err);
-                    // Menampilkan pesan pop-up peringatan agar Anda tahu alasan pasti database menolaknya
-                    alert(`GAGAL MENYIMPAN!\nPesan dari Database: ${err.message}\n\nBuka dashboard Supabase Anda, cari tabel 'pengumuman', dan pastikan Anda menghapus batasan (Constraint) yang mengunci peringkat maksimal.`);
-                    this.showToast('Gagal menerbitkan pengumuman.', 'error'); 
+                    this.showToast(`Gagal: ${err.message}`, 'error'); 
                 } finally { 
-                    this.hideLoader(); 
+                    this.hideLoader(); // Dijamin akan mematikan layar loading apapun yang terjadi
                 }
             },
 
