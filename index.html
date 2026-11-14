@@ -326,7 +326,7 @@
                     <h2 class="text-3xl font-bold">Pengumuman Lomba</h2>
                     <div class="flex gap-3">
                         <select id="filter-pengumuman" onchange="app.renderPengumumanView()" class="px-4 py-2 border rounded-xl bg-slate-50 outline-none"><option value="all">Semua Kategori</option></select>
-                        <button onclick="window.print()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2"><i class="ph-bold ph-printer"></i> Cetak (F4)</button>
+                        <button onclick="app.cetakPengumuman()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2 text-muh-blue shadow-sm hover:bg-slate-50"><i class="ph-bold ph-printer"></i> Cetak PDF (F4)</button>
                     </div>
                 </div>
                 <table class="w-full text-left bg-white rounded-3xl shadow-soft border">
@@ -899,20 +899,19 @@
             },
             
             // PENGUMUMAN PUBLIK
+            // PENGUMUMAN PUBLIK
             renderPengumumanView: async function() {
                 const sel = document.getElementById('filter-pengumuman');
                 if(sel.options.length <= 1) this.state.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.judul}</option>`);
                 this.showLoader('Memuat pengumuman...');
                 try {
                     const res = await db.get('pengumuman', '?select=*,kategori_lomba(judul)&order=peringkat.asc');
-                    this.state.pengumuman = res;
+                    this.state.pengumuman = res; // Simpan ke state agar bisa dicetak
                     const fVal = sel.value; const tbody = document.getElementById('table-pengumuman');
                     let data = res; if(fVal !== 'all') data = data.filter(p => p.kategori_id === fVal);
                     
-                    // Colspan diubah dari 5 menjadi 4 karena kolom skor dihapus
                     if(!data.length) return tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada pengumuman untuk kategori ini.</td></tr>`;
                     
-                    // Elemen <td> yang berisi p.skor telah dihilangkan
                     tbody.innerHTML = data.map(p => `<tr>
                         <td class="p-4 pl-6 font-bold text-muh-blue">Juara ${p.peringkat}</td>
                         <td class="p-4 font-bold">${p.nama_pemenang}</td>
@@ -924,6 +923,66 @@
                 } finally { 
                     this.hideLoader(); 
                 }
+            },
+
+            // CETAK DOKUMEN PENGUMUMAN JUARA (PRESISI PDF KERTAS F4)
+            cetakPengumuman: function() {
+                const fVal = document.getElementById('filter-pengumuman').value;
+                let targetData = this.state.pengumuman || [];
+                
+                // Filter data sesuai dropdown saat ini
+                if(fVal !== 'all') targetData = targetData.filter(p => p.kategori_id === fVal);
+                
+                if(targetData.length === 0) return this.showToast('Tidak ada data pengumuman untuk dicetak!', 'error');
+
+                const katFilter = document.getElementById('filter-pengumuman');
+                let judulFilter = katFilter.value === 'all' ? 'Semua Kategori' : katFilter.options[katFilter.selectedIndex].text;
+
+                const container = document.getElementById('print-container');
+                let html = `
+                <div class="print-list-page">
+                    <div style="text-align:center; margin-bottom: 25px;">
+                        <img src="https://i.ibb.co.com/qMtjkHBY/MEA24-300x.png" style="height:70px; margin-bottom:10px;">
+                        <h2 style="border:none; margin-bottom:5px; font-size:20px;">SURAT KEPUTUSAN DEWAN JURI MEA 2026<br>
+                        <span style="font-size:14px; font-weight:normal;">Daftar Pemenang Kategori: <strong>${judulFilter}</strong></span></h2>
+                    </div>
+                    <table class="print-table" style="font-size:12px;">
+                        <thead>
+                            <tr>
+                                <th style="width:15%; text-align:center;">Peringkat</th>
+                                <th style="width:35%;">Nama Pemenang</th>
+                                <th style="width:30%;">Asal Instansi</th>
+                                <th style="width:20%;">Kategori Lomba</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                targetData.forEach(p => {
+                    html += `
+                        <tr>
+                            <td style="text-align:center; font-weight:bold; color:#005B9F; font-size:14px;">Juara ${p.peringkat}</td>
+                            <td style="font-weight:bold;">${p.nama_pemenang}</td>
+                            <td>${p.asal_instansi}</td>
+                            <td>${p.kategori_lomba?.judul || '-'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>
+                <div style="margin-top: 60px; display: flex; justify-content: flex-end; padding-right: 40px;">
+                    <div style="text-align: center;">
+                        <p>Wonosobo, ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+                        <p style="margin-bottom: 70px;">Ketua Panitia MEA 2026</p>
+                        <p style="font-weight: bold; text-decoration: underline;">( ............................................ )</p>
+                    </div>
+                </div>
+                </div>`;
+                
+                // Injeksi ke kontainer cetak dan eksekusi
+                container.innerHTML = html;
+                window.print();
+                setTimeout(() => container.innerHTML = '', 1000); // Bersihkan sisa cetakan agar tidak membebani memori
             },
 
             // ADMIN LOGIC (ROUTING)
@@ -1781,7 +1840,7 @@
                 }
             },
             
-            // FUNGSI UTAMA: MENERBITKAN PENGUMUMAN
+            // FUNGSI UTAMA: MENERBITKAN PENGUMUMAN (Anti-Error NaN)
             addPengumuman: async function(e) {
                 e.preventDefault(); 
                 if (!['admin', 'koordinator'].includes(this.state.user?.role)) {
@@ -1792,7 +1851,7 @@
                 
                 this.showLoader('Menerbitkan Pengumuman Juara...');
                 try {
-                    // Karena skor dihapus, kita set default 0 ke database agar tidak terjadi error SQL
+                    // Karena input skor di HTML dihapus, kita paksa skor menjadi 0 di sini
                     const payload = { 
                         kategori_id: d.kategori_id, 
                         peringkat: parseInt(d.peringkat), 
@@ -1809,25 +1868,6 @@
                 } catch(err) { 
                     console.error(err);
                     this.showToast('Gagal menerbitkan pengumuman ke database.', 'error'); 
-                } finally { 
-                    this.hideLoader(); 
-                }
-            },
-            
-            hapusPengumuman: async function(id) {
-                if (!['admin', 'koordinator'].includes(this.state.user?.role)) return this.showToast('Akses Ditolak', 'error');
-                
-                if(!confirm('Anda yakin ingin menarik / menghapus pengumuman ini dari publik?')) return;
-                
-                this.showLoader('Menghapus Pengumuman...');
-                try { 
-                    await db.delete('pengumuman', `?id=eq.${id}`); 
-                    this.showToast('Pengumuman berhasil ditarik/dihapus.', 'success'); 
-                    
-                    // Segarkan list pengumuman di layar
-                    await this.renderAdminKonten(); 
-                } catch(err) { 
-                    this.showToast('Gagal menghapus pengumuman', 'error'); 
                 } finally { 
                     this.hideLoader(); 
                 }
