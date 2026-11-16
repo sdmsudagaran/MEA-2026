@@ -324,7 +324,22 @@
             <div class="max-w-6xl mx-auto px-4">
                 <div class="flex justify-between items-center mb-8 no-print">
                     <h2 class="text-3xl font-bold">Pengumuman Lomba</h2>
-                    <div class="flex gap-3 items-center">
+                    <div class="flex flex-wrap gap-3 items-center justify-end">
+                            <select id="filter-pengumuman" onchange="app.renderPengumumanView()" class="px-4 py-2 border rounded-xl bg-slate-50 outline-none font-semibold text-muh-dark">
+                                <option value="all">Semua Kategori</option>
+                            </select>
+                            <!-- Dropdown Opsi Lanjutan (Mapel / Tilawah) -->
+                            <select id="filter-pengumuman-opsi" onchange="app.terapkanFilterOpsiPengumuman()" class="hidden px-4 py-2 border rounded-xl bg-slate-50 outline-none font-semibold text-muh-dark">
+                                <option value="all">Semua Mapel/Kategori</option>
+                            </select>
+                            
+                            <button onclick="app.cetakPengumuman()" class="bg-white border font-bold px-4 py-2 rounded-xl flex items-center gap-2 text-muh-blue shadow-sm hover:bg-slate-50 transition-colors">
+                                <i class="ph-bold ph-printer"></i> Cetak PDF (F4)
+                            </button>
+                            <button onclick="app.unduhExcelPengumuman()" class="bg-green-600 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm hover:bg-green-700 transition-colors">
+                                <i class="ph-bold ph-microsoft-excel-logo"></i> Unduh Excel
+                            </button>
+                        </div>
     <select id="filter-pengumuman" onchange="app.renderPengumumanView()" class="px-4 py-2 border rounded-xl bg-slate-50 outline-none font-semibold text-muh-dark">
         <option value="all">Semua Kategori</option>
     </select>
@@ -1080,6 +1095,65 @@
                 
                 // Bersihkan kontainer setelah jendela print ditutup
                 setTimeout(() => container.innerHTML = '', 1000); 
+            },
+
+            // UNDUH EXCEL/CSV PENGUMUMAN JUARA (Sesuai Filter)
+            unduhExcelPengumuman: function() {
+                const katFilter = document.getElementById('filter-pengumuman');
+                const opsiFilter = document.getElementById('filter-pengumuman-opsi');
+                
+                if (!katFilter || !opsiFilter) return this.showToast('Gagal memuat filter', 'error');
+
+                const fVal = katFilter.value;
+                const opsiVal = opsiFilter.classList.contains('hidden') ? 'all' : opsiFilter.value;
+                
+                let targetData = this.state.pengumuman || [];
+                
+                // Terapkan filter yang sama dengan tampilan UI dan PDF
+                if (fVal !== 'all') {
+                    targetData = targetData.filter(p => p.kategori_id === fVal);
+                }
+                if (opsiVal !== 'all') {
+                    targetData = targetData.filter(p => p.nama_pemenang.includes(opsiVal));
+                }
+                
+                if(targetData.length === 0) return this.showToast('Tidak ada data pengumuman untuk diunduh!', 'error');
+
+                this.showLoader('Menyiapkan file Excel...');
+                try {
+                    // Header Kolom Excel
+                    let csv = 'Peringkat,Nama Pemenang,Asal Instansi,Kategori Lomba\n';
+                    
+                    targetData.forEach(p => {
+                        const kat = p.kategori_lomba?.judul || p.kategori_id || '-';
+                        // Format data dan hilangkan karakter koma/tanda kutip yang bisa merusak struktur CSV
+                        const rank = `"Juara ${p.peringkat}"`;
+                        const nama = `"${String(p.nama_pemenang || '').replace(/"/g, '""').toUpperCase()}"`;
+                        const instansi = `"${String(p.asal_instansi || '').replace(/"/g, '""')}"`;
+                        const kategori = `"${String(kat).replace(/"/g, '""')}"`;
+                        
+                        csv += `${rank},${nama},${instansi},${kategori}\n`;
+                    });
+
+                    // Proses Pembuatan File Download
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    
+                    // Penamaan file dinamis berdasarkan filter
+                    let filename = 'Pengumuman_Juara_MEA_2026';
+                    if (fVal !== 'all') filename += `_${katFilter.options[katFilter.selectedIndex].text.replace(/\s+/g, '_')}`;
+                    if (opsiVal !== 'all') filename += `_${opsiVal.replace(/\s+/g, '_')}`;
+                    
+                    link.download = `${filename}.csv`;
+                    link.click();
+                    this.showToast('Berhasil mengunduh Excel pengumuman!', 'success');
+                } catch(e) { 
+                    this.showToast('Gagal mengunduh Excel', 'error'); 
+                    console.error(e);
+                } finally { 
+                    this.hideLoader(); 
+                }
             },
 
             // ADMIN LOGIC (ROUTING)
